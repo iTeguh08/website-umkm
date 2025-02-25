@@ -4,6 +4,16 @@ use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+use App\Http\Controllers\ProductController;
+
+Route::resource('products', ProductController::class);
+
+
+Route::get('/admin/dashboard/{page?}', function ($page = 'jenis-usaha') {
+    return Inertia::render('Admin/DashboardUMKM', [
+        'currentPage' => $page
+    ]);
+})->name('admin.dashboard');
 
 Route::get('/', function () {
     return Inertia::render('Index', [
