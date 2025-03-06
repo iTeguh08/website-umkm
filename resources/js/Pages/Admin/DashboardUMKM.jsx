@@ -1,11 +1,12 @@
 import React from 'react';
 import { Head, usePage } from '@inertiajs/react';
-import Sidebar from '@/Components/Sidebar';
 import JenisUsaha from './Components/JenisUsaha';
 import BidangUsaha from './Components/BidangUsaha';
 import DaftarUsaha from './Components/DaftarUsaha';
 import Badges from './Components/Badges';
 import Pages from './Components/Pages';
+import Sidebar from '@/Components/Sidebar';
+import Product from './Product';
 
 const DashboardUMKM = () => {
     const { currentPage } = usePage().props;
@@ -22,6 +23,8 @@ const DashboardUMKM = () => {
                 return <Badges />;
             case 'pages':
                 return <Pages />;
+            case 'products':
+                return <Product />;
             default:
                 return <JenisUsaha />;
         }

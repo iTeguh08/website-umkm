@@ -4,6 +4,7 @@ use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+// routes/web.php
 use App\Http\Controllers\ProductController;
 
 Route::resource('products', ProductController::class);
