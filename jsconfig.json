@@ -2,9 +2,12 @@
     "compilerOptions": {
         "baseUrl": ".",
         "paths": {
-            "@/*": ["resources/js/*"],
-            "ziggy-js": ["./vendor/tightenco/ziggy"]
-        }
+            "@/*": ["resources/js/*"]
+        },
+        "jsx": "react",
+        "module": "ES6",
+        "target": "ES6",
+        "moduleResolution": "node"
     },
     "exclude": ["node_modules", "public"]
 }

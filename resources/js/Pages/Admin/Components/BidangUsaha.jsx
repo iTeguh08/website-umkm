@@ -1,5 +1,7 @@
+// resources/js/Pages/Admin/Components/BidangUsaha.jsx
 import React, { useState } from 'react';
 import CrudModal from '@/Components/CrudModal';
+import GenericForm from '@/Components/GenericForm';
 
 const BidangUsaha = () => {
     const [modalState, setModalState] = useState({
@@ -18,12 +20,15 @@ const BidangUsaha = () => {
         setModalState({ isOpen: false, type: null, data: null });
     };
 
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        const formData = new FormData(e.target);
-        console.log('Form submitted:', Object.fromEntries(formData));
+    const handleSubmit = (data) => {
+        console.log('Form submitted:', data);
         closeModal();
     };
+
+    const fields = [
+        { name: 'name', label: 'Nama' },
+        { name: 'description', label: 'Deskripsi', type: 'textarea' }
+    ];
 
     return (
         <>
@@ -34,7 +39,7 @@ const BidangUsaha = () => {
                         onClick={() => openModal('create')}
                         className="px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 transition-colors duration-150"
                     >
-                        Add New
+                        Tambah Baru
                     </button>
                 </div>
             </header>
@@ -46,7 +51,7 @@ const BidangUsaha = () => {
                             <div className="relative w-64">
                                 <input
                                     type="text"
-                                    placeholder="Search..."
+                                    placeholder="Cari..."
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                     className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -62,9 +67,9 @@ const BidangUsaha = () => {
                                 <thead>
                                     <tr className="bg-gray-50">
                                         <th className="w-[25%] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-                                        <th className="w-[25%] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                                        <th className="w-[25%] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama</th>
                                         <th className="w-[25%] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Digunakan</th>
-                                        <th className="w-[25%] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                        <th className="w-[25%] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
                                     </tr>
                                 </thead>
                                 <tbody className="bg-white divide-y divide-gray-200">
@@ -106,66 +111,36 @@ const BidangUsaha = () => {
                 isOpen={modalState.isOpen}
                 onClose={closeModal}
                 title={
-                    modalState.type === 'create' ? 'Add New Business Field' :
-                        modalState.type === 'edit' ? 'Edit Business Field' :
-                            modalState.type === 'delete' ? 'Delete Business Field' : ''
+                    modalState.type === 'create' ? 'Tambah Bidang Usaha Baru' :
+                        modalState.type === 'edit' ? 'Edit Bidang Usaha' :
+                            modalState.type === 'delete' ? 'Hapus Bidang Usaha' : ''
                 }
             >
                 {modalState.type === 'delete' ? (
                     <div className="space-y-4">
-                        <p>Are you sure you want to delete "{modalState.data?.name}"?</p>
+                        <p>Apakah kamu yakin ingin menghapus "{modalState.data?.name}"?</p>
                         <div className="flex justify-end space-x-2">
                             <button
                                 onClick={closeModal}
                                 className="px-4 py-2 text-gray-600 hover:text-gray-800"
                             >
-                                Cancel
+                                Batal
                             </button>
                             <button
                                 onClick={() => handleSubmit({ id: modalState.data?.id })}
                                 className="rounded bg-red-600 px-4 py-2 text-white hover:bg-red-700"
                             >
-                                Delete
+                                Hapus
                             </button>
                         </div>
                     </div>
                 ) : (
-                    <form onSubmit={handleSubmit} className="space-y-4">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700">Name</label>
-                            <input
-                                type="text"
-                                name="name"
-                                required
-                                defaultValue={modalState.data?.name || ''}
-                                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700">Description</label>
-                            <textarea
-                                name="description"
-                                rows="4"
-                                defaultValue={modalState.data?.description || ''}
-                                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
-                            />
-                        </div>
-                        <div className="flex justify-end space-x-2 pt-4">
-                            <button
-                                type="button"
-                                onClick={closeModal}
-                                className="px-4 py-2 text-gray-600 hover:text-gray-800"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                type="submit"
-                                className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
-                            >
-                                {modalState.type === 'create' ? 'Create' : 'Update'}
-                            </button>
-                        </div>
-                    </form>
+                    <GenericForm
+                        fields={fields}
+                        onSubmit={handleSubmit}
+                        onClose={closeModal}
+                        initialData={modalState.data || {}}
+                    />
                 )}
             </CrudModal>
         </>

@@ -1,5 +1,7 @@
+// resources/js/Pages/Admin/Components/Badges.jsx
 import React, { useState } from 'react';
 import CrudModal from '@/Components/CrudModal';
+import GenericForm from '@/Components/GenericForm';
 
 const Badges = () => {
     const [modalState, setModalState] = useState({
@@ -18,12 +20,15 @@ const Badges = () => {
         setModalState({ isOpen: false, type: null, data: null });
     };
 
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        const formData = new FormData(e.target);
-        console.log('Form submitted:', Object.fromEntries(formData));
+    const handleSubmit = (data) => {
+        console.log('Form submitted:', data);
         closeModal();
     };
+
+    const fields = [
+        { name: 'name', label: 'Badge Name' },
+        { name: 'color', label: 'Color', type: 'color' }
+    ];
 
     return (
         <>
@@ -130,43 +135,12 @@ const Badges = () => {
                         </div>
                     </div>
                 ) : (
-                    <form onSubmit={handleSubmit} className="space-y-4">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700">Badge Name</label>
-                            <input
-                                type="text"
-                                name="name"
-                                required
-                                defaultValue={modalState.data?.name || ''}
-                                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700">Color</label>
-                            <input
-                                type="color"
-                                name="color"
-                                required
-                                defaultValue={modalState.data?.color || '#000000'}
-                                className="mt-1 block w-full h-10 rounded-md border border-gray-300 px-3 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
-                            />
-                        </div>
-                        <div className="flex justify-end space-x-2 pt-4">
-                            <button
-                                type="button"
-                                onClick={closeModal}
-                                className="px-4 py-2 text-gray-600 hover:text-gray-800"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                type="submit"
-                                className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
-                            >
-                                {modalState.type === 'create' ? 'Create' : 'Update'}
-                            </button>
-                        </div>
-                    </form>
+                    <GenericForm
+                        fields={fields}
+                        onSubmit={handleSubmit}
+                        onClose={closeModal}
+                        initialData={modalState.data || {}}
+                    />
                 )}
             </CrudModal>
         </>

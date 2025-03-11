@@ -6,7 +6,6 @@ import DaftarUsaha from './Components/DaftarUsaha';
 import Badges from './Components/Badges';
 import Pages from './Components/Pages';
 import Sidebar from '@/Components/Sidebar';
-import Product from './Product';
 
 const DashboardUMKM = () => {
     const { currentPage } = usePage().props;
