@@ -1,32 +1,24 @@
-// Add this if it's not already in your GenericForm.jsx
-import React, { useEffect } from 'react';
+import React from 'react';
 
-const GenericForm = ({ 
-    fields, 
-    onSubmit, 
-    onClose, 
-    initialData, 
-    handleImageChange, 
-    imagePreview, 
-    processing, 
+const GenericForm = ({
+    fields,
+    onSubmit,
+    onClose,
+    initialData,
+    handleImageChange,
+    imagePreview,
+    processing,
     errors,
     data,
     setData
 }) => {
-    // If you're using the data and setData from the parent component
-    // No need to initialize form state here
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        onSubmit();
+    };
 
-    // Update the handleSubmit function in GenericForm
-const handleSubmit = (e) => {
-    e.preventDefault();
-    console.log('GenericForm submitting');
-    onSubmit(); // Call the parent's onSubmit function
-};
-
-    // Handle input changes
     const handleChange = (e) => {
-        const { name, value, type, files } = e.target;
-        
+        const { name, value, type } = e.target;
         if (type === 'file') {
             handleImageChange(e);
         } else {

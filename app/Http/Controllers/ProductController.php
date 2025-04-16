@@ -10,43 +10,48 @@ use Inertia\Inertia;
 
 class ProductController extends Controller
 {
-    public function index()
-{
-    // Make sure we're getting ALL products without any filters
-    $products = Product::latest()->get();
-    
-    // Log the count to verify
-    Log::info('Fetching all products. Count: ' . $products->count());
-    
-    return Inertia::render('Admin/DashboardUMKM', [
-        'currentPage' => 'daftar-usaha',
-        'products' => $products
-    ]);
-}
+    public function index(Request $request)
+    {
+        $search = $request->query('search');
+        $products = Product::when($search, function ($query, $search) {
+            return $query->where('nama_usaha', 'like', '%' . $search . '%');
+        })->latest()->paginate(10);
 
-public function store(Request $request)
-{
-    try {
-        $validated = $request->validate([
-            'nama_usaha' => 'required|string|max:255',
-            'lokasi' => 'required|string|max:255',
-            'email' => 'required|email|max:255',
-            'telephone' => 'required|string|max:255',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
+        // Log the count to verify
+        Log::info('Fetching all products. Count: ' . $products->count());
+        
+        return Inertia::render('Admin/DashboardUMKM', [
+            'currentPage' => 'daftar-usaha',
+            'products' => $products,
+            'filters' => [
+                'search' => $search
+            ]
         ]);
-
-        if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('products', 'public');
-            $validated['image'] = Storage::url($path);
-        }
-
-        Product::create($validated);
-
-        return redirect()->back()->with('success', 'Product created successfully');
-    } catch (\Exception $e) {
-        return redirect()->back()->with('error', 'Error creating product: ' . $e->getMessage());
     }
-}
+
+    public function store(Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'nama_usaha' => 'required|string|max:255',
+                'lokasi' => 'required|string|max:255',
+                'email' => 'required|email|max:255',
+                'telephone' => 'required|string|max:255',
+                'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
+            ]);
+
+            if ($request->hasFile('image')) {
+                $path = $request->file('image')->store('products', 'public');
+                $validated['image'] = Storage::url($path);
+            }
+
+            Product::create($validated);
+
+            return redirect()->back()->with('success', 'Product created successfully');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Error creating product: ' . $e->getMessage());
+        }
+    }
 
     public function update(Request $request, $id)
     {
