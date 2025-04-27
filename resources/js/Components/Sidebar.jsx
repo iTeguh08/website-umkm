@@ -39,19 +39,19 @@ const Sidebar = () => {
     ];
 
     return (
-        <div className="fixed inset-y-0 left-0 w-64 bg-white shadow-lg z-30">
-            <div className="flex h-16 items-center px-6 border-b border-gray-200">
-                <Link href="/" className="flex items-center space-x-3">
-                    <img src="/umkmKapal.png" alt="Logo" className="h-8 w-auto" />
-                    <span className="text-xs font-semibold text-gray-900">Dashboard CMS UMKM</span>
+        <div className="fixed inset-y-0 left-0 w-64 bg-white shadow-lg z-30 font-sans flex flex-col">
+            <div className="flex h-20 items-center px-6 border-b border-gray-200">
+                <Link href="/" className="flex items-center space-x-2">
+                    <img src="/umkmKapal.png" alt="Logo" className="h-12 w-auto" />
+                    <span className="text-sm font-extrabold tracking-tight text-blue-800">DASHBOARD</span>
                 </Link>
             </div>
-            <div className="p-4">
+            <nav className="flex-1 overflow-y-auto py-6 px-2 space-y-6">
                 {navigation.map((group) => (
-                    <div key={group.section} className="mb-4">
+                    <div key={group.section} className="mb-2">
                         <button
                             onClick={() => toggleSection(group.section)}
-                            className="flex items-center justify-between w-full px-3 py-2 text-sm font-medium text-gray-600 hover:text-gray-900"
+                            className="flex items-center justify-between w-full px-3 py-2 text-base font-semibold text-gray-600 hover:text-blue-700 tracking-wide uppercase"
                         >
                             <span>{group.section}</span>
                             <svg
@@ -60,30 +60,27 @@ const Sidebar = () => {
                                 viewBox="0 0 24 24"
                                 stroke="currentColor"
                             >
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
                             </svg>
                         </button>
-                        <div className={`mt-1 space-y-1 ${openSections.includes(group.section) ? 'block' : 'hidden'}`}>
+                        <div className={openSections.includes(group.section) ? "mt-1 space-y-1" : "hidden"}>
                             {group.items.map((item) => (
                                 <Link
                                     key={item.name}
                                     href={item.href}
-                                    className={`
-                                        flex items-center px-8 py-2 text-sm rounded-lg
-                                        transition-colors duration-150 ease-in-out
-                                        ${currentPage === item.name
-                                            ? 'bg-blue-50 text-blue-600'
-                                            : 'text-gray-600 hover:bg-gray-50'
-                                        }
-                                    `}
+                                    className={`group flex items-center px-4 py-2 rounded-lg transition font-medium text-base space-x-3 ${currentPage === item.name ? 'bg-blue-50 text-blue-700 font-bold' : 'text-gray-500 hover:bg-gray-100 hover:text-blue-600'}`}
                                 >
-                                    <span className="truncate">{item.label}</span>
+                                    <span className="inline-block w-5 h-5">
+                                        {/* Replace with actual SVG icons as needed */}
+                                        <i className={`icon-${item.icon}`}></i>
+                                    </span>
+                                    <span>{item.label}</span>
                                 </Link>
                             ))}
                         </div>
                     </div>
                 ))}
-            </div>
+            </nav>
         </div>
     );
 };

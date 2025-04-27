@@ -14,7 +14,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/admin/dashboard/daftar-usaha', [ProductController::class, 'store'])->name('admin.dashboard.daftar-usaha.store');
     Route::put('/admin/dashboard/daftar-usaha/{id}', [ProductController::class, 'update'])->name('admin.dashboard.daftar-usaha.update');
     Route::delete('/admin/dashboard/daftar-usaha/{id}', [ProductController::class, 'destroy'])->name('admin.dashboard.daftar-usaha.destroy');
-    
+
     // This catch-all route should come AFTER the specific routes
     Route::get('/admin/dashboard/{page?}', function ($page = 'jenis-usaha') {
         return Inertia::render('Admin/DashboardUMKM', [

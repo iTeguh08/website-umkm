@@ -1,17 +1,21 @@
-import React from 'react';
+import React, { useEffect, forwardRef } from 'react';
 
-const CrudModal = ({ isOpen, onClose, title, children, maxWidth = '2xl', showImage = false }) => {
+const CrudModal = forwardRef(({ isOpen, onClose, title, children, maxWidth = '3xl', showImage = false }, ref) => {
     if (!isOpen) return null;
+
+    const handleClose = () => {
+        onClose();
+    };
 
     return (
         <div className="fixed inset-0 z-50 overflow-y-auto">
             <div className="flex min-h-screen items-center justify-center p-4">
-                <div className="fixed inset-0 bg-black opacity-30" onClick={onClose}></div>
-                <div className={`relative w-full ${maxWidth === '2xl' ? 'max-w-2xl' : maxWidth === '4xl' ? 'max-w-4xl' : 'max-w-2xl'} rounded-lg bg-white p-6 shadow-xl`}>
-                    <div className="mb-4 flex items-center justify-between">
-                        <h3 className="text-lg font-semibold">{title}</h3>
+                <div className="fixed inset-0 bg-black opacity-30" onClick={handleClose}></div>
+                <div className="relative rounded-sm bg-white p-6 shadow-xl w-full" style={maxWidth ? { maxWidth } : {}}>
+                    <div className="mb-3 flex items-center justify-between">
+                        <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
                         <button
-                            onClick={onClose}
+                            onClick={handleClose}
                             className="text-gray-400 hover:text-gray-600"
                         >
                             <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -19,13 +23,13 @@ const CrudModal = ({ isOpen, onClose, title, children, maxWidth = '2xl', showIma
                             </svg>
                         </button>
                     </div>
-                    <div className={showImage ? 'grid grid-cols-2 gap-4' : ''}>
+                    <div>
                         {children}
                     </div>
                 </div>
             </div>
         </div>
     );
-};
+});
 
 export default CrudModal;

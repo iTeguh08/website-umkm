@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from 'react';
 import CrudModal from "@/Components/CrudModal";
 import GenericForm from "@/Components/GenericForm";
 import { useForm, router, usePage, Link } from "@inertiajs/react";
+import { Inertia } from '@inertiajs/inertia'; // Pastikan Anda mengimpor Inertia
 
 const DaftarUsaha = () => {
     const { products, filters } = usePage().props; // Get products from page props
@@ -11,6 +12,7 @@ const DaftarUsaha = () => {
         email: "",
         telephone: "",
         image: null,
+        existing_image: null,
     });
 
     const [modalState, setModalState] = useState({
@@ -22,6 +24,17 @@ const DaftarUsaha = () => {
     const [searchQuery, setSearchQuery] = useState(filters?.search || "");
     const [imagePreview, setImagePreview] = useState(null);
 
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    useEffect(() => {
+        if (isSubmitting) {
+            const timer = setTimeout(() => {
+                setIsSubmitting(false);
+            }, 2000); // Reset after 2 seconds
+            return () => clearTimeout(timer);
+        }
+    }, [isSubmitting]);
+
     const openModal = (type, modalData = null) => {
         setModalState({ isOpen: true, type, data: modalData });
         if (modalData) {
@@ -31,6 +44,7 @@ const DaftarUsaha = () => {
                 email: modalData.email || "",
                 telephone: modalData.telephone || "",
                 image: null,
+                existing_image: modalData.image || null,
             });
             setImagePreview(modalData.image || null);
         } else {
@@ -38,12 +52,16 @@ const DaftarUsaha = () => {
             setImagePreview(null);
         }
     };
-
+    
     const closeModal = () => {
         setModalState({ isOpen: false, type: null, data: null });
         setImagePreview(null);
         reset();
     };
+
+    useEffect(() => {
+        console.log('Modal state changed:', modalState);
+    }, [modalState]);
 
     const handleSubmit = () => {
         const formData = new FormData();
@@ -51,67 +69,66 @@ const DaftarUsaha = () => {
         formData.append("lokasi", data.lokasi);
         formData.append("email", data.email);
         formData.append("telephone", data.telephone);
+    
         if (data.image instanceof File) {
             formData.append("image", data.image);
         }
-
-        if (modalState.type === "create") {
-            post("/admin/dashboard/daftar-usaha", formData, {
-                forceFormData: true,
-                preserveScroll: true,
-                onSuccess: () => {
-                    closeModal();
-                    router.reload();
-                },
-                onError: () => {
-                    setModalState({ isOpen: true, type: "create", data: null });
-                },
-            });
-        } else if (modalState.type === "edit" && modalState.data?.id) {
-            formData.append("_method", "PUT");
-            post(
-                `/admin/dashboard/daftar-usaha/${modalState.data.id}`,
-                formData,
-                {
-                    forceFormData: true,
-                    preserveScroll: true,
-                    onSuccess: () => {
-                        reset();
-                        setImagePreview(null);
-                        router.reload();
-                    },
-                    onError: () => {
-                        setModalState({
-                            isOpen: true,
-                            type: "edit",
-                            data: modalState.data,
-                        });
-                    },
-                }
-            );
-        }
+    
+        setIsSubmitting(true);
+    
+        const submitMethod = modalState.type === "create" ? Inertia.post : Inertia.put; // Pastikan Anda menggunakan Inertia.post atau Inertia.put
+        const url = modalState.type === "create"
+            ? "/admin/dashboard/daftar-usaha"
+            : `/admin/dashboard/daftar-usaha/${modalState.data?.id}`;
+    
+        submitMethod(url, formData, {
+            forceFormData: true,
+            preserveScroll: true,
+            onSuccess: (response) => {
+                console.log("Form submitted successfully", response); // Tambahkan logging di sini
+                setIsSubmitting(false);
+                reset();
+                setImagePreview(null);
+                setModalState({ isOpen: false, type: null, data: null }); // Pastikan modal tertutup
+            },
+            onError: (errors) => {
+                console.error("Form submission error", errors); // Tambahkan logging di sini
+                setIsSubmitting(false);
+            }
+        });
     };
 
     const handleDelete = (id) => {
-        router.delete(`/admin/dashboard/daftar-usaha/${id}`, {
-            onSuccess: () => {
-                closeModal();
-                router.reload();
-            },
-            onError: (errors) => {
-                console.error("Delete errors:", errors);
-            },
-            preserveScroll: true,
-        });
+        if (window.confirm('Are you sure you want to delete this item?')) {
+            router.delete(`/admin/dashboard/daftar-usaha/${id}`, {
+                preserveScroll: true,
+                onSuccess: () => {
+                    setIsSubmitting(false);
+                },
+                onError: () => {
+                    setIsSubmitting(false);
+                }
+            });
+        }
     };
 
     const handleImageChange = (e) => {
         const file = e.target.files[0];
         if (file) {
-            setData("image", file);
+            setData('image', file);
             const reader = new FileReader();
-            reader.onloadend = () => setImagePreview(reader.result);
+            reader.onloadend = () => {
+                setImagePreview(reader.result);
+            };
             reader.readAsDataURL(file);
+        } else {
+            setData('image', null);
+            // Jika dalam mode edit, kembalikan ke gambar yang ada
+            if (modalState.type === "edit" && data.existing_image) {
+                setImagePreview(data.existing_image);
+            } else {
+                setImagePreview(null);
+            }
         }
     };
 
@@ -138,11 +155,13 @@ const DaftarUsaha = () => {
 
     return (
         <>
-            <header className="bg-white shadow-sm">
+            <header className="bg-white shadow-sm font-sans border-b border-gray-100">
                 <div className="flex justify-between items-center px-8 py-6">
-                    <h1 className="text-2xl font-semibold text-gray-900">
-                        Daftar Usaha
-                    </h1>
+                    <div>
+                        <h1 className="text-xl font-bold tracking-tight text-gray-800 leading-tight">
+                            DAFTAR USAHA
+                        </h1>
+                    </div>
                     <div className="flex items-center space-x-4">
                         <div className="relative w-64">
                             <input
@@ -168,14 +187,13 @@ const DaftarUsaha = () => {
                         </div>
                         <button
                             onClick={() => openModal("create")}
-                            className="px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 transition-colors duration-150"
+                            className="px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold shadow hover:bg-blue-700 transition-colors duration-150"
                         >
                             Tambah Baru
                         </button>
                     </div>
                 </div>
             </header>
-
             <main className="p-8">
                 <div className="bg-white shadow">
                     <div className="p-6">
@@ -309,44 +327,67 @@ const DaftarUsaha = () => {
                                     )}
                                 </tbody>
                             </table>
-
-                                                        {/* Pagination */}
-                                                        <div className="mt-4 flex justify-between items-center">
-                                <div className="text-sm text-gray-700">
-                                    Menampilkan {products.from} sampai {products.to} dari {products.total} data
-                                </div>
-                                <div className="flex items-center space-x-2">
-                                    {products.links.map((link, index) => {
-                                        // Skip rendering if no URL (disabled links)
-                                        if (!link.url) return null;
-                                        
-                                        return (
-                                            <Link
-                                                key={index}
-                                                href={link.url}
-                                                className={`px-3 py-1 rounded-md ${
-                                                    link.active
-                                                        ? 'bg-blue-600 text-white'
-                                                        : 'text-gray-700 hover:bg-gray-100'
-                                                }`}
-                                            >
-                                                {link.label === 'Previous' ? (
-                                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
-                                                    </svg>
-                                                ) : link.label === 'Next' ? (
-                                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-                                                    </svg>
-                                                ) : (
-                                                    <span dangerouslySetInnerHTML={{ __html: link.label }} />
-                                                )}
-                                            </Link>
-                                        );
-                                    })}
-                                </div>
-                            </div>
                         </div>
+                    </div>
+                </div>
+                {/* Pagination */}
+                <div className="mt-4 flex justify-between items-center">
+                    <div className="text-sm text-gray-700">
+                        Menampilkan {products.from} sampai {products.to} dari{" "}
+                        {products.total} data
+                    </div>
+                    <div className="flex items-center space-x-2">
+                        {products.links.map((link, index) => {
+                            // Skip rendering if no URL (disabled links)
+                            if (!link.url) return null;
+                            return (
+                                <Link
+                                    key={index}
+                                    href={link.url}
+                                    className={`px-3 py-1 rounded-md ${
+                                        link.active
+                                            ? "bg-blue-600 text-white"
+                                            : "text-gray-700 hover:bg-gray-100"
+                                    }`}
+                                >
+                                    {link.label === "Previous" ? (
+                                        <svg
+                                            className="w-5 h-5"
+                                            fill="none"
+                                            viewBox="0 0 24 24"
+                                            stroke="currentColor"
+                                        >
+                                            <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                strokeWidth="2"
+                                                d="M15 19l-7-7 7-7"
+                                            />
+                                        </svg>
+                                    ) : link.label === "Next" ? (
+                                        <svg
+                                            className="w-5 h-5"
+                                            fill="none"
+                                            viewBox="0 0 24 24"
+                                            stroke="currentColor"
+                                        >
+                                            <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                strokeWidth="2"
+                                                d="M9 5l7 7-7 7"
+                                            />
+                                        </svg>
+                                    ) : (
+                                        <span
+                                            dangerouslySetInnerHTML={{
+                                                __html: link.label,
+                                            }}
+                                        />
+                                    )}
+                                </Link>
+                            );
+                        })}
                     </div>
                 </div>
             </main>
@@ -366,100 +407,139 @@ const DaftarUsaha = () => {
                         : ""
                 }
                 showImage={modalState.type === "view"}
-                maxWidth={modalState.type === "view" ? "4xl" : "2xl"}
+                maxWidth={
+                    modalState.type === "edit" || modalState.type === "create"
+                        ? "500px"
+                        : modalState.type === "view"
+                        ? "46dvw"
+                        : modalState.type === "delete"
+                        ? "400px"
+                        : undefined
+                }
             >
-                {modalState.type === "delete" ? (
-                    <div className="space-y-4">
-                        <p>
-                            Apakah kamu yakin ingin menghapus "
-                            {modalState.data?.nama_usaha}"?
+                {modalState.type === "delete" && (
+                    <div
+                        className="p-8 text-center"
+                        style={{
+                            fontFamily:
+                                "'Inter', 'Nunito', 'Poppins', sans-serif",
+                        }}
+                    >
+                        {modalState.data?.image && (
+                            <img
+                                src={modalState.data.image}
+                                alt={`Gambar usaha ${modalState.data?.nama_usaha}`}
+                                className="mx-auto mb-6 max-h-40 rounded shadow border object-cover"
+                                onError={(e) => {
+                                    e.currentTarget.onerror = null;
+                                    e.currentTarget.src =
+                                        "/images/no-image.png";
+                                }}
+                                style={{ background: "#f3f4f6" }}
+                            />
+                        )}
+                        <h2 className="text-2xl font-bold mb-4 text-red-700">
+                            Hapus Usaha?
+                        </h2>
+                        <p className="mb-6 text-gray-700">
+                            Apakah Anda yakin ingin menghapus usaha{" "}
+                            <span className="font-semibold text-red-700">
+                                {modalState.data?.nama_usaha}
+                            </span>
+                            ?<br />
+                            Tindakan ini tidak dapat dibatalkan.
                         </p>
-                        <div className="flex justify-end space-x-2">
+                        <div className="flex justify-center gap-4">
                             <button
                                 onClick={closeModal}
-                                className="px-4 py-2 text-gray-600 hover:text-gray-800"
+                                className="px-5 py-2 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition"
                             >
                                 Batal
                             </button>
                             <button
                                 onClick={() =>
-                                    handleDelete(modalState.data?.id)
+                                    modalState.data?.id &&
+                                    handleDelete(modalState.data.id)
                                 }
-                                className="rounded bg-red-600 px-4 py-2 text-white hover:bg-red-700"
+                                className="px-5 py-2 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 shadow transition"
+                                disabled={processing}
                             >
-                                Hapus
+                                {processing ? "Menghapus..." : "Hapus"}
                             </button>
                         </div>
                     </div>
-                ) : modalState.type === "view" ? (
-                    <>
-                        <div className="space-y-4">
-                            <div className="relative w-full h-64 mb-4">
+                )}
+                {modalState.type === "view" && (
+                    <div
+                        style={{
+                            fontFamily:
+                                "'Inter', 'Nunito', 'Poppins', sans-serif",
+                        }}
+                    >
+                        <div className="flex flex-col md:flex-row items-center md:items-start gap-6 md:gap-8">
+                            {modalState.data?.image && (
                                 <img
-                                    src={modalState.data?.image ? modalState.data.image : "/images/no-image.png"}
-                                    alt={modalState.data?.nama_usaha ? `Gambar ${modalState.data.nama_usaha}` : "Tidak ada gambar"}
-                                    className="w-full h-full object-cover transition-opacity duration-300"
+                                    src={modalState.data.image}
+                                    alt="Usaha"
+                                    className="w-full max-w-xs rounded shadow border object-cover mb-6 md:mb-0"
+                                    style={{ background: "#f3f4f6" }}
                                     onError={(e) => {
                                         e.currentTarget.onerror = null;
-                                        e.currentTarget.src = "/images/no-image.png";
+                                        e.currentTarget.src =
+                                            "/images/no-image.png";
                                     }}
-                                    onLoad={(e) => {
-                                        e.currentTarget.style.opacity = "1";
-                                    }}
-                                    style={{ opacity: 0 }}
                                 />
-                                <div className="absolute inset-0 bg-black bg-opacity-20 rounded-lg transition-opacity duration-300" style={{ opacity: 0 }}></div>
+                            )}
+                            <div className="grid grid-cols-1 gap-y-3 w-full">
+                                <div>
+                                    <div className="text-gray-500 text-sm font-semibold mb-1">
+                                        Nama Usaha
+                                    </div>
+                                    <div className="text-base font-medium text-gray-900">
+                                        {modalState.data?.nama_usaha}
+                                    </div>
+                                </div>
+                                <div>
+                                    <div className="text-gray-500 text-sm font-semibold mb-1">
+                                        Lokasi
+                                    </div>
+                                    <div className="text-base font-medium text-gray-900">
+                                        {modalState.data?.lokasi}
+                                    </div>
+                                </div>
+                                <div>
+                                    <div className="text-gray-500 text-sm font-semibold mb-1">
+                                        Email
+                                    </div>
+                                    <div className="text-base font-medium text-gray-900">
+                                        {modalState.data?.email}
+                                    </div>
+                                </div>
+                                <div>
+                                    <div className="text-gray-500 text-sm font-semibold mb-1">
+                                        Telephone
+                                    </div>
+                                    <div className="text-base font-medium text-gray-900">
+                                        {modalState.data?.telephone}
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        <div className="space-y-4">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700">
-                                    Nama Usaha
-                                </label>
-                                <p className="mt-1 text-sm text-gray-900">
-                                    {modalState.data?.nama_usaha}
-                                </p>
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700">
-                                    Lokasi
-                                </label>
-                                <p className="mt-1 text-sm text-gray-900">
-                                    {modalState.data?.lokasi}
-                                </p>
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700">
-                                    Email
-                                </label>
-                                <p className="mt-1 text-sm text-gray-900">
-                                    {modalState.data?.email}
-                                </p>
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700">
-                                    Telephone
-                                </label>
-                                <p className="mt-1 text-sm text-gray-900">
-                                    {modalState.data?.telephone}
-                                </p>
-                            </div>
-                        </div>
-                    </>
-                ) : (
-                    <CrudModal isOpen={modalState.isOpen} onClose={closeModal}>
-                        <GenericForm
-                            fields={fields}
-                            onSubmit={handleSubmit}
-                            onClose={closeModal}
-                            handleImageChange={handleImageChange}
-                            imagePreview={imagePreview}
-                            processing={processing}
-                            errors={errors}
-                            data={data}
-                            setData={setData}
-                        />
-                    </CrudModal>
+                    </div>
+                )}
+                {(modalState.type === "edit" ||
+                    modalState.type === "create") && (
+                    <GenericForm
+                        fields={fields}
+                        data={data}
+                        setData={setData}
+                        errors={errors}
+                        handleSubmit={handleSubmit}
+                        handleImageChange={handleImageChange}
+                        imagePreview={imagePreview}
+                        processing={isSubmitting}
+                        onClose={closeModal} // Pastikan ini ada
+                    />
                 )}
             </CrudModal>
         </>
