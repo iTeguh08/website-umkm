@@ -5,23 +5,34 @@ use App\Http\Controllers\ProductController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+use App\Http\Controllers\PostController;
+use App\Http\Controllers\Product2Controller;
+
+// POSTS
+Route::middleware(['auth'])->group(function () {
+    Route::resource('admin/posts', PostController::class);
+});
+///
+
+// PRODUCTS
+Route::middleware(['auth'])->group(function () {
+    Route::resource('admin/products', Product2Controller::class);
+});
+
 
 // Admin routes
-Route::middleware(['auth'])->group(function () {
-    // Fix CRUD routes for daftar-usaha using ProductController
-    // These specific routes need to come BEFORE the catch-all route
-    Route::get('/admin/dashboard/daftar-usaha', [ProductController::class, 'index'])->name('admin.dashboard.daftar-usaha');
-    Route::post('/admin/dashboard/daftar-usaha', [ProductController::class, 'store'])->name('admin.dashboard.daftar-usaha.store');
-    Route::put('/admin/dashboard/daftar-usaha/{id}', [ProductController::class, 'update'])->name('admin.dashboard.daftar-usaha.update');
-    Route::delete('/admin/dashboard/daftar-usaha/{id}', [ProductController::class, 'destroy'])->name('admin.dashboard.daftar-usaha.destroy');
+Route::get('/admin/dashboard/{page?}', function ($page = 'jenis-usaha') {
+    return Inertia::render('Admin/DashboardUMKM', [
+        'currentPage' => $page
+    ]);
+})->name('admin.dashboard');
 
-    // This catch-all route should come AFTER the specific routes
-    Route::get('/admin/dashboard/{page?}', function ($page = 'jenis-usaha') {
-        return Inertia::render('Admin/DashboardUMKM', [
-            'currentPage' => $page
-        ]);
-    })->name('admin.dashboard');
-});
+// Add explicit routes for products
+Route::get('/admin/product', function () {
+    return Inertia::render('Admin/DashboardUMKM', [
+        'currentPage' => 'index'
+    ]);
+})->name('admin.product');
 
 // Public routes
 Route::get('/', function () {

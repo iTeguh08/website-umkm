@@ -2,7 +2,7 @@ import React from 'react';
 import { Head, usePage } from '@inertiajs/react';
 import JenisUsaha from './Components/JenisUsaha';
 import BidangUsaha from './Components/BidangUsaha';
-import DaftarUsaha from './Components/DaftarUsaha';
+import Index from './Products/Index';
 import Badges from './Components/Badges';
 import Pages from './Components/Pages';
 import Sidebar from '@/Components/Sidebar';
@@ -16,14 +16,12 @@ const DashboardUMKM = () => {
                 return <JenisUsaha />;
             case 'bidang-usaha':
                 return <BidangUsaha />;
-            case 'daftar-usaha':
-                return <DaftarUsaha />;
+            case 'index':
+                return <Index />;
             case 'badges':
                 return <Badges />;
             case 'pages':
                 return <Pages />;
-            case 'products':
-                return <Product />;
             default:
                 return <JenisUsaha />;
         }

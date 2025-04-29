@@ -1,25 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, usePage } from '@inertiajs/react';
 
-const Sidebar = () => {
-    const { currentPage } = usePage().props;
-    const [openSections, setOpenSections] = useState(['UMKM', 'MANAGEMENT']);
-
-    // useEffect(() => {
-    //     const section = currentPage.includes('badges') || currentPage.includes('pages') ? 'MANAGEMENT' : 'UMKM';
-    //     if (!openSections.includes(section)) {
-    //         setOpenSections([...openSections, section]);
-    //     }
-    // }, [currentPage]);
-
-    const toggleSection = (section) => {
-        setOpenSections(prev =>
-            prev.includes(section)
-                ? prev.filter(s => s !== section)
-                : [...prev, section]
-        );
-    };
-
+const Sidebar2 = () => {
     const navigation = [
         {
             section: 'UMKM',
@@ -50,12 +32,12 @@ const Sidebar = () => {
                 {navigation.map((group) => (
                     <div key={group.section} className="mb-2">
                         <button
-                            onClick={() => toggleSection(group.section)}
+                            // onClick={() => toggleSection(group.section)}
                             className="flex items-center justify-between w-full px-3 py-2 text-base font-semibold text-gray-600 hover:text-blue-700 tracking-wide uppercase"
                         >
                             <span>{group.section}</span>
                             <svg
-                                className={`w-4 h-4 transition-transform duration-200 ${openSections.includes(group.section) ? 'transform rotate-180' : ''}`}
+                                // className={`w-4 h-4 transition-transform duration-200 ${openSections.includes(group.section) ? 'transform rotate-180' : ''}`}
                                 fill="none"
                                 viewBox="0 0 24 24"
                                 stroke="currentColor"
@@ -63,12 +45,12 @@ const Sidebar = () => {
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
                             </svg>
                         </button>
-                        <div className={openSections.includes(group.section) ? "mt-1 space-y-1" : "hidden"}>
+                        <div className={true ? "mt-1 space-y-1" : "hidden"}>
                             {group.items.map((item) => (
                                 <Link
                                     key={item.name}
                                     href={item.href}
-                                    className={`group flex items-center px-4 py-2 rounded-lg transition font-medium text-base space-x-3 ${currentPage === item.name ? 'bg-blue-50 text-blue-700 font-bold' : 'text-gray-500 hover:bg-gray-100 hover:text-blue-600'}`}
+                                    className={`group flex items-center px-4 py-2 rounded-lg transition font-medium text-base space-x-3 ${false === item.name ? 'bg-blue-50 text-blue-700 font-bold' : 'text-gray-500 hover:bg-gray-100 hover:text-blue-600'}`}
                                 >
                                     <span className="inline-block w-5 h-5">
                                         {/* Replace with actual SVG icons as needed */}
@@ -85,4 +67,4 @@ const Sidebar = () => {
     );
 };
 
-export default Sidebar;
+export default Sidebar2;
