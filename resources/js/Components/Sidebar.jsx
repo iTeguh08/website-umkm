@@ -40,10 +40,9 @@ const Sidebar = () => {
 
     return (
         <div className="fixed inset-y-0 left-0 w-64 bg-white shadow-lg z-30 font-sans flex flex-col">
-            <div className="flex h-20 items-center px-6 border-b border-gray-200">
-                <Link href="/" className="flex items-center space-x-2">
+            <div className="flex h-[65px] items-center justify-center px-6 border-b border-gray-200">
+                <Link href="/">
                     <img src="/umkmKapal.png" alt="Logo" className="h-12 w-auto" />
-                    <span className="text-sm font-extrabold tracking-tight text-blue-800">DASHBOARD</span>
                 </Link>
             </div>
             <nav className="flex-1 overflow-y-auto py-6 px-2 space-y-6">

@@ -16,7 +16,7 @@ Route::middleware(['auth'])->group(function () {
 
 // PRODUCTS
 Route::middleware(['auth'])->group(function () {
-    Route::resource('admin/products', Product2Controller::class);
+    Route::resource('admin/products', ProductController::class);
 });
 
 

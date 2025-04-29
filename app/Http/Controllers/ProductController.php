@@ -14,14 +14,15 @@ class ProductController extends Controller
     {
         $search = $request->query('search');
         $products = Product::when($search, function ($query, $search) {
-            return $query->where('nama_usaha', 'like', '%' . $search . '%');
+            return $query->where('nama_usaha', 'like', '%' . $search . '%')
+                ->orWhere('lokasi', 'like', "%{$search}%")
+                ->orWhere('email', 'like', "%{$search}%");
         })->latest()->paginate(10);
 
         // Log the count to verify
-        Log::info('Fetching all products. Count: ' . $products->count());
-        
-        return Inertia::render('Admin/DashboardUMKM', [
-            'currentPage' => 'daftar-usaha',
+        Log::info('Fetching products. Count: ' . $products->count());
+
+        return Inertia::render('Admin/Products/Index', [
             'products' => $products,
             'filters' => [
                 'search' => $search
@@ -29,110 +30,93 @@ class ProductController extends Controller
         ]);
     }
 
+    public function create()
+    {
+        return Inertia::render('Admin/Products/Create');
+    }
+
     public function store(Request $request)
-{
-    try {
-        $validated = $request->validate([
+    {
+        $request->validate([
             'nama_usaha' => 'required|string|max:255',
-            'lokasi' => 'required|string|max:255',
-            'email' => 'required|email|max:255',
-            'telephone' => 'required|string|max:255',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
+            'lokasi' => 'required|string',
+            'email' => 'required|email',
+            'telephone' => 'required|string',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
+
+        $product = new Product();
+        $product->nama_usaha = $request->nama_usaha;
+        $product->lokasi = $request->lokasi;
+        $product->email = $request->email;
+        $product->telephone = $request->telephone;
 
         if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('products', 'public');
-            $validated['image'] = Storage::url($path);
+            $file = $request->file('image');
+            $path = $file->store('products', 'public');
+            $product->image = basename($path);
         }
 
-        $product = Product::create($validated);
+        $product->save();
 
-        return Inertia::render('Admin/DashboardUMKM', [
-            'currentPage' => 'daftar-usaha',
-            'products' => Product::latest()->paginate(10),
-            'filters' => [
-                'search' => $request->query('search')
-            ],
-            'flash' => ['success' => 'Product created successfully']
-        ]);
-    } catch (\Exception $e) {
-        return Inertia::render('Admin/DashboardUMKM', [
-            'currentPage' => 'daftar-usaha',
-            'products' => Product::latest()->paginate(10),
-            'filters' => [
-                'search' => $request->query('search')
-            ],
-            'flash' => ['error' => 'Error creating product: ' . $e->getMessage()]
+        return redirect()->route('products.index', ['page' => $request->page ?? 1])
+            ->with('message', 'Product created successfully.');
+    }
+
+    public function edit(Product $product)
+    {
+        return Inertia::render('Admin/Products/Edit', [
+            'product' => $product
         ]);
     }
-}
 
-public function update(Request $request, $id)
-{
-    try {
-        $product = Product::findOrFail($id);
-
-        $validated = $request->validate([
+    public function update(Request $request, Product $product)
+    {
+        $request->validate([
             'nama_usaha' => 'required|string|max:255',
-            'lokasi' => 'required|string|max:255',
-            'email' => 'required|email|max:255',
-            'telephone' => 'required|string|max:255',
-            'image' => 'nullable|file|image|mimes:jpeg,png,jpg,gif|max:2048'
+            'lokasi' => 'required|string',
+            'email' => 'required|email',
+            'telephone' => 'required|string',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
-        // Handle image updates
+        $product->nama_usaha = $request->nama_usaha;
+        $product->lokasi = $request->lokasi;
+        $product->email = $request->email;
+        $product->telephone = $request->telephone;
+
         if ($request->hasFile('image')) {
             // Delete old image if exists
             if ($product->image) {
-                $oldImagePath = str_replace('/storage/', '', $product->image);
-                if (Storage::disk('public')->exists($oldImagePath)) {
-                    Storage::disk('public')->delete($oldImagePath);
-                }
+                Storage::delete('public/products/' . $product->image);
             }
-            // Store new image
-            $path = $request->file('image')->store('products', 'public');
-            $validated['image'] = Storage::url($path);
-        } else {
-            // Keep existing image
-            $validated['image'] = $product->image;
+
+            $file = $request->file('image');
+            $path = $file->store('products', 'public');
+            $product->image = basename($path);
         }
 
-        $product->update($validated);
+        $product->save();
 
-        return Inertia::render('Admin/DashboardUMKM', [
-            'currentPage' => 'daftar-usaha',
-            'products' => Product::latest()->paginate(10),
-            'filters' => [
-                'search' => $request->query('search')
-            ],
-            'flash' => ['success' => 'Product updated successfully']
-        ]);
-    } catch (\Exception $e) {
-        return Inertia::render('Admin/DashboardUMKM', [
-            'currentPage' => 'daftar-usaha',
-            'products' => Product::latest()->paginate(10),
-            'filters' => [
-                'search' => $request->query('search')
-            ],
-            'flash' => ['error' => 'Update error: ' . $e->getMessage()]
-        ]);
+        return redirect()->route('products.index', ['page' => $request->page ?? 1])
+            ->with('message', 'Product updated successfully.');
     }
-}
 
-    public function destroy($id)
+    public function destroy(Product $product)
     {
-        try {
-            $product = Product::findOrFail($id);
-
-            if ($product->image) {
-                Storage::disk('public')->delete(str_replace('/storage/', '', $product->image));
-            }
-
-            $product->delete();
-
-            return redirect()->route('admin.dashboard.daftar-usaha')->with('success', 'Product deleted successfully');
-        } catch (\Exception $e) {
-            return back()->with('error', 'Error deleting product: ' . $e->getMessage());
+        if ($product->image) {
+            Storage::delete('public/products/' . $product->image);
         }
+
+        $product->delete();
+
+        return redirect()->route('products.index')
+            ->with('message', 'Product deleted successfully.');
+    }
+    public function show(Product $product)
+    {
+        return Inertia::render('Admin/Products/View', [
+            'product' => $product
+        ]);
     }
 }

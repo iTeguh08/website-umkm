@@ -1,17 +1,21 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from "react";
 import { useForm, router, usePage, Link } from "@inertiajs/react";
-import { Inertia } from '@inertiajs/inertia'; // Pastikan Anda mengimpor Inertia
-import DeleteButton from '@/Components/DeleteButton';
-import Sidebar from '@/Components/Sidebar';
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import { Inertia } from "@inertiajs/inertia"; // Pastikan Anda mengimpor Inertia
+import DeleteButton from "@/Components/DeleteButton";
+import Sidebar from "@/Components/Sidebar";
+import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 
 const Index = () => {
     const { products, filters } = usePage().props; // Get products from page props
     const [searchQuery, setSearchQuery] = useState(filters?.search || "");
+    const [showPreview, setShowPreview] = useState(false);
+    const [previewImage, setPreviewImage] = useState(null);
+    const [isAnimating, setIsAnimating] = useState(false);
+
     const handleSearch = (e) => {
         setSearchQuery(e.target.value);
         router.get(
-            route('products.index'),
+            route("products.index"),
             { search: e.target.value },
             {
                 preserveState: true,
@@ -20,6 +24,30 @@ const Index = () => {
             }
         );
     };
+
+    const handleImageClick = (imageUrl) => {
+        setPreviewImage(imageUrl);
+        setIsAnimating(true);
+        setTimeout(() => {
+            setShowPreview(true);
+        }, 100); // Small delay for animation
+    };
+
+    const handleClosePreview = () => {
+        setIsAnimating(true);
+        setTimeout(() => {
+            setShowPreview(false);
+            setPreviewImage(null);
+        }, 100); // Small delay for animation
+    };
+
+    const queryString = window.location.search;
+
+    // Buat objek URLSearchParams dari query string
+    const urlParams = new URLSearchParams(queryString);
+
+    // Ambil nilai parameter 'page'
+    const page = urlParams.get("page");
 
     return (
         <>
@@ -56,9 +84,13 @@ const Index = () => {
                                         />
                                     </svg>
                                 </div>
-                                <Link href={route('products.create')}>
-                                    <button className="px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold shadow hover:bg-blue-700 transition-colors duration-150">
-                                        Tambah Baru
+                                <Link
+                                    href={route("products.create", {
+                                        page: page || 1,
+                                    })}
+                                >
+                                    <button className="px-4 py-2 bg-[#04de16] text-white rounded-lg font-semibold shadow hover:bg-green-500 transition-colors duration-150">
+                                        Tambah Baru +
                                     </button>
                                 </Link>
                             </div>
@@ -71,6 +103,9 @@ const Index = () => {
                                     <table className="min-w-full divide-y divide-gray-200">
                                         <thead>
                                             <tr className="bg-gray-50">
+                                                <th className="w-[30%] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                    Gambar
+                                                </th>
                                                 <th className="w-[30%] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                                     Nama Usaha
                                                 </th>
@@ -92,6 +127,26 @@ const Index = () => {
                                             {products?.data?.length > 0 ? (
                                                 products.data.map((product) => (
                                                     <tr key={product.id}>
+                                                        <td className="px-6 py-4 whitespace-nowrap">
+                                                            {product.image && (
+                                                                <div
+                                                                    className="relative cursor-pointer"
+                                                                    onClick={() =>
+                                                                        handleImageClick(
+                                                                            `/storage/products/${product.image}`
+                                                                        )
+                                                                    }
+                                                                >
+                                                                    <img
+                                                                        src={`/storage/products/${product.image}`}
+                                                                        alt={
+                                                                            product.nama_usaha
+                                                                        }
+                                                                        className="w-12 h-12 object-cover rounded"
+                                                                    />
+                                                                </div>
+                                                            )}
+                                                        </td>
                                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                                             {product.nama_usaha}
                                                         </td>
@@ -105,12 +160,47 @@ const Index = () => {
                                                             {product.telephone}
                                                         </td>
                                                         <td className="px-6 py-4 whitespace-nowrap text-sm space-x-3">
-                                                            <button
-                                                                className="p-1.5 text-green-600 hover:bg-green-50 transition-colors"
+                                                            <Link
+                                                                href={route(
+                                                                    "products.edit",
+                                                                    {
+                                                                        product:
+                                                                            product.id,
+                                                                        page:
+                                                                            page ||
+                                                                            1,
+                                                                    }
+                                                                )}
                                                             >
-                                                                <Link
-                                                                    href={route('products.show', product.id)}
-                                                                >
+                                                                <button className="p-1.5 text-blue-600 hover:bg-blue-50 transition-colors">
+                                                                    <svg
+                                                                        className="w-5 h-5"
+                                                                        fill="none"
+                                                                        viewBox="0 0 24 24"
+                                                                        stroke="currentColor"
+                                                                    >
+                                                                        <path
+                                                                            strokeLinecap="round"
+                                                                            strokeLinejoin="round"
+                                                                            strokeWidth="2"
+                                                                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                                                                        />
+                                                                    </svg>
+                                                                </button>
+                                                            </Link>
+                                                            <Link
+                                                                href={route(
+                                                                    "products.show",
+                                                                    {
+                                                                        product:
+                                                                            product.id,
+                                                                        page:
+                                                                            page ||
+                                                                            1,
+                                                                    }
+                                                                )}
+                                                            >
+                                                                <button className="p-1.5 text-gray-400 hover:bg-gray-50 transition-colors">
                                                                     <svg
                                                                         className="w-5 h-5"
                                                                         fill="none"
@@ -130,32 +220,13 @@ const Index = () => {
                                                                             d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
                                                                         />
                                                                     </svg>
-                                                                </Link>
-                                                            </button>
-                                                            <button
-                                                                className="p-1.5 text-blue-600 hover:bg-blue-50 transition-colors"
-                                                            >
-                                                                <Link href={route('products.edit', product.id)}>
-                                                                    <svg
-                                                                        className="w-5 h-5"
-                                                                        fill="none"
-                                                                        viewBox="0 0 24 24"
-                                                                        stroke="currentColor"
-                                                                    >
-                                                                        <path
-                                                                            strokeLinecap="round"
-                                                                            strokeLinejoin="round"
-                                                                            strokeWidth="2"
-                                                                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                                                                        />
-                                                                    </svg>
-                                                                </Link>
-                                                            </button>
-                                                            <button
-                                                                className="p-1.5 text-red-600 hover:bg-red-50 transition-colors"
-                                                            >
-                                                                <DeleteButton productId={product.id} />
-                                                            </button>
+                                                                </button>
+                                                            </Link>
+                                                            <DeleteButton
+                                                                productId={
+                                                                    product.id
+                                                                }
+                                                            />
                                                         </td>
                                                     </tr>
                                                 ))
@@ -179,8 +250,8 @@ const Index = () => {
                         {/* Pagination */}
                         <div className="mt-4 flex justify-between items-center">
                             <div className="text-sm text-gray-700">
-                                Menampilkan {products.from} sampai {products.to} dari{" "}
-                                {products.total} data
+                                Menampilkan {products.from} sampai {products.to}{" "}
+                                dari {products.total} data
                             </div>
                             <div className="flex items-center space-x-2">
                                 {products.links.map((link, index) => {
@@ -190,10 +261,11 @@ const Index = () => {
                                         <Link
                                             key={index}
                                             href={link.url}
-                                            className={`px-3 py-1 rounded-md ${link.active
-                                                ? "bg-blue-600 text-white"
-                                                : "text-gray-700 hover:bg-gray-100"
-                                                }`}
+                                            className={`px-3 py-1 rounded-md ${
+                                                link.active
+                                                    ? "bg-blue-600 text-white"
+                                                    : "text-gray-700 hover:bg-gray-100"
+                                            }`}
                                         >
                                             {link.label === "Previous" ? (
                                                 <svg
@@ -238,8 +310,55 @@ const Index = () => {
                     </main>
                 </AuthenticatedLayout>
             </div>
+            <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
+                <div className="fixed inset-0 bg-black" style={{
+                    opacity: showPreview ? 0.5 : 0,
+                    transition: 'opacity 0.1s cubic-bezier(0.1, 0, 0.1, 0.1)'
+                }}>
+                </div>
+                <div 
+                    className="bg-white rounded-sm shadow-xl max-w-4xl max-h-[90vh] overflow-auto relative pointer-events-auto"
+                    style={{
+                        transform: showPreview ? 'scale(1)' : 'scale(0.90)',
+                        opacity: showPreview ? 1 : 0,
+                        transition: 'all 0.05s',
+                        willChange: 'transform, opacity',
+                        transformOrigin: 'center center'
+                    }}
+                >
+                    {showPreview && (
+                        <>
+                            <button
+                                onClick={handleClosePreview}
+                                className="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
+                            >
+                                <svg
+                                    className="w-6 h-6"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M6 18L18 6M6 6l12 12"
+                                    />
+                                </svg>
+                            </button>
+                            <div className="p-10">
+                                <img
+                                    src={previewImage}
+                                    alt="Preview"
+                                    className="w-full h-full object-contain"
+                                />
+                            </div>
+                        </>
+                    )}
+                </div>
+            </div>
         </>
     );
-}
+};
 
 export default Index;
