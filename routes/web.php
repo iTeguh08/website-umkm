@@ -21,18 +21,18 @@ Route::middleware(['auth'])->group(function () {
 
 
 // Admin routes
-Route::get('/admin/dashboard/{page?}', function ($page = 'jenis-usaha') {
-    return Inertia::render('Admin/DashboardUMKM', [
-        'currentPage' => $page
-    ]);
-})->name('admin.dashboard');
+// Route::get('/admin/dashboard/{page?}', function ($page = 'jenis-usaha') {
+//     return Inertia::render('Admin/DashboardUMKM', [
+//         'currentPage' => $page
+//     ]);
+// })->name('admin.dashboard');
 
 // Add explicit routes for products
-Route::get('/admin/product', function () {
-    return Inertia::render('Admin/DashboardUMKM', [
-        'currentPage' => 'index'
-    ]);
-})->name('admin.product');
+// Route::get('/admin/product', function () {
+//     return Inertia::render('Admin/DashboardUMKM', [
+//         'currentPage' => 'index'
+//     ]);
+// })->name('admin.product');
 
 // Public routes
 Route::get('/', function () {
