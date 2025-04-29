@@ -14,7 +14,9 @@ class Product2Controller extends Controller
     {
         $search = $request->query('search');
         $products = Product::when($search, function ($query, $search) {
-            return $query->where('nama_usaha', 'like', '%' . $search . '%');
+            return $query->where('nama_usaha', 'like', '%' . $search . '%')
+                ->orWhere('lokasi', 'like', "%{$search}%")
+                ->orWhere('email', 'like', "%{$search}%");
         })->latest()->paginate(10);
 
         // Log the count to verify

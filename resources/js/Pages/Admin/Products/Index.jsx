@@ -10,7 +10,7 @@ const Index = () => {
     const handleSearch = (e) => {
         setSearchQuery(e.target.value);
         router.get(
-            "/admin/product",
+            route('products.index'),
             { search: e.target.value },
             {
                 preserveState: true,
