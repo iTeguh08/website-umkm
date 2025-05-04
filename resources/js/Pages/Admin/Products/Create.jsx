@@ -16,58 +16,82 @@ export default function Create() {
         lokasi: "",
         email: "",
         telephone: "",
-        image: null,
+        images: [],
     });
 
-    const [imagePreview, setImagePreview] = useState(null);
+    const [imagePreviewUrls, setImagePreviewUrls] = useState([]);
     const [isUploading, setIsUploading] = useState(false);
 
     const handleSubmit = (e) => {
         e.preventDefault();
+        const formData = new FormData();
+        if (data.images.length > 0) {
+            for (let i = 0; i < data.images.length; i++) {
+                formData.append(`images[${i}]`, data.images[i]);
+            }
+        }
         submitForm(route("products.store"), {
             preserveScroll: true,
         });
     };
 
     const handleImageChange = (e) => {
-        const file = e.target.files[0];
-        setData("image", file);
+        const files = e.target.files;
+        setData('images', [...data.images, ...files]);
 
-        if (file) {
+        const newImagePreviewUrls = [...imagePreviewUrls];
+
+        if (files && files.length > 0) {
             // First hide the current image and show loading
-            setImagePreview(null);
+            setImagePreviewUrls([]);
             setIsUploading(true);
 
-            const reader = new FileReader();
-
-            // Create a promise to handle the image loading
-            const loadImage = new Promise((resolve) => {
+            // Process each file
+            const newImagePreviewUrls = [];
+            
+            Array.from(files).forEach((file, index) => {
+                const reader = new FileReader();
+                
                 reader.onload = (e) => {
-                    resolve(e.target.result);
+                    newImagePreviewUrls.push(e.target.result);
+                    
+                    // Update the state after all images are loaded
+                    if (index === files.length - 1) {
+                        setImagePreviewUrls(newImagePreviewUrls);
+                        setIsUploading(false);
+                    }
                 };
+                
+                reader.onerror = () => {
+                    console.error('Error reading file:', file.name);
+                    setIsUploading(false);
+                };
+                
                 reader.readAsDataURL(file);
             });
-
-            // Show loading animation while image is being processed
-            loadImage.then((result) => {
-                // Show loading animation for at least 1 second
-                const startTime = Date.now();
-                const timeout = 1000; // 1 second
-
-                // Wait for either the timeout or the image to be fully loaded
-                const waitTime = Math.max(
-                    0,
-                    timeout - (Date.now() - startTime)
-                );
-                setTimeout(() => {
-                    setImagePreview(result);
-                    setIsUploading(false);
-                }, waitTime);
-            });
         } else {
-            setImagePreview(null);
+            setImagePreviewUrls([]);
             setIsUploading(false);
         }
+
+        files.forEach(file => {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                newImagePreviewUrls.push(reader.result);
+                setImagePreviewUrls([...newImagePreviewUrls]);
+            };
+            reader.readAsDataURL(file);
+        });
+    };
+
+    const removeImage = (index) => {
+        const newImages = [...data.images];
+        newImages.splice(index, 1);
+        setData('images', newImages);
+
+        const newImagePreviewUrls = [...imagePreviewUrls];
+        newImagePreviewUrls.splice(index, 1);
+        setImagePreviewUrls(newImagePreviewUrls);
     };
 
     const queryString = window.location.search;
@@ -175,34 +199,46 @@ export default function Create() {
                                     </div>
                                 ))}
 
-                                <div>
+                                {/* Field untuk multiple images */}
+                                <div className="mb-4">
                                     <label className="block text-sm font-medium text-gray-700 mb-2">
                                         Gambar
                                     </label>
-                                    <div className="flex items-center space-x-4">
-                                        <input
-                                            type="file"
-                                            name="image"
-                                            onChange={handleImageChange}
-                                            className="block w-full text-sm text-gray-500 file:mr-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-green-100 file:text-green-500 hover:file:bg-green-100"
-                                            accept="image/*"
-                                        />
-                                    </div>
+                                    <input
+                                        id="images"
+                                        type="file"
+                                        name="images"
+                                        multiple
+                                        className="block w-full text-sm text-gray-500 file:mr-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-green-100 file:text-green-500 hover:file:bg-green-100"
+                                        onChange={handleImageChange}
+                                    />
                                     {errors.image && (
                                         <p className="mt-1 text-sm text-red-600">
                                             {errors.image}
                                         </p>
                                     )}
 
-                                    {imagePreview ? (
-                                        <div className="mt-4">
-                                            <div className="w-1/3 overflow-hidden rounded-lg">
-                                                <img
-                                                    src={imagePreview}
-                                                    alt="Preview"
-                                                    className="w-full h-full object-cover transition duration-300 hover:scale-105"
-                                                />
-                                            </div>
+                                    {/* Preview multiple images */}
+                                    {imagePreviewUrls.length > 0 ? (
+                                        <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4">
+                                            {imagePreviewUrls.map((url, index) => (
+                                                <div key={index} className="relative">
+                                                    <img
+                                                        src={url}
+                                                        alt={`Preview ${index + 1}`}
+                                                        className="aspect-[16/9] object-cover rounded"
+                                                    />
+                                                    <button
+                                                        type="button"
+                                                        className="absolute top-2 right-2 w-6 h-6 bg-red-600 text-white rounded-sm flex items-center justify-center hover:bg-red-600 transition-colors duration-200"
+                                                        onClick={() => removeImage(index)}
+                                                    >
+                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                                        </svg>
+                                                    </button>
+                                                </div>
+                                            ))}
                                         </div>
                                     ) : (
                                         <div className="mt-4">

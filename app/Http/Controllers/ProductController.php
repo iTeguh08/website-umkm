@@ -3,24 +3,24 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
+use App\Models\ProductImage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\DB;
 
 class ProductController extends Controller
 {
     public function index(Request $request)
     {
         $search = $request->query('search');
-        $products = Product::when($search, function ($query, $search) {
-            return $query->where('nama_usaha', 'like', '%' . $search . '%')
-                ->orWhere('lokasi', 'like', "%{$search}%")
-                ->orWhere('email', 'like', "%{$search}%");
-        })->latest()->paginate(10);
-
-        // Log the count to verify
-        Log::info('Fetching products. Count: ' . $products->count());
+        $products = Product::with('images')
+            ->when($search, function ($query, $search) {
+                return $query->where('nama_usaha', 'like', '%' . $search . '%')
+                    ->orWhere('lokasi', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
+            })->latest()->paginate(10);
 
         return Inertia::render('Admin/Products/Index', [
             'products' => $products,
@@ -42,7 +42,8 @@ class ProductController extends Controller
             'lokasi' => 'required|string',
             'email' => 'required|email',
             'telephone' => 'required|string',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'images' => 'nullable|array',
+            'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
         $product = new Product();
@@ -52,20 +53,26 @@ class ProductController extends Controller
         $product->telephone = $request->telephone;
         $product->description = $request->description;
 
-        if ($request->hasFile('image')) {
-            $file = $request->file('image');
-            $path = $file->store('products', 'public');
-            $product->image = basename($path);
-        }
-
+        
         $product->save();
+        
+        if ($request->hasFile('images')) {
+            foreach ($request->file('images') as $image) {
+                $path = $image->store('products', 'public');
 
+                $product->images()->create([
+                    'image_path' => $path
+                ]);
+            }
+        }
         return redirect()->route('products.index', ['page' => $request->page ?? 1])
             ->with('message', 'Product created successfully.');
     }
 
     public function edit(Product $product)
     {
+        $product->load('images');
+
         return Inertia::render('Admin/Products/Edit', [
             'product' => $product
         ]);
@@ -78,7 +85,7 @@ class ProductController extends Controller
             'lokasi' => 'required|string',
             'email' => 'required|email',
             'telephone' => 'required|string',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
         $product->nama_usaha = $request->nama_usaha;
@@ -87,15 +94,14 @@ class ProductController extends Controller
         $product->telephone = $request->telephone;
         $product->description = $request->description;
 
-        if ($request->hasFile('image')) {
-            // Delete old image if exists
-            if ($product->image) {
-                Storage::delete('public/products/' . $product->image);
-            }
+        if ($request->hasFile('images')) {
+            foreach ($request->file('images') as $image) {
+                $path = $image->store('products', 'public');
 
-            $file = $request->file('image');
-            $path = $file->store('products', 'public');
-            $product->image = basename($path);
+                $product->images()->create([
+                    'image_path' => $path
+                ]);
+            }
         }
 
         $product->save();
@@ -117,8 +123,22 @@ class ProductController extends Controller
     }
     public function show(Product $product)
     {
+        $product->load('images');
         return Inertia::render('Admin/Products/View', [
             'product' => $product
         ]);
+    }
+    public function deleteImage($id)
+    {
+        $image = ProductImage::findOrFail($id);
+
+        // Hapus file dari storage
+        if (Storage::disk('public')->exists($image->image_path)) {
+            Storage::disk('public')->delete($image->image_path);
+        }
+
+        $image->delete();
+
+        return back()->with('message', 'Image deleted successfully');
     }
 }

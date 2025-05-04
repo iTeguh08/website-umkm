@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { Head, Link, useForm } from "@inertiajs/react";
+import { Head, Link, useForm, router } from "@inertiajs/react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import Sidebar from "@/Components/Sidebar";
 
 export default function Edit({ auth, product }) {
 
+    console.log('Product received:', product);
+    console.log('Images received:', product.images);
 
     const queryString = window.location.search;
 
@@ -27,80 +29,108 @@ export default function Edit({ auth, product }) {
         lokasi: product.lokasi || "",
         email: product.email || "",
         telephone: product.telephone || "",
-        image: null,
+        images: [],
         description: product.description || "",
         page: page,
         _method: "PUT",
     });
 
-    const [imagePreview, setImagePreview] = useState(null);
+    const [imagePreviewUrls, setImagePreviewUrls] = useState([]);
+    const [existingImages, setExistingImages] = useState(product.images || []);
     const [isInitialLoading, setIsInitialLoading] = useState(true);
     const [isUploading, setIsUploading] = useState(false);
 
     useEffect(() => {
-        if (product.image) {
-            const imageUrl = `/storage/products/${product.image}`;
-            const image = new Image();
-            image.src = imageUrl;
+        if (product.images) {
+            const imageUrls = `/storage/products/${product.images}`;
+            const images = new Image();
+            images.src = imageUrls;
 
-            image.onload = () => {
+            images.onload = () => {
                 // Show loading animation for at least 1 second
                 setTimeout(() => {
-                    setImagePreview(imageUrl);
+                    setImagePreviewUrls(imageUrls);
                     setIsInitialLoading(false);
                 }, 1000);
             };
 
-            image.onerror = () => {
+            images.onerror = () => {
                 setIsInitialLoading(false);
             };
         } else {
             setIsInitialLoading(false);
         }
-    }, [product.image]);
+    }, [product.images]);
 
     const handleSubmit = (e) => {
         e.preventDefault();
+        const formData = new FormData();
+        if (data.images.length > 0) {
+            for (let i = 0; i < data.images.length; i++) {
+                formData.append(`images[${i}]`, data.images[i]);
+            }
+        }
         submitForm(route("products.update", product.id), {
             preserveScroll: true,
         });
     };
 
     const handleImageChange = (e) => {
-        const file = e.target.files[0];
-        setData('image', file);
+        const files = e.target.files;
+        setData('images', [...data.images, ...files]);
 
-        if (file) {
+        const newImagePreviewUrls = [...imagePreviewUrls];
+
+        if (files && files.length > 0) {
             // First hide the current image and show loading
-            setImagePreview(null);
+            setExistingImages([]);
             setIsUploading(true);
 
-            const reader = new FileReader();
-
-            // Create a promise to handle the image loading
-            const loadImage = new Promise((resolve) => {
+            // Process each file
+            const newImagePreviewUrls = [];
+            
+            Array.from(files).forEach((file, index) => {
+                const reader = new FileReader();
+                
                 reader.onload = (e) => {
-                    resolve(e.target.result);
+                    newImagePreviewUrls.push(e.target.result);
+                    
+                    // Update the state after all images are loaded
+                    if (index === files.length - 1) {
+                        setExistingImages(newImagePreviewUrls);
+                        setIsUploading(false);
+                    }
                 };
+                
+                reader.onerror = () => {
+                    console.error('Error reading file:', file.name);
+                    setIsUploading(false);
+                };
+                
                 reader.readAsDataURL(file);
             });
-
-            // Show loading animation while image is being processed
-            loadImage.then((result) => {
-                // Show loading animation for at least 1 second
-                const startTime = Date.now();
-                const timeout = 1000; // 1 second
-
-                // Wait for either the timeout or the image to be fully loaded
-                const waitTime = Math.max(0, timeout - (Date.now() - startTime));
-                setTimeout(() => {
-                    setImagePreview(result);
-                    setIsUploading(false);
-                }, waitTime);
-            });
         } else {
-            setImagePreview(null);
+            setExistingImages([]);
             setIsUploading(false);
+        }
+
+        files.forEach(file => {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                newImagePreviewUrls.push(reader.result);
+                setExistingImages([...newImagePreviewUrls]);
+            };
+            reader.readAsDataURL(file);
+        });
+    };
+
+    const removeExistingImage = (id) => {
+        if (confirm('Are you sure you want to delete this image?')) {
+            router.delete(route('product-images.delete', id), {
+                onSuccess: () => {
+                    setExistingImages(existingImages.filter(img => img.id !== id));
+                },
+            });
         }
     };
 
@@ -204,41 +234,53 @@ export default function Edit({ auth, product }) {
                                     </div>
                                 ))}
 
-                                <div>
+                                {/* Field untuk multiple images */}
+                                <div className="mb-4">
                                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Gambar (Optional)
+                                        Gambar
                                     </label>
-                                    <div className="flex items-center space-x-4">
-                                        <input
-                                            type="file"
-                                            name="image"
-                                            onChange={handleImageChange}
-                                            className="block w-full text-sm text-gray-500 file:mr-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                                            accept="image/*"
-                                        />
-                                    </div>
+                                    <input
+                                        id="images"
+                                        type="file"
+                                        name="images"
+                                        multiple
+                                        className="block w-full text-sm text-gray-500 file:mr-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-green-100 file:text-green-500 hover:file:bg-green-100"
+                                        onChange={handleImageChange}
+                                    />
                                     {errors.image && (
                                         <p className="mt-1 text-sm text-red-600">
                                             {errors.image}
                                         </p>
                                     )}
 
-                                    {imagePreview ? (
-                                        <div className="mt-4">
-                                            <div className="w-1/3 aspect-[16/9] overflow-hidden rounded-lg">
-                                                <img
-                                                    src={imagePreview}
-                                                    alt="Preview"
-                                                    className="w-full h-full object-cover transition duration-300 hover:scale-105"
-                                                />
-                                            </div>
+                                    {/* Preview multiple images */}
+                                    {existingImages.length > 0 ? (
+                                        <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4">
+                                            {existingImages.map((image) => (
+                                                <div key={image.id} className="relative">
+                                                    <img
+                                                        src={`/storage/${image.image_path}`}
+                                                        alt="Product"
+                                                        className="aspect-[16/9] object-cover rounded"
+                                                    />
+                                                    <button
+                                                        type="button"
+                                                        className="absolute top-2 right-2 w-6 h-6 bg-red-600 text-white rounded-sm flex items-center justify-center hover:bg-red-600 transition-colors duration-200"
+                                                        onClick={() => removeExistingImage(image.id)}
+                                                    >
+                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                                        </svg>
+                                                    </button>
+                                                </div>
+                                            ))}
                                         </div>
                                     ) : (
                                         <div className="mt-4">
                                             <div className="w-1/3 aspect-[16/9] overflow-hidden rounded-lg">
-                                                {(isInitialLoading || isUploading) && (
+                                                {isUploading && (
                                                     <div className="flex items-center justify-center h-full bg-gray-100">
-                                                        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#5b9cff]"></div>
+                                                        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-green-600"></div>
                                                     </div>
                                                 )}
                                             </div>

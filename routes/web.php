@@ -23,6 +23,10 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('admin/products', ProductController::class);
 });
 
+Route::post('products/{product}/reorder-images', [ProductController::class, 'reorderImages'])
+    ->name('products.reorder-images');
+
+Route::delete('/product-images/{id}', [ProductController::class, 'deleteImage'])->name('product-images.delete');
 
 // Admin routes
 // Route::get('/admin/dashboard/{page?}', function ($page = 'jenis-usaha') {
@@ -55,4 +59,4 @@ Route::middleware('auth')->group(function () {
 });
 
 // Authentication routes
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';
