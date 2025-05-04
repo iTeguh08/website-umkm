@@ -39,15 +39,13 @@ export default function Create() {
         const files = e.target.files;
         setData('images', [...data.images, ...files]);
 
-        const newImagePreviewUrls = [...imagePreviewUrls];
-
         if (files && files.length > 0) {
             // First hide the current image and show loading
             setImagePreviewUrls([]);
             setIsUploading(true);
 
             // Process each file
-            const newImagePreviewUrls = [];
+            const newImagePreviewUrls = imagePreviewUrls;
             
             Array.from(files).forEach((file, index) => {
                 const reader = new FileReader();

@@ -5,9 +5,6 @@ import Sidebar from "@/Components/Sidebar";
 
 export default function Edit({ auth, product }) {
 
-    console.log('Product received:', product);
-    console.log('Images received:', product.images);
-
     const queryString = window.location.search;
 
     // Buat objek URLSearchParams dari query string
@@ -41,7 +38,8 @@ export default function Edit({ auth, product }) {
     const [isUploading, setIsUploading] = useState(false);
 
     useEffect(() => {
-        if (product.images) {
+        if (product.images.length > 0) {
+            console.log('LEWAT', product.images)
             const imageUrls = `/storage/products/${product.images}`;
             const images = new Image();
             images.src = imageUrls;
@@ -63,6 +61,7 @@ export default function Edit({ auth, product }) {
     }, [product.images]);
 
     const handleSubmit = (e) => {
+        console.log('LEWAT 1', product)
         e.preventDefault();
         const formData = new FormData();
         if (data.images.length > 0) {
@@ -76,50 +75,44 @@ export default function Edit({ auth, product }) {
     };
 
     const handleImageChange = (e) => {
-        const files = e.target.files;
-        setData('images', [...data.images, ...files]);
+        const files = Array.from(e.target.files);
 
-        const newImagePreviewUrls = [...imagePreviewUrls];
+        if (files.length === 0) return;
 
-        if (files && files.length > 0) {
-            // First hide the current image and show loading
-            setExistingImages([]);
-            setIsUploading(true);
+        setIsUploading(true);
 
-            // Process each file
-            const newImagePreviewUrls = [];
-            
-            Array.from(files).forEach((file, index) => {
-                const reader = new FileReader();
-                
-                reader.onload = (e) => {
-                    newImagePreviewUrls.push(e.target.result);
-                    
-                    // Update the state after all images are loaded
-                    if (index === files.length - 1) {
-                        setExistingImages(newImagePreviewUrls);
-                        setIsUploading(false);
-                    }
-                };
-                
-                reader.onerror = () => {
-                    console.error('Error reading file:', file.name);
-                    setIsUploading(false);
-                };
-                
-                reader.readAsDataURL(file);
-            });
-        } else {
-            setExistingImages([]);
-            setIsUploading(false);
-        }
+        // Get the current images and add new ones
+        const currentImages = [...data.images];
+        currentImages.push(...files);
+        setData('images', currentImages);
+
+        // Update the preview URLs
+        const newPreviewUrls = [...imagePreviewUrls];
+        let loadedCount = 0;
 
         files.forEach(file => {
             const reader = new FileReader();
+            
             reader.onloadend = () => {
-                newImagePreviewUrls.push(reader.result);
-                setExistingImages([...newImagePreviewUrls]);
+                newPreviewUrls.push(reader.result);
+                loadedCount++;
+                
+                // When all images are loaded, update the preview state
+                if (loadedCount === files.length) {
+                    setImagePreviewUrls(newPreviewUrls);
+                    setIsUploading(false);
+                }
             };
+            
+            reader.onerror = () => {
+                console.error('Error reading file:', file.name);
+                loadedCount++;
+                
+                if (loadedCount === files.length) {
+                    setIsUploading(false);
+                }
+            };
+            
             reader.readAsDataURL(file);
         });
     };
@@ -130,7 +123,26 @@ export default function Edit({ auth, product }) {
                 onSuccess: () => {
                     setExistingImages(existingImages.filter(img => img.id !== id));
                 },
+                preserveScroll: true,
             });
+        }
+    };
+
+    const removeTempImage = (index) => {
+        if (confirm('Are you sure you want to remove this image? ' + index)) {
+            // Get the current images array
+            const currentImages = [...data.images];
+
+            // Remove the image at the specified index
+            currentImages.splice(index, 1);
+
+            // Update the form data
+            setData('images', currentImages);
+
+            // Update the preview URLs
+            const newPreviewUrls = [...imagePreviewUrls];
+            newPreviewUrls.splice(index, 1);
+            setImagePreviewUrls(newPreviewUrls);
         }
     };
 
@@ -244,7 +256,7 @@ export default function Edit({ auth, product }) {
                                         type="file"
                                         name="images"
                                         multiple
-                                        className="block w-full text-sm text-gray-500 file:mr-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-green-100 file:text-green-500 hover:file:bg-green-100"
+                                        className="block w-full text-sm text-gray-500 file:mr-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-100 file:text-blue-500 hover:file:bg-blue-100"
                                         onChange={handleImageChange}
                                     />
                                     {errors.image && (
@@ -253,10 +265,13 @@ export default function Edit({ auth, product }) {
                                         </p>
                                     )}
 
-                                    {/* Preview multiple images */}
-                                    {existingImages.length > 0 ? (
-                                        <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4">
-                                            {existingImages.map((image) => (
+
+
+                                    {/* Display existing images */}
+                                    <div className="mt-4">
+                                        <h4 className="font-medium text-gray-700 mb-2">Gambar Saat Ini:</h4>
+                                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                            {existingImages.length > 0 && existingImages.map((image) => (
                                                 <div key={image.id} className="relative">
                                                     <img
                                                         src={`/storage/${image.image_path}`}
@@ -265,7 +280,7 @@ export default function Edit({ auth, product }) {
                                                     />
                                                     <button
                                                         type="button"
-                                                        className="absolute top-2 right-2 w-6 h-6 bg-red-600 text-white rounded-sm flex items-center justify-center hover:bg-red-600 transition-colors duration-200"
+                                                        className="absolute top-2 right-2 w-6 h-6 bg-red-600 text-white rounded-sm flex items-center justify-center hover:bg-red-700 transition-colors duration-200"
                                                         onClick={() => removeExistingImage(image.id)}
                                                     >
                                                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -274,16 +289,34 @@ export default function Edit({ auth, product }) {
                                                     </button>
                                                 </div>
                                             ))}
+
+                                            {imagePreviewUrls.length > 0 && imagePreviewUrls.map((url, index) => (
+                                                <div key={`new-${index}`} className="relative">
+                                                    <img
+                                                        src={url}
+                                                        alt={`New upload ${index + 1}`}
+                                                        className="aspect-[16/9] object-cover rounded border-4 border-blue-200"
+                                                    />
+                                                    <button
+                                                        type="button"
+                                                        className="absolute top-2 right-2 w-6 h-6 bg-red-600 text-white rounded-sm flex items-center justify-center hover:bg-red-700 transition-colors duration-200"
+                                                        onClick={() => removeTempImage(index)}
+                                                    >
+                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                                        </svg>
+                                                    </button>
+                                                </div>
+                                            )
+                                            )}
                                         </div>
-                                    ) : (
-                                        <div className="mt-4">
-                                            <div className="w-1/3 aspect-[16/9] overflow-hidden rounded-lg">
-                                                {isUploading && (
-                                                    <div className="flex items-center justify-center h-full bg-gray-100">
-                                                        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-green-600"></div>
-                                                    </div>
-                                                )}
-                                            </div>
+                                    </div>
+
+                                    {/* Loading indicator */}
+                                    {isUploading && (
+                                        <div className="mt-4 flex items-center">
+                                            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600 mr-2"></div>
+                                            <span className="text-sm text-gray-500">Memproses gambar...</span>
                                         </div>
                                     )}
                                 </div>

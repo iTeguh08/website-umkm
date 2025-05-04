@@ -128,20 +128,18 @@ const Index = () => {
                                                 products.data.map((product) => (
                                                     <tr key={product.id}>
                                                         <td className="px-6 py-4 whitespace-nowrap">
-                                                            {product.image && (
+                                                            {product.images && product.images.length > 0 && (
                                                                 <div
                                                                     className="relative cursor-pointer"
                                                                     onClick={() =>
                                                                         handleImageClick(
-                                                                            `/storage/products/${product.image}`
+                                                                            `/storage/${product.images[0].image_path}`
                                                                         )
                                                                     }
                                                                 >
                                                                     <img
-                                                                        src={`/storage/products/${product.image}`}
-                                                                        alt={
-                                                                            product.nama_usaha
-                                                                        }
+                                                                        src={`/storage/${product.images[0].image_path}`}
+                                                                        alt={product.nama_usaha}
                                                                         className="w-12 h-12 object-cover rounded"
                                                                     />
                                                                 </div>
