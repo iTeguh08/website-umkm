@@ -30,6 +30,22 @@ class ProductController extends Controller
         ]);
     }
 
+    public function homeProduct()
+    {
+        $products = Product::with('images')
+        ->has('images')
+        ->limit(6)
+        ->get();
+        // dd($products);
+        return Inertia::render('Index', [
+            'products' => $products,
+            'canLogin' => true,
+            'canRegister' => true,
+            'laravelVersion' => '1',
+            'phpVersion' => PHP_VERSION,
+        ]);
+    }
+
     public function create()
     {
         return Inertia::render('Admin/Products/Create');
