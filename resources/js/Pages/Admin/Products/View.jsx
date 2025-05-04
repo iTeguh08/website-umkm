@@ -93,6 +93,14 @@ export default function View({ product }) {
                                         </div>
                                     ))}
                                 </div>
+                                
+                                {/* Description Section */}
+                                <div className="mt-8 bg-gray-50 p-6 rounded-lg">
+                                    <h3 className="text-lg font-semibold text-gray-700 mb-4">Description</h3>
+                                    <div className="prose max-w-none">
+                                        <p className="text-gray-700">{product.description || 'No description provided'}</p>
+                                    </div>
+                                </div>
 
                                 <div className="mt-8 flex justify-end">
                                     <Link

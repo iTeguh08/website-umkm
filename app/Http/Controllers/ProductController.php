@@ -50,6 +50,7 @@ class ProductController extends Controller
         $product->lokasi = $request->lokasi;
         $product->email = $request->email;
         $product->telephone = $request->telephone;
+        $product->description = $request->description;
 
         if ($request->hasFile('image')) {
             $file = $request->file('image');
@@ -84,6 +85,7 @@ class ProductController extends Controller
         $product->lokasi = $request->lokasi;
         $product->email = $request->email;
         $product->telephone = $request->telephone;
+        $product->description = $request->description;
 
         if ($request->hasFile('image')) {
             // Delete old image if exists

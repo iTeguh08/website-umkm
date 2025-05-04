@@ -125,14 +125,21 @@ export default function Create() {
                                         type: "tel",
                                         placeholder: "Masukkan nomor telepon",
                                     },
+                                    {
+                                        label: "Description",
+                                        name: "description",
+                                        type: "textarea",
+                                        placeholder: "Masukkan deskripsi (opsional)",
+                                    },
                                 ].map((field) => (
                                     <div key={field.name}>
                                         <label className="block text-sm font-medium text-gray-700 mb-2">
                                             {field.label}
                                         </label>
-                                        <input
-                                            type={field.type}
+                                        {field.type === 'textarea' ? (<textarea
+                                            type={'textarea'}
                                             name={field.name}
+                                            rows="5"
                                             placeholder={field.placeholder}
                                             value={data[field.name]}
                                             onChange={(e) =>
@@ -141,9 +148,25 @@ export default function Create() {
                                                     e.target.value
                                                 )
                                             }
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 transition duration-300"
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#5b9cff] transition duration-300"
                                             required
-                                        />
+                                        />)
+
+                                            : (<input
+                                                type={field.type}
+                                                name={field.name}
+                                                placeholder={field.placeholder}
+                                                value={data[field.name]}
+                                                onChange={(e) =>
+                                                    setData(
+                                                        field.name,
+                                                        e.target.value
+                                                    )
+                                                }
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#5b9cff] transition duration-300"
+                                                required
+                                            />)
+                                        }
                                         {errors[field.name] && (
                                             <p className="mt-1 text-sm text-red-600">
                                                 {errors[field.name]}
