@@ -52,6 +52,7 @@ Route::delete('/product-images/{id}', [ProductController::class, 'deleteImage'])
 //     ]);
 // });
 Route::get('/', [ProductController::class, 'homeProduct'])->name('homepage');
+Route::get('/product/{product}', [ProductController::class, 'showPublic'])->name('product.detail');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

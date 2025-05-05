@@ -39,7 +39,6 @@ export default function Edit({ auth, product }) {
 
     useEffect(() => {
         if (product.images.length > 0) {
-            console.log('LEWAT', product.images)
             const imageUrls = `/storage/products/${product.images}`;
             const images = new Image();
             images.src = imageUrls;

@@ -37,7 +37,7 @@ export default function Create() {
 
     const handleImageChange = (e) => {
         const files = e.target.files;
-        setData('images', [...data.images, ...files]);
+        setData("images", [...data.images, ...files]);
 
         if (files && files.length > 0) {
             // First hide the current image and show loading
@@ -46,25 +46,25 @@ export default function Create() {
 
             // Process each file
             const newImagePreviewUrls = imagePreviewUrls;
-            
+
             Array.from(files).forEach((file, index) => {
                 const reader = new FileReader();
-                
+
                 reader.onload = (e) => {
                     newImagePreviewUrls.push(e.target.result);
-                    
+
                     // Update the state after all images are loaded
                     if (index === files.length - 1) {
                         setImagePreviewUrls(newImagePreviewUrls);
                         setIsUploading(false);
                     }
                 };
-                
+
                 reader.onerror = () => {
-                    console.error('Error reading file:', file.name);
+                    console.error("Error reading file:", file.name);
                     setIsUploading(false);
                 };
-                
+
                 reader.readAsDataURL(file);
             });
         } else {
@@ -72,7 +72,7 @@ export default function Create() {
             setIsUploading(false);
         }
 
-        files.forEach(file => {
+        files.forEach((file) => {
             const reader = new FileReader();
             reader.onloadend = () => {
                 newImagePreviewUrls.push(reader.result);
@@ -82,14 +82,22 @@ export default function Create() {
         });
     };
 
-    const removeImage = (index) => {
-        const newImages = [...data.images];
-        newImages.splice(index, 1);
-        setData('images', newImages);
+    const removeTempImage = (index) => {
+        if (confirm('Are you sure you want to remove this image? ')) {
+            // Get the current images array
+            const currentImages = [...data.images];
 
-        const newImagePreviewUrls = [...imagePreviewUrls];
-        newImagePreviewUrls.splice(index, 1);
-        setImagePreviewUrls(newImagePreviewUrls);
+            // Remove the image at the specified index
+            currentImages.splice(index, 1);
+
+            // Update the form data
+            setData('images', currentImages);
+
+            // Update the preview URLs
+            const newPreviewUrls = [...imagePreviewUrls];
+            newPreviewUrls.splice(index, 1);
+            setImagePreviewUrls(newPreviewUrls);
+        }
     };
 
     const queryString = window.location.search;
@@ -151,30 +159,32 @@ export default function Create() {
                                         label: "Description",
                                         name: "description",
                                         type: "textarea",
-                                        placeholder: "Masukkan deskripsi (opsional)",
+                                        placeholder:
+                                            "Masukkan deskripsi (opsional)",
                                     },
                                 ].map((field) => (
                                     <div key={field.name}>
                                         <label className="block text-sm font-medium text-gray-700 mb-2">
                                             {field.label}
                                         </label>
-                                        {field.type === 'textarea' ? (<textarea
-                                            type={'textarea'}
-                                            name={field.name}
-                                            rows="5"
-                                            placeholder={field.placeholder}
-                                            value={data[field.name]}
-                                            onChange={(e) =>
-                                                setData(
-                                                    field.name,
-                                                    e.target.value
-                                                )
-                                            }
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#5b9cff] transition duration-300"
-                                            required
-                                        />)
-
-                                            : (<input
+                                        {field.type === "textarea" ? (
+                                            <textarea
+                                                type={"textarea"}
+                                                name={field.name}
+                                                rows="5"
+                                                placeholder={field.placeholder}
+                                                value={data[field.name]}
+                                                onChange={(e) =>
+                                                    setData(
+                                                        field.name,
+                                                        e.target.value
+                                                    )
+                                                }
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#5b9cff] transition duration-300"
+                                                required
+                                            />
+                                        ) : (
+                                            <input
                                                 type={field.type}
                                                 name={field.name}
                                                 placeholder={field.placeholder}
@@ -187,8 +197,8 @@ export default function Create() {
                                                 }
                                                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#5b9cff] transition duration-300"
                                                 required
-                                            />)
-                                        }
+                                            />
+                                        )}
                                         {errors[field.name] && (
                                             <p className="mt-1 text-sm text-red-600">
                                                 {errors[field.name]}
@@ -219,28 +229,51 @@ export default function Create() {
                                     {/* Preview multiple images */}
                                     {imagePreviewUrls.length > 0 ? (
                                         <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4">
-                                            {imagePreviewUrls.map((url, index) => (
-                                                <div key={index} className="relative">
-                                                    <img
-                                                        src={url}
-                                                        alt={`Preview ${index + 1}`}
-                                                        className="aspect-[16/9] object-cover rounded"
-                                                    />
-                                                    <button
-                                                        type="button"
-                                                        className="absolute top-2 right-2 w-6 h-6 bg-red-600 text-white rounded-sm flex items-center justify-center hover:bg-red-600 transition-colors duration-200"
-                                                        onClick={() => removeImage(index)}
+                                            {imagePreviewUrls.map(
+                                                (url, index) => (
+                                                    <div
+                                                        key={index}
+                                                        className="relative"
                                                     >
-                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                                        </svg>
-                                                    </button>
-                                                </div>
-                                            ))}
+                                                        <img
+                                                            src={url}
+                                                            alt={`Preview ${
+                                                                index + 1
+                                                            }`}
+                                                            className="aspect-[16/9] object-cover rounded"
+                                                        />
+                                                        <button
+                                                            type="button"
+                                                            className="absolute top-2 right-2 w-6 h-6 bg-red-600 text-white rounded-sm flex items-center justify-center hover:bg-red-600 transition-colors duration-200"
+                                                            onClick={() =>
+                                                                removeTempImage(
+                                                                    index
+                                                                )
+                                                            }
+                                                        >
+                                                            <svg
+                                                                className="w-4 h-4"
+                                                                fill="none"
+                                                                stroke="currentColor"
+                                                                viewBox="0 0 24 24"
+                                                            >
+                                                                <path
+                                                                    strokeLinecap="round"
+                                                                    strokeLinejoin="round"
+                                                                    strokeWidth={
+                                                                        2
+                                                                    }
+                                                                    d="M6 18L18 6M6 6l12 12"
+                                                                />
+                                                            </svg>
+                                                        </button>
+                                                    </div>
+                                                )
+                                            )}
                                         </div>
                                     ) : (
-                                        <div className="mt-4">
-                                            <div className="w-1/3 aspect-[16/9] overflow-hidden rounded-lg">
+                                        <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4">
+                                            <div className="aspect-[16/9] overflow-hidden rounded-lg">
                                                 {isUploading && (
                                                     <div className="flex items-center justify-center h-full bg-gray-100">
                                                         <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-green-600"></div>

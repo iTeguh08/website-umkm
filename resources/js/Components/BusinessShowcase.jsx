@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from '@inertiajs/react';
 
 const BusinessShowcase = ({ products }) => {
     return (
@@ -11,9 +12,9 @@ const BusinessShowcase = ({ products }) => {
                             <h3 className="text-lg font-semibold">{product.nama_usaha}</h3>
                             <p className="text-gray-600">{product.description}</p>
                             <div className="flex space-x-2 mt-2">
-                            <button className="ml-auto text-blue-600 text-sm font-medium">
+                            <Link href={route('product.detail', product.id)} className="ml-auto text-blue-600 text-sm font-medium">
                                 DETAIL
-                            </button>
+                            </Link>
                             </div>
                         </div>
                     </div>
