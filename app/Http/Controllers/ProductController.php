@@ -30,15 +30,27 @@ class ProductController extends Controller
         ]);
     }
 
-    public function homeProduct()
+    public function homeProduct(Request $request)
     {
+        $search = $request->query('search');
+        
         $products = Product::with('images')
-        ->has('images')
-        ->limit(6)
-        ->get();
-        // dd($products);
+            ->when($search, function ($query) use ($search) {
+                return $query->where(function($q) use ($search) {
+                    $q->where('nama_usaha', 'like', '%' . $search . '%')
+                      ->orWhere('lokasi', 'like', '%' . $search . '%')
+                      ->orWhere('email', 'like', '%' . $search . '%');
+                });
+            })
+            ->has('images')
+            ->latest()
+            ->paginate(6);
+
         return Inertia::render('Index', [
             'products' => $products,
+            'filters' => [
+                'search' => $search
+            ],
             'canLogin' => true,
             'canRegister' => true,
             'laravelVersion' => '1',
@@ -156,13 +168,5 @@ class ProductController extends Controller
         $image->delete();
 
         return back()->with('message', 'Image deleted successfully');
-    }
-
-    public function showPublic(Product $product)
-    {
-        $product->load('images');
-        return Inertia::render('ProductDetail', [
-            'product' => $product
-        ]);
     }
 }

@@ -2,9 +2,10 @@ import React, { useState, useEffect } from "react";
 import { Head, Link, useForm, router } from "@inertiajs/react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import Sidebar from "@/Components/Sidebar";
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
 
 export default function Edit({ auth, product }) {
-
     const queryString = window.location.search;
 
     // Buat objek URLSearchParams dari query string
@@ -12,7 +13,6 @@ export default function Edit({ auth, product }) {
 
     // Ambil nilai parameter 'page'
     const page = urlParams.get("page");
-
 
     const {
         data,
@@ -34,33 +34,10 @@ export default function Edit({ auth, product }) {
 
     const [imagePreviewUrls, setImagePreviewUrls] = useState([]);
     const [existingImages, setExistingImages] = useState(product.images || []);
-    const [isInitialLoading, setIsInitialLoading] = useState(true);
     const [isUploading, setIsUploading] = useState(false);
 
-    useEffect(() => {
-        if (product.images.length > 0) {
-            const imageUrls = `/storage/products/${product.images}`;
-            const images = new Image();
-            images.src = imageUrls;
-
-            images.onload = () => {
-                // Show loading animation for at least 1 second
-                setTimeout(() => {
-                    setImagePreviewUrls(imageUrls);
-                    setIsInitialLoading(false);
-                }, 1000);
-            };
-
-            images.onerror = () => {
-                setIsInitialLoading(false);
-            };
-        } else {
-            setIsInitialLoading(false);
-        }
-    }, [product.images]);
-
     const handleSubmit = (e) => {
-        console.log('LEWAT 1', product)
+        console.log("LEWAT 1", product);
         e.preventDefault();
         const formData = new FormData();
         if (data.images.length > 0) {
@@ -83,44 +60,46 @@ export default function Edit({ auth, product }) {
         // Get the current images and add new ones
         const currentImages = [...data.images];
         currentImages.push(...files);
-        setData('images', currentImages);
+        setData("images", currentImages);
 
         // Update the preview URLs
         const newPreviewUrls = [...imagePreviewUrls];
         let loadedCount = 0;
 
-        files.forEach(file => {
+        files.forEach((file) => {
             const reader = new FileReader();
-            
+
             reader.onloadend = () => {
                 newPreviewUrls.push(reader.result);
                 loadedCount++;
-                
+
                 // When all images are loaded, update the preview state
                 if (loadedCount === files.length) {
                     setImagePreviewUrls(newPreviewUrls);
                     setIsUploading(false);
                 }
             };
-            
+
             reader.onerror = () => {
-                console.error('Error reading file:', file.name);
+                console.error("Error reading file:", file.name);
                 loadedCount++;
-                
+
                 if (loadedCount === files.length) {
                     setIsUploading(false);
                 }
             };
-            
+
             reader.readAsDataURL(file);
         });
     };
 
     const removeExistingImage = (id) => {
-        if (confirm('Are you sure you want to delete this image?')) {
-            router.delete(route('product-images.delete', id), {
+        if (confirm("Are you sure you want to delete this image?")) {
+            router.delete(route("product-images.delete", id), {
                 onSuccess: () => {
-                    setExistingImages(existingImages.filter(img => img.id !== id));
+                    setExistingImages(
+                        existingImages.filter((img) => img.id !== id)
+                    );
                 },
                 preserveScroll: true,
             });
@@ -128,7 +107,7 @@ export default function Edit({ auth, product }) {
     };
 
     const removeTempImage = (index) => {
-        if (confirm('Are you sure you want to remove this image? ' + index)) {
+        if (confirm("Are you sure you want to remove this image? " + index)) {
             // Get the current images array
             const currentImages = [...data.images];
 
@@ -136,7 +115,7 @@ export default function Edit({ auth, product }) {
             currentImages.splice(index, 1);
 
             // Update the form data
-            setData('images', currentImages);
+            setData("images", currentImages);
 
             // Update the preview URLs
             const newPreviewUrls = [...imagePreviewUrls];
@@ -144,6 +123,27 @@ export default function Edit({ auth, product }) {
             setImagePreviewUrls(newPreviewUrls);
         }
     };
+
+    const handleDescriptionChange = (value) => {
+        setData('description', value);
+    };
+
+    const modules = {
+        toolbar: [
+            [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+            ['bold', 'italic', 'underline', 'strike'],
+            [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+            ['link'],
+            ['clean']
+        ],
+    };
+
+    const formats = [
+        'header',
+        'bold', 'italic', 'underline', 'strike',
+        'list', 'bullet',
+        'link'
+    ];
 
     return (
         <>
@@ -198,7 +198,7 @@ export default function Edit({ auth, product }) {
                                     {
                                         label: "Description",
                                         name: "description",
-                                        type: "textarea",
+                                        type: "richtext",
                                         placeholder: "Masukkan deskripsi (opsional)",
                                     },
                                 ].map((field) => (
@@ -206,23 +206,20 @@ export default function Edit({ auth, product }) {
                                         <label className="block text-sm font-medium text-gray-700 mb-2">
                                             {field.label}
                                         </label>
-                                        {field.type === 'textarea' ? (<textarea
-                                            type={'textarea'}
-                                            name={field.name}
-                                            rows="5"
-                                            placeholder={field.placeholder}
-                                            value={data[field.name]}
-                                            onChange={(e) =>
-                                                setData(
-                                                    field.name,
-                                                    e.target.value
-                                                )
-                                            }
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#5b9cff] transition duration-300"
-                                            required
-                                        />)
-
-                                            : (<input
+                                        {field.type === "richtext" ? (
+                                            <div className="mt-1">
+                                                <ReactQuill
+                                                    theme="snow"
+                                                    value={data.description}
+                                                    onChange={handleDescriptionChange}
+                                                    modules={modules}
+                                                    formats={formats}
+                                                    className="h-64 mb-16"
+                                                    placeholder="Masukkan deskripsi usaha..."
+                                                />
+                                            </div>
+                                        ) : (
+                                            <input
                                                 type={field.type}
                                                 name={field.name}
                                                 placeholder={field.placeholder}
@@ -235,8 +232,8 @@ export default function Edit({ auth, product }) {
                                                 }
                                                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#5b9cff] transition duration-300"
                                                 required
-                                            />)
-                                        }
+                                            />
+                                        )}
                                         {errors[field.name] && (
                                             <p className="mt-1 text-sm text-red-600">
                                                 {errors[field.name]}
@@ -264,60 +261,95 @@ export default function Edit({ auth, product }) {
                                         </p>
                                     )}
 
-
-
                                     {/* Display existing images */}
                                     <div className="mt-4">
-                                        <h4 className="font-medium text-gray-700 mb-2">Gambar Saat Ini:</h4>
+                                        <h4 className="font-medium text-gray-700 mb-2">
+                                            Gambar Saat Ini:
+                                        </h4>
                                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                            {existingImages.length > 0 && existingImages.map((image) => (
-                                                <div key={image.id} className="relative">
-                                                    <img
-                                                        src={`/storage/${image.image_path}`}
-                                                        alt="Product"
-                                                        className="aspect-[16/9] object-cover rounded"
-                                                    />
-                                                    <button
-                                                        type="button"
-                                                        className="absolute top-2 right-2 w-6 h-6 bg-red-600 text-white rounded-sm flex items-center justify-center hover:bg-red-700 transition-colors duration-200"
-                                                        onClick={() => removeExistingImage(image.id)}
+                                            {existingImages.length > 0 &&
+                                                existingImages.map((image) => (
+                                                    <div
+                                                        key={image.id}
+                                                        className="relative"
                                                     >
-                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                                        </svg>
-                                                    </button>
-                                                </div>
-                                            ))}
+                                                        <img
+                                                            src={`/storage/${image.image_path}`}
+                                                            alt="Product"
+                                                            className="aspect-[16/9] object-cover rounded"
+                                                        />
+                                                        <button
+                                                            type="button"
+                                                            className="absolute top-2 right-2 w-6 h-6 bg-red-600 text-white rounded-sm flex items-center justify-center hover:bg-red-700 transition-colors duration-200"
+                                                            onClick={() =>
+                                                                removeExistingImage(
+                                                                    image.id
+                                                                )
+                                                            }
+                                                        >
+                                                            <svg
+                                                                className="w-4 h-4"
+                                                                fill="none"
+                                                                stroke="currentColor"
+                                                                viewBox="0 0 24 24"
+                                                            >
+                                                                <path
+                                                                    strokeLinecap="round"
+                                                                    strokeLinejoin="round"
+                                                                    strokeWidth={
+                                                                        2
+                                                                    }
+                                                                    d="M6 18L18 6M6 6l12 12"
+                                                                />
+                                                            </svg>
+                                                        </button>
+                                                    </div>
+                                                ))}
 
-                                            {imagePreviewUrls.length > 0 && imagePreviewUrls.map((url, index) => (
-                                                <div key={`new-${index}`} className="relative">
-                                                    <img
-                                                        src={url}
-                                                        alt={`New upload ${index + 1}`}
-                                                        className="aspect-[16/9] object-cover rounded border-4 border-blue-200"
-                                                    />
-                                                    <button
-                                                        type="button"
-                                                        className="absolute top-2 right-2 w-6 h-6 bg-red-600 text-white rounded-sm flex items-center justify-center hover:bg-red-700 transition-colors duration-200"
-                                                        onClick={() => removeTempImage(index)}
-                                                    >
-                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                                        </svg>
-                                                    </button>
-                                                </div>
-                                            )
-                                            )}
+                                            {imagePreviewUrls.length > 0 &&
+                                                imagePreviewUrls.map(
+                                                    (url, index) => (
+                                                        <div
+                                                            key={`new-${index}`}
+                                                            className="relative"
+                                                        >
+                                                            <img
+                                                                src={url}
+                                                                alt={`New upload ${
+                                                                    index + 1
+                                                                }`}
+                                                                className="aspect-[16/9] object-cover rounded border-4 border-blue-200"
+                                                            />
+                                                            <button
+                                                                type="button"
+                                                                className="absolute top-2 right-2 w-6 h-6 bg-red-600 text-white rounded-sm flex items-center justify-center hover:bg-red-700 transition-colors duration-200"
+                                                                onClick={() =>
+                                                                    removeTempImage(
+                                                                        index
+                                                                    )
+                                                                }
+                                                            >
+                                                                <svg
+                                                                    className="w-4 h-4"
+                                                                    fill="none"
+                                                                    stroke="currentColor"
+                                                                    viewBox="0 0 24 24"
+                                                                >
+                                                                    <path
+                                                                        strokeLinecap="round"
+                                                                        strokeLinejoin="round"
+                                                                        strokeWidth={
+                                                                            2
+                                                                        }
+                                                                        d="M6 18L18 6M6 6l12 12"
+                                                                    />
+                                                                </svg>
+                                                            </button>
+                                                        </div>
+                                                    )
+                                                )}
                                         </div>
                                     </div>
-
-                                    {/* Loading indicator */}
-                                    {isUploading && (
-                                        <div className="mt-4 flex items-center">
-                                            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600 mr-2"></div>
-                                            <span className="text-sm text-gray-500">Memproses gambar...</span>
-                                        </div>
-                                    )}
                                 </div>
 
                                 <div className="flex justify-end space-x-3 pt-4">

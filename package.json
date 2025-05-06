@@ -21,6 +21,7 @@
         "vite": "^6.0.11"
     },
     "dependencies": {
-        "@inertiajs/inertia": "^0.11.1"
+        "@inertiajs/inertia": "^0.11.1",
+        "react-quill": "^2.0.0"
     }
 }

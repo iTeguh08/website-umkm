@@ -6,18 +6,18 @@ import Search from '@/Components/Search';
 import BusinessShowcase from '@/Components/BusinessShowcase';
 
 const Index = () => {
-    const { products} = usePage().props; // Get products from page props
     // const [searchQuery, setSearchQuery] = useState(filters?.search || "");
     // const [showPreview, setShowPreview] = useState(false);
     // const [previewImage, setPreviewImage] = useState(null);
     // const [isAnimating, setIsAnimating] = useState(false);
-    console.log('lewat 1', products)
+    const { products = [], filters = {} } = usePage().props;
+
     return (
         <div>
             <Header />
             <Hero />
-            <Search />
-            <BusinessShowcase products={products}/>
+            <Search filters={filters} />
+            <BusinessShowcase products={products.data || products} />
         </div>
     );
 };

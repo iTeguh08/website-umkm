@@ -1,13 +1,43 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from "react";
+import { useForm, router, usePage, Link } from "@inertiajs/react";
 
 const Search = () => {
-    const [searchTerm, setSearchTerm] = useState('');
-    const [businessType, setBusinessType] = useState('');
-    const [businessField, setBusinessField] = useState('');
+    const [businessType, setBusinessType] = useState("");
+    const [businessField, setBusinessField] = useState("");
+    const { filters } = usePage().props;
+    const [searchQuery, setSearchQuery] = useState(filters?.search || "");
 
-    const handleSearch = () => {
-        // Handle search logic here
-    };
+    // Debounce search
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            if (searchQuery !== filters?.search) {
+                router.get(
+                    route("homepage"),
+                    { search: searchQuery },
+                    {
+                        preserveState: true,
+                        preserveScroll: true,
+                        replace: true
+                    }
+                );
+            }
+        }, 500); // 500ms delay
+
+        return () => clearTimeout(timer);
+    }, [searchQuery]);
+
+    const handleSearch = (e) => {
+            setSearchQuery(e.target.value);
+            router.get(
+                route("homepage"),
+                { search: e.target.value },
+                {
+                    preserveState: true,
+                    preserveScroll: true,
+                    only: ["products", "filters"],
+                }
+            );
+        };
 
     return (
         <section className="py-8 text-center">
@@ -16,14 +46,13 @@ const Search = () => {
                     <input
                         type="text"
                         placeholder="Cari jenis usaha..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
+                        value={searchQuery}
+                        onChange={handleSearch}
                         className="w-full px-6 py-5 rounded-[30px] border border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 pr-[400px] text-lg placeholder:text-gray-500"
                     />
                     <div className="absolute right-0 flex items-center space-x-4 mr-6">
                         <div className="relative">
                             <select
-                                value={businessType}
                                 onChange={(e) => setBusinessType(e.target.value)}
                                 className="appearance-none p-2 pr-8 border-0 bg-transparent focus:outline-none focus:ring-0 text-gray-500 text-lg font-light"
                             >
