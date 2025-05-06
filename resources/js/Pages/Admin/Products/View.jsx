@@ -92,12 +92,10 @@ export default function View({ product }) {
                                     <h3 className="text-lg font-semibold text-gray-700 mb-4">
                                         Description
                                     </h3>
-                                    <div className="prose max-w-none">
-                                        <p className="text-gray-700">
-                                            {product?.description ||
-                                                "No description provided"}
-                                        </p>
-                                    </div>
+                                    <div 
+                                        className="prose max-w-none"
+                                        dangerouslySetInnerHTML={{ __html: product?.description || "No description provided" }}
+                                    />
                                 </div>
 
                                 <div className="mt-8 flex justify-end">

@@ -169,4 +169,11 @@ class ProductController extends Controller
 
         return back()->with('message', 'Image deleted successfully');
     }
+    public function showPublic(Product $product)
+    {
+        $product->load('images');
+        return Inertia::render('ProductDetail', [
+            'product' => $product
+        ]);
+    }
 }

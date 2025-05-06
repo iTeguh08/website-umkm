@@ -48,9 +48,12 @@ const ProductDetail = () => {
                         {/* Right column - Business details */}
                         <div>
                             <h1 className="text-3xl font-bold mb-4">{product.nama_usaha}</h1>
-                            <p className="text-gray-700 mb-6">
-                                {product.description || "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore"}
-                            </p>
+                            <div 
+                                className="prose max-w-none text-gray-700 mb-6"
+                                dangerouslySetInnerHTML={{ 
+                                    __html: product.description || "<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore</p>"
+                                }}
+                            />
                             
                             <div className="mb-4">
                                 <p className="text-gray-700">Buka operasional senin-jumat (08:00-17:00)</p>
