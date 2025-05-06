@@ -32,7 +32,10 @@ const BusinessShowcase = ({ products }) => {
                                 <Link href={route('product.detail', product.id)} className="hover:text-blue-600">
                                     <h3 className="text-lg font-semibold">{product.nama_usaha}</h3>
                                 </Link>
-                                <p className="text-gray-600">{product.description}</p>
+                                <div 
+                                    className="text-gray-600 line-clamp-1"
+                                    dangerouslySetInnerHTML={{ __html: product.description || '' }}
+                                />
                                 <div className="flex space-x-2 mt-2">
                                     <Link 
                                         href={route('product.detail', product.id)} 
