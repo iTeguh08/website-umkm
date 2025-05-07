@@ -1,5 +1,5 @@
 import { useForm, Link } from "@inertiajs/react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Sidebar from "@/Components/Sidebar";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import ReactQuill from 'react-quill';
@@ -23,6 +23,7 @@ export default function Create() {
     });
 
     const [imagePreviewUrls, setImagePreviewUrls] = useState([]);
+    const [loadingStates, setLoadingStates] = useState([]); // Array untuk menyimpan status loading per gambar
     const [isUploading, setIsUploading] = useState(false);
 
     const handleDescriptionChange = (value) => {
@@ -60,48 +61,67 @@ export default function Create() {
     };
 
     const handleImageChange = (e) => {
-        const files = e.target.files;
-        setData("images", [...data.images, ...files]);
+        const files = Array.from(e.target.files);
+        if (files.length === 0) return;
 
-        if (files && files.length > 0) {
-            // First hide the current image and show loading
-            setImagePreviewUrls([]);
-            setIsUploading(true);
+        setIsUploading(true);
 
-            // Process each file
-            const newImagePreviewUrls = imagePreviewUrls;
+        // Get the current images and add new ones
+        const currentImages = [...data.images];
+        const newImages = [...currentImages, ...files];
+        setData("images", newImages);
 
-            Array.from(files).forEach((file, index) => {
-                const reader = new FileReader();
+        // Create loading states for new images
+        const newLoadingStates = [...loadingStates];
+        for (let i = 0; i < files.length; i++) {
+            newLoadingStates.push(true); // Set loading state to true for each new image
+        }
+        setLoadingStates(newLoadingStates);
 
-                reader.onload = (e) => {
-                    newImagePreviewUrls.push(e.target.result);
+        // Update the preview URLs
+        const newPreviewUrls = [...imagePreviewUrls];
+        let loadedCount = 0;
 
-                    // Update the state after all images are loaded
-                    if (index === files.length - 1) {
-                        setImagePreviewUrls(newImagePreviewUrls);
+        files.forEach((file, index) => {
+            const reader = new FileReader();
+
+            reader.onloadend = () => {
+                // Tambahkan artificial delay untuk menunjukkan loading state
+                setTimeout(() => {
+                    newPreviewUrls.push(reader.result);
+                    
+                    // Update the loading state for this specific image
+                    const updatedLoadingStates = [...loadingStates];
+                    // Mencari index yang sesuai berdasarkan jumlah gambar yang ada
+                    const currentIndex = currentImages.length + index;
+                    updatedLoadingStates[currentIndex] = false;
+                    setLoadingStates(updatedLoadingStates);
+                    
+                    loadedCount++;
+
+                    // When all images are loaded, update the preview state
+                    if (loadedCount === files.length) {
+                        setImagePreviewUrls(newPreviewUrls);
                         setIsUploading(false);
                     }
-                };
-
-                reader.onerror = () => {
-                    console.error("Error reading file:", file.name);
-                    setIsUploading(false);
-                };
-
-                reader.readAsDataURL(file);
-            });
-        } else {
-            setImagePreviewUrls([]);
-            setIsUploading(false);
-        }
-
-        files.forEach((file) => {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                newImagePreviewUrls.push(reader.result);
-                setImagePreviewUrls([...newImagePreviewUrls]);
+                }, 100 + (index * 50)); // Tambahkan delay bertahap untuk setiap gambar
             };
+
+            reader.onerror = () => {
+                console.error("Error reading file:", file.name);
+                
+                // Update the loading state for this specific image
+                const updatedLoadingStates = [...loadingStates];
+                const currentIndex = currentImages.length + index;
+                updatedLoadingStates[currentIndex] = false;
+                setLoadingStates(updatedLoadingStates);
+                
+                loadedCount++;
+                if (loadedCount === files.length) {
+                    setIsUploading(false);
+                }
+            };
+
             reader.readAsDataURL(file);
         });
     };
@@ -121,16 +141,51 @@ export default function Create() {
             const newPreviewUrls = [...imagePreviewUrls];
             newPreviewUrls.splice(index, 1);
             setImagePreviewUrls(newPreviewUrls);
+
+            // Update loading states
+            const newLoadingStates = [...loadingStates];
+            newLoadingStates.splice(index, 1);
+            setLoadingStates(newLoadingStates);
         }
     };
 
+    // Gunakan useEffect untuk inisialisasi loading states sesuai dengan preview yang ada
+    useEffect(() => {
+        if (imagePreviewUrls.length > 0 && loadingStates.length === 0) {
+            // Jika ada preview gambar tapi tidak ada loading states, inisialisasi dengan false
+            setLoadingStates(new Array(imagePreviewUrls.length).fill(false));
+        }
+    }, []);
+
     const queryString = window.location.search;
-
-    // Buat objek URLSearchParams dari query string
     const urlParams = new URLSearchParams(queryString);
-
-    // Ambil nilai parameter 'page'
     const page = urlParams.get("page");
+
+    // Menghitung jumlah placeholder yang perlu ditampilkan
+    const calculatePlaceholdersCount = () => {
+        const totalImages = data.images.length;
+        const loadedImages = imagePreviewUrls.length;
+        const placeholdersNeeded = Math.max(0, totalImages - loadedImages);
+        return placeholdersNeeded;
+    };
+
+    // Menghasilkan array placeholder berdasarkan jumlah yang dibutuhkan
+    const generatePlaceholders = () => {
+        const count = calculatePlaceholdersCount();
+        return Array(count).fill(null);
+    };
+
+    // Placeholder untuk gambar yang sedang diupload
+    const renderLoadingPlaceholders = () => {
+        const placeholders = generatePlaceholders();
+        return placeholders.map((_, index) => (
+            <div key={`placeholder-${index}`} className="aspect-[16/9] overflow-hidden rounded-sm">
+                <div className="flex items-center justify-center h-full bg-gray-100">
+                    <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-green-600"></div>
+                </div>
+            </div>
+        ));
+    };
 
     return (
         <>
@@ -231,76 +286,73 @@ export default function Create() {
                                     <label className="block text-sm font-medium text-gray-700 mb-2">
                                         Gambar
                                     </label>
-                                    <input
-                                        id="images"
-                                        type="file"
-                                        name="images"
-                                        multiple
-                                        className="block w-full text-sm text-gray-500 file:mr-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-green-100 file:text-green-500 hover:file:bg-green-100"
-                                        onChange={handleImageChange}
-                                    />
+                                    <div className="relative">
+                                        <div className="relative inline-block min-w-[120px]">
+                                            <div className="inline-flex items-center justify-center px-4 py-1 bg-green-100 text-green-600 text-sm font-medium rounded-full hover:bg-green-200 transition-colors duration-200 shadow-sm border border-green-200">
+                                                <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                                </svg>
+                                                Tambahkan Image
+                                            </div>
+                                            <input
+                                                id="images"
+                                                type="file"
+                                                name="images"
+                                                multiple
+                                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                                onChange={handleImageChange}
+                                            />
+                                        </div>
+                                        {data.images.length > 0 && (
+                                            <span className="ml-3 px-3 py-1.5 bg-gray-100 text-gray-600 text-sm rounded-full inline-flex items-center">
+                                                <svg className="w-4 h-4 mr-1.5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                </svg>
+                                                {data.images.length} file{data.images.length > 1 ? 's' : ''} ditambahkan
+                                            </span>
+                                        )}
+                                    </div>
                                     {errors.image && (
                                         <p className="mt-1 text-sm text-red-600">
                                             {errors.image}
                                         </p>
                                     )}
 
-                                    {/* Preview multiple images */}
-                                    {imagePreviewUrls.length > 0 ? (
-                                        <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4">
-                                            {imagePreviewUrls.map(
-                                                (url, index) => (
-                                                    <div
-                                                        key={index}
-                                                        className="relative"
+                                    {/* Preview images dan placeholders */}
+                                    <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4">
+                                        {/* Render existing image previews */}
+                                        {imagePreviewUrls.map((url, index) => (
+                                            <div key={index} className="relative">
+                                                <img
+                                                    src={url}
+                                                    alt={`Preview ${index + 1}`}
+                                                    className="aspect-[16/9] object-cover rounded"
+                                                />
+                                                <button
+                                                    type="button"
+                                                    className="absolute top-2 right-2 w-6 h-6 bg-red-600 text-white rounded-sm flex items-center justify-center hover:bg-red-600 transition-colors duration-200"
+                                                    onClick={() => removeTempImage(index)}
+                                                >
+                                                    <svg
+                                                        className="w-4 h-4"
+                                                        fill="none"
+                                                        stroke="currentColor"
+                                                        viewBox="0 0 24 24"
                                                     >
-                                                        <img
-                                                            src={url}
-                                                            alt={`Preview ${
-                                                                index + 1
-                                                            }`}
-                                                            className="aspect-[16/9] object-cover rounded"
+                                                        <path
+                                                            strokeLinecap="round"
+                                                            strokeLinejoin="round"
+                                                            strokeWidth={2}
+                                                            d="M6 18L18 6M6 6l12 12"
                                                         />
-                                                        <button
-                                                            type="button"
-                                                            className="absolute top-2 right-2 w-6 h-6 bg-red-600 text-white rounded-sm flex items-center justify-center hover:bg-red-600 transition-colors duration-200"
-                                                            onClick={() =>
-                                                                removeTempImage(
-                                                                    index
-                                                                )
-                                                            }
-                                                        >
-                                                            <svg
-                                                                className="w-4 h-4"
-                                                                fill="none"
-                                                                stroke="currentColor"
-                                                                viewBox="0 0 24 24"
-                                                            >
-                                                                <path
-                                                                    strokeLinecap="round"
-                                                                    strokeLinejoin="round"
-                                                                    strokeWidth={
-                                                                        2
-                                                                    }
-                                                                    d="M6 18L18 6M6 6l12 12"
-                                                                />
-                                                            </svg>
-                                                        </button>
-                                                    </div>
-                                                )
-                                            )}
-                                        </div>
-                                    ) : (
-                                        <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4">
-                                            <div className="aspect-[16/9] overflow-hidden rounded-lg">
-                                                {isUploading && (
-                                                    <div className="flex items-center justify-center h-full bg-gray-100">
-                                                        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-green-600"></div>
-                                                    </div>
-                                                )}
+                                                    </svg>
+                                                </button>
                                             </div>
-                                        </div>
-                                    )}
+                                        ))}
+                                        
+                                        {/* Render loading placeholders for images being uploaded */}
+                                        {isUploading && renderLoadingPlaceholders()}
+                                    </div>
                                 </div>
 
                                 <div className="flex justify-end space-x-3 pt-4">

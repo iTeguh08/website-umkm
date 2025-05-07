@@ -93,6 +93,7 @@ class ProductController extends Controller
                 ]);
             }
         }
+        // dd($request->all());
         return redirect()->route('products.index', ['page' => $request->page ?? 1])
             ->with('message', 'Product created successfully.');
     }

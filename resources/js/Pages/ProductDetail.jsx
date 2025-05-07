@@ -1,12 +1,75 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link, usePage } from "@inertiajs/react";
 import Header from '@/Components/Header';
+import Slider from "react-slick";
+import "slick-carousel/slick/slick.css";
+import "slick-carousel/slick/slick-theme.css";
+
+// Custom CSS for carousel arrows
+const carouselStyles = `
+    .slick-arrow {
+        width: 40px;
+        height: 40px;
+        z-index: 20;
+        border-radius: 50%;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        opacity: 0.7;
+        background: rgba(0, 0, 0, 0.4);
+    }
+    .slick-arrow:hover {
+        background: rgba(0, 0, 0, 0.7);
+        transform: scale(1.1);
+        opacity: 1;
+    }
+    .slick-prev {
+        left: 10px;
+    }
+    .slick-next {
+        right: 10px;
+    }
+    .slick-arrow:before {
+        display: none;
+    }
+`;
 
 const ProductDetail = () => {
     const { product } = usePage().props;
+    const [currentSlide, setCurrentSlide] = useState(0);
+
+    const settings = {
+        dots: true,
+        infinite: true,
+        speed: 500,
+        slidesToShow: 1,
+        slidesToScroll: 1,
+        beforeChange: (current, next) => setCurrentSlide(next),
+        prevArrow: (
+            <button className="slick-arrow">
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+            </button>
+        ),
+        nextArrow: (
+            <button className="slick-arrow">
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+            </button>
+        ),
+        customPaging: (i) => (
+            <div className={`w-2 h-2 mx-1 rounded-full transition-all ${i === currentSlide ? 'bg-gray-800 w-4' : 'bg-gray-400'}`}></div>
+        ),
+        appendDots: dots => (
+            <div className="">
+                <ul className="flex justify-center align-center">{dots}</ul>
+            </div>
+        )
+    };
 
     return (
         <div>
+            <style>{carouselStyles}</style>
             <Header />
             
             <div className="max-w-7xl mx-auto px-4 py-4">
@@ -21,26 +84,45 @@ const ProductDetail = () => {
                 </Link>
             
                 <div className="py-4">
-                    <div className="flex flex-col justify-center md:flex-row gap-8">
-                        {/* Navigation tabs */}
-                        <div className="flex mb-6 border-b">
-                            <Link href="#" className="px-4 py-2 font-medium">Perusahaan</Link>
-                            <Link href="#" className="px-4 py-2 font-medium">Produk</Link>
-                        </div>
-                    </div>
-                    
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        {/* Left column - Image */}
-                        <div>
+                        {/* Left column - Image Carousel */}
+                        <div className="relative">
                             {product.images && product.images.length > 0 ? (
-                                <img 
-                                    src={`/storage/${product.images[0].image_path}`} 
-                                    alt={product.nama_usaha} 
-                                    className="w-full h-auto rounded-lg object-cover"
-                                />
+                                <Slider {...settings}>
+                                    {product.images.map((image, index) => (
+                                        <div key={index} className="outline-none mb-1">
+                                            <img 
+                                                src={`/storage/${image.image_path}`} 
+                                                alt={`${product.nama_usaha} - ${index + 1}`}
+                                                className="w-full h-96 object-cover rounded-lg"
+                                            />
+                                        </div>
+                                    ))}
+                                </Slider>
                             ) : (
                                 <div className="w-full h-80 bg-gray-200 rounded-lg flex items-center justify-center">
-                                    <span className="text-gray-500">No image available</span>
+                                    <span className="text-gray-500">Tidak ada gambar tersedia</span>
+                                </div>
+                            )}
+                            
+                            {/* Thumbnail Navigation */}
+                            {product.images && product.images.length > 1 && (
+                                <div className="flex mt-8 space-x-2 overflow-x-auto pb-2">
+                                    {product.images.map((image, index) => (
+                                        <button
+                                            key={index}
+                                            onClick={() => setCurrentSlide(index)}
+                                            className={`flex-shrink-0 w-16 h-16 rounded-md overflow-hidden ${
+                                                index === currentSlide ? 'ring-2 ring-blue-500' : 'opacity-70 hover:opacity-100'
+                                            }`}
+                                        >
+                                            <img
+                                                src={`/storage/${image.image_path}`}
+                                                alt={`Thumbnail ${index + 1}`}
+                                                className="w-full h-full object-cover"
+                                            />
+                                        </button>
+                                    ))}
                                 </div>
                             )}
                         </div>
@@ -77,16 +159,16 @@ const ProductDetail = () => {
                                 
                                 <div className="flex items-center">
                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                                     </svg>
-                                    <span>www.website.com</span>
+                                    <span>{product.telephone}</span>
                                 </div>
                                 
                                 <div className="flex items-center">
                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
                                     </svg>
-                                    <span>{product.telephone}</span>
+                                    <span>www.website.com</span>
                                 </div>
                                 
                                 <div className="flex items-center">
