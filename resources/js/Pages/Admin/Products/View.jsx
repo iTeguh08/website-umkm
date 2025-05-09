@@ -10,14 +10,14 @@ import "slick-carousel/slick/slick-theme.css";
 const carouselStyles = `
     .slick-arrow {
         width: 4%;
-        height: 6.5%;
+        height: 7%;
         z-index: 20;
         border-radius: 50%;
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         opacity: 0.7;
     }
     .slick-arrow:hover {
-        background: rgba(0, 0, 0, 0.7);
+        background: rgba(0, 0, 0, 0.5);
         opacity: 1;
     }
     .slick-arrow:before {
@@ -163,6 +163,18 @@ export default function View({ product }) {
                                         {
                                             label: "Telephone",
                                             value: product?.telephone || "N/A",
+                                        },
+                                        {
+                                            label: "Bidang Usaha",
+                                            value: product?.bidang_usaha
+                                                ? product.bidang_usaha.charAt(0).toUpperCase() + product.bidang_usaha.slice(1)
+                                                : "N/A",
+                                        },
+                                        {
+                                            label: "Jenis Usaha",
+                                            value: product?.jenis_usaha
+                                                ? product.jenis_usaha.charAt(0).toUpperCase() + product.jenis_usaha.slice(1)
+                                                : "N/A",
                                         },
                                     ].map((detail, index) => (
                                         <div

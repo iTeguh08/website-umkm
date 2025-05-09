@@ -35,6 +35,8 @@ class ProductController extends Controller
     public function homeProduct(Request $request)
     {
         $search = $request->query('search');
+        $jenisUsaha = $request->query('jenis_usaha');
+        $bidangUsaha = $request->query('bidang_usaha');
         
         $products = Product::with('images')
             ->when($search, function ($query) use ($search) {
@@ -44,6 +46,12 @@ class ProductController extends Controller
                       ->orWhere('email', 'like', '%' . $search . '%');
                 });
             })
+            ->when($jenisUsaha, function ($query) use ($jenisUsaha) {
+                return $query->where('jenis_usaha', $jenisUsaha);
+            })
+            ->when($bidangUsaha, function ($query) use ($bidangUsaha) {
+                return $query->where('bidang_usaha', $bidangUsaha);
+            })
             ->has('images')
             ->latest()
             ->paginate(6);
@@ -51,7 +59,9 @@ class ProductController extends Controller
         return Inertia::render('Index', [
             'products' => $products,
             'filters' => [
-                'search' => $search
+                'search' => $search,
+                'jenis_usaha' => $jenisUsaha,
+                'bidang_usaha' => $bidangUsaha
             ],
             'canLogin' => true,
             'canRegister' => true,

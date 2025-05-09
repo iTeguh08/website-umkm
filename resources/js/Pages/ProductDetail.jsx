@@ -1,40 +1,62 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { Link, usePage } from "@inertiajs/react";
 import Header from '@/Components/Header';
 import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 
-// Custom CSS for carousel arrows
 const carouselStyles = `
     .slick-arrow {
-        width: 40px;
-        height: 40px;
+        width: 7%;
+        height: 11%;
         z-index: 20;
         border-radius: 50%;
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         opacity: 0.7;
-        background: rgba(0, 0, 0, 0.4);
     }
     .slick-arrow:hover {
-        background: rgba(0, 0, 0, 0.7);
-        transform: scale(1.1);
+        background: rgba(0, 0, 0, 0.5);
         opacity: 1;
-    }
-    .slick-prev {
-        left: 10px;
-    }
-    .slick-next {
-        right: 10px;
     }
     .slick-arrow:before {
         display: none;
+    }
+    .slick-prev {
+        left: 25px;
+    }
+    .slick-next {
+        right: 25px;
+    }
+    .slick-arrow:after {
+        margin-left: 3px;
+        margin-right: 3px;
+        content: '';
+        width: 11px;
+        height: 11px;
+        border: 3px solid white;
+        border-width: 0 2px 2px 0;
+        display: inline-block;
+        transition: transform 0.2s ease;
+    }
+    .slick-prev:after {
+        transform: rotate(135deg);
+        margin-right: -1px;
+    }
+    .slick-next:after {
+        transform: rotate(-45deg);
+        margin-left: -1px;
     }
 `;
 
 const ProductDetail = () => {
     const { product } = usePage().props;
     const [currentSlide, setCurrentSlide] = useState(0);
+    const sliderRef = useRef(null);
+
+    const capitalizeFirstLetter = (str) => {
+        if (!str) return '';
+        return str.charAt(0).toUpperCase() + str.slice(1);
+    };
 
     const settings = {
         dots: true,
@@ -43,18 +65,15 @@ const ProductDetail = () => {
         slidesToShow: 1,
         slidesToScroll: 1,
         beforeChange: (current, next) => setCurrentSlide(next),
+        afterChange: (current) => setCurrentSlide(current),
         prevArrow: (
-            <button className="slick-arrow">
-                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
+            <button className="absolute left-2 top-1/2 z-10 bg-gray-800/80 hover:bg-gray-700 text-white rounded-full w-10 h-10 flex items-center justify-center shadow-lg transition-all duration-300">
+                &#10094;
             </button>
         ),
         nextArrow: (
-            <button className="slick-arrow">
-                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
+            <button className="absolute right-2 top-1/2 z-10 bg-gray-800/80 hover:bg-gray-700 text-white rounded-full w-10 h-10 flex items-center justify-center shadow-lg transition-all duration-300">
+                &#10095;
             </button>
         ),
         customPaging: (i) => (
@@ -65,6 +84,14 @@ const ProductDetail = () => {
                 <ul className="flex justify-center align-center">{dots}</ul>
             </div>
         )
+    };
+
+    // Function to handle thumbnail click
+    const handleThumbnailClick = (index) => {
+        setCurrentSlide(index);
+        if (sliderRef.current) {
+            sliderRef.current.slickGoTo(index);
+        }
     };
 
     return (
@@ -88,7 +115,7 @@ const ProductDetail = () => {
                         {/* Left column - Image Carousel */}
                         <div className="relative">
                             {product.images && product.images.length > 0 ? (
-                                <Slider {...settings}>
+                                <Slider ref={sliderRef} {...settings}>
                                     {product.images.map((image, index) => (
                                         <div key={index} className="outline-none mb-1">
                                             <img 
@@ -105,23 +132,26 @@ const ProductDetail = () => {
                                 </div>
                             )}
                             
-                            {/* Thumbnail Navigation */}
                             {product.images && product.images.length > 1 && (
-                                <div className="flex mt-8 space-x-2 overflow-x-auto pb-2">
+                                <div className="flex mt-8 space-x-3 overflow-x-auto pb-4 px-2 thumbnail-container">
                                     {product.images.map((image, index) => (
-                                        <button
+                                        <div 
                                             key={index}
-                                            onClick={() => setCurrentSlide(index)}
-                                            className={`flex-shrink-0 w-16 h-16 rounded-md overflow-hidden ${
-                                                index === currentSlide ? 'ring-2 ring-blue-500' : 'opacity-70 hover:opacity-100'
-                                            }`}
+                                            className={`thumbnail-button p-1 ${index === currentSlide ? 'active' : ''}`}
                                         >
-                                            <img
-                                                src={`/storage/${image.image_path}`}
-                                                alt={`Thumbnail ${index + 1}`}
-                                                className="w-full h-full object-cover"
-                                            />
-                                        </button>
+                                            <button
+                                                onClick={() => handleThumbnailClick(index)}
+                                                className={`flex-shrink-0 w-16 h-16 rounded-md overflow-hidden transition-all ${
+                                                    index === currentSlide ? 'opacity-100' : 'opacity-70 hover:opacity-100'
+                                                }`}
+                                            >
+                                                <img
+                                                    src={`/storage/${image.image_path}`}
+                                                    alt={`Thumbnail ${index + 1}`}
+                                                    className="w-full h-full object-cover"
+                                                />
+                                            </button>
+                                        </div>
                                     ))}
                                 </div>
                             )}
@@ -156,7 +186,7 @@ const ProductDetail = () => {
                                     </svg>
                                     <span>{product.email}</span>
                                 </div>
-                                
+
                                 <div className="flex items-center">
                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
@@ -181,8 +211,16 @@ const ProductDetail = () => {
                             
                             <div className="mt-8">
                                 <div className="flex flex-wrap gap-2">
-                                    <span className="px-3 py-1 bg-gray-200 rounded-full text-sm">Jasa</span>
-                                    <span className="px-3 py-1 bg-gray-200 rounded-full text-sm">Cargo</span>
+                                    {product.bidang_usaha && (
+                                        <span className="px-3 py-1 bg-gray-200 rounded-full text-sm">
+                                            {capitalizeFirstLetter(product.bidang_usaha)}
+                                        </span>
+                                    )}
+                                    {product.jenis_usaha && (
+                                        <span className="px-3 py-1 bg-gray-200 rounded-full text-sm">
+                                            {capitalizeFirstLetter(product.jenis_usaha)}
+                                        </span>
+                                    )}
                                 </div>
                                 
                                 <div className="flex items-center mt-4">

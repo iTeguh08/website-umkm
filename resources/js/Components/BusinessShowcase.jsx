@@ -2,44 +2,49 @@ import React from 'react';
 import { Link } from '@inertiajs/react';
 
 const BusinessShowcase = ({ products }) => {
-    // Ensure products is an array before mapping
     const productList = Array.isArray(products) ? products : [];
     
     if (productList.length === 0) {
         return (
-            <div className="text-center py-12">
-                <p className="text-gray-500">Tidak ada produk yang ditemukan</p>
+            <div className="text-center py-16">
+                <p className="text-gray-600 text-lg">Tidak ada produk yang ditemukan</p>
             </div>
         );
     }
 
     return (
-        <section className="py-12">
-            <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6">
+        <section className="py-16">
+            <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
                 {productList.map((product) => (
                     product && product.id && (
-                        <div key={product.id} className="rounded-lg overflow-hidden">
+                        <div 
+                            key={product.id} 
+                            className="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden"
+                        >
                             <Link href={route('product.detail', product.id)}>
                                 {product.images?.[0]?.image_path && (
                                     <img 
                                         src={`/storage/${product.images[0].image_path}`} 
                                         alt={product.nama_usaha} 
-                                        className="w-full aspect-video object-cover hover:opacity-90 transition-opacity"
+                                        className="aspect-[16/9] object-cover"
                                     />
                                 )}
                             </Link>
-                            <div className="pt-4">
-                                <Link href={route('product.detail', product.id)} className="hover:text-blue-600">
-                                    <h3 className="text-lg font-semibold">{product.nama_usaha}</h3>
+                            <div className="p-6">
+                                <Link 
+                                    href={route('product.detail', product.id)} 
+                                    className="block text-lg font-semibold text-gray-900 hover:text-blue-600 transition-colors"
+                                >
+                                    {product.nama_usaha}
                                 </Link>
                                 <div 
-                                    className="text-gray-600 line-clamp-1"
+                                    className="text-gray-600 mt-2 line-clamp-2"
                                     dangerouslySetInnerHTML={{ __html: product.description || '' }}
                                 />
-                                <div className="flex space-x-2 mt-2">
+                                <div className="mt-4">
                                     <Link 
                                         href={route('product.detail', product.id)} 
-                                        className="ml-auto text-blue-600 text-sm font-medium hover:underline"
+                                        className="text-blue-600 text-sm font-medium hover:underline hover:text-blue-700 transition-colors"
                                     >
                                         DETAIL
                                     </Link>

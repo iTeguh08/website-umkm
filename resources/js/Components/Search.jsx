@@ -1,34 +1,34 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useForm, router, usePage, Link } from "@inertiajs/react";
 
 const Search = () => {
     const { filters } = usePage().props;
     const [searchQuery, setSearchQuery] = useState(filters?.search || "");
+    const [jenisUsaha, setJenisUsaha] = useState(filters?.jenis_usaha || "");
+    const [bidangUsaha, setBidangUsaha] = useState(filters?.bidang_usaha || "");
 
-    // Debounce search
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            if (searchQuery !== filters?.search) {
-                router.get(
-                    route("homepage"),
-                    { search: searchQuery },
-                    {
-                        preserveState: true,
-                        preserveScroll: true,
-                        replace: true
-                    }
-                );
-            }
-        }, 500); // 500ms delay
+    const jenisUsahaOptions = [
+        { value: "mikro", label: "Mikro" },
+        { value: "kecil", label: "Kecil" },
+        { value: "menengah", label: "Menengah" }
+    ];
 
-        return () => clearTimeout(timer);
-    }, [searchQuery]);
+    const bidangUsahaOptions = [
+        { value: "kuliner", label: "Kuliner" },
+        { value: "fashion", label: "Fashion" },
+        { value: "jasa", label: "Jasa" },
+        { value: "pertanian", label: "Pertanian" },
+        { value: "kreatif", label: "Kreatif" }
+    ];
 
-    const handleSearch = (e) => {
-        e.preventDefault();
+    const handleSearch = () => {
         router.get(
             route("homepage"),
-            { search: searchQuery },
+            { 
+                search: searchQuery,
+                jenis_usaha: jenisUsaha,
+                bidang_usaha: bidangUsaha
+            },
             {
                 preserveState: true,
                 preserveScroll: true,
@@ -58,12 +58,16 @@ const Search = () => {
                         <div className="py-3 px-1">
                             <div className="flex items-center">
                                 <select
+                                    value={jenisUsaha}
+                                    onChange={(e) => setJenisUsaha(e.target.value)}
                                     className="focus:outline-none appearance-none bg-white text-gray-600 border-0"
                                 >
                                     <option value="">Jenis Usaha</option>
-                                    <option value="jakarta">Jakarta</option>
-                                    <option value="bandung">Bandung</option>
-                                    <option value="surabaya">Surabaya</option>
+                                    {jenisUsahaOptions.map((option) => (
+                                        <option key={option.value} value={option.value}>
+                                            {option.label}
+                                        </option>
+                                    ))}
                                 </select>
                             </div>
                         </div>
@@ -71,19 +75,23 @@ const Search = () => {
                         <div className="py-3 px-1">
                             <div className="flex items-center">
                                 <select
+                                    value={bidangUsaha}
+                                    onChange={(e) => setBidangUsaha(e.target.value)}
                                     className="focus:outline-none appearance-none bg-white text-gray-600 border-0"
                                 >
                                     <option value="">Bidang Usaha</option>
-                                    <option value="jakarta">Jakarta</option>
-                                    <option value="bandung">Bandung</option>
-                                    <option value="surabaya">Surabaya</option>
+                                    {bidangUsahaOptions.map((option) => (
+                                        <option key={option.value} value={option.value}>
+                                            {option.label}
+                                        </option>
+                                    ))}
                                 </select>
                             </div>
                         </div>
                         
                         <button
                             onClick={handleSearch}
-                            className="ml-2 p-3 mr-4"
+                            className="ml-2 p-3 mr-4 hover:bg-gray-100 rounded-full transition-colors"
                         >
                             <svg className="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -98,7 +106,10 @@ const Search = () => {
                         {['Percetakan', 'Laundry', 'Cargo', 'Warung', 'Toko Bunga'].map((tag, index) => (
                             <button
                                 key={index}
-                                onClick={() => setSearchQuery(tag)}
+                                onClick={() => {
+                                    setSearchQuery(tag);
+                                    handleSearch();
+                                }}
                                 className="bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm px-4 py-2 rounded-full transition duration-200"
                             >
                                 {tag}
