@@ -5,7 +5,7 @@ import Sidebar from "@/Components/Sidebar";
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 
-export default function Edit({ auth, product }) {
+export default function Edit({ auth, product, bidangUsahaOptions, jenisUsahaOptions }) {
     const queryString = window.location.search;
     const urlParams = new URLSearchParams(queryString);
     const page = urlParams.get("page");
@@ -24,6 +24,8 @@ export default function Edit({ auth, product }) {
         telephone: product.telephone || "",
         images: [],
         description: product.description || "",
+        bidang_usaha: product.bidang_usaha || "",
+        jenis_usaha: product.jenis_usaha || "",
         page: page,
         _method: "PUT",
     });
@@ -203,6 +205,8 @@ export default function Edit({ auth, product }) {
                                     { label: "Lokasi", name: "lokasi", type: "text", placeholder: "Masukkan lokasi usaha" },
                                     { label: "Email", name: "email", type: "email", placeholder: "Masukkan email usaha" },
                                     { label: "Telephone", name: "telephone", type: "tel", placeholder: "Masukkan nomor telepon" },
+                                    { label: "Bidang Usaha", name: "bidang_usaha", type: "select", placeholder: "Pilih bidang usaha" },
+                                    { label: "Jenis Usaha", name: "jenis_usaha", type: "select", placeholder: "Pilih jenis usaha" },
                                     { label: "Description", name: "description", type: "richtext", placeholder: "Masukkan deskripsi (opsional)" },
                                 ].map((field) => (
                                     <div key={field.name}>
@@ -221,6 +225,25 @@ export default function Edit({ auth, product }) {
                                                     placeholder="Masukkan deskripsi usaha..."
                                                 />
                                             </div>
+                                        ) : field.type === "select" ? (
+                                            <select
+                                                id={field.name}
+                                                className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+                                                value={data[field.name]}
+                                                onChange={(e) => setData(field.name, e.target.value)}
+                                                required
+                                            >
+                                                <option value="">Select {field.label}</option>
+                                                {field.name === "bidang_usaha" ? bidangUsahaOptions.map((option) => (
+                                                    <option key={option} value={option}>
+                                                        {option.charAt(0).toUpperCase() + option.slice(1)}
+                                                    </option>
+                                                )) : jenisUsahaOptions.map((option) => (
+                                                    <option key={option} value={option}>
+                                                        {option.charAt(0).toUpperCase() + option.slice(1)}
+                                                    </option>
+                                                ))}
+                                            </select>
                                         ) : (
                                             <input
                                                 type={field.type}

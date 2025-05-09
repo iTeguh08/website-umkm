@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use App\Models\ProductImage;
+use App\Enums\BidangUsaha;
+use App\Enums\JenisUsaha;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
@@ -60,7 +62,10 @@ class ProductController extends Controller
 
     public function create()
     {
-        return Inertia::render('Admin/Products/Create');
+        return Inertia::render('Admin/Products/Create', [
+            'bidangUsahaOptions' => BidangUsaha::values(),
+            'jenisUsahaOptions' => JenisUsaha::values(),
+        ]);
     }
 
     public function store(Request $request)
@@ -70,6 +75,8 @@ class ProductController extends Controller
             'lokasi' => 'required|string',
             'email' => 'required|email',
             'telephone' => 'required|string',
+            'bidang_usaha' => 'required|in:' . implode(',', BidangUsaha::values()),
+            'jenis_usaha' => 'required|in:' . implode(',', JenisUsaha::values()),
             'images' => 'nullable|array',
             'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
@@ -80,8 +87,9 @@ class ProductController extends Controller
         $product->email = $request->email;
         $product->telephone = $request->telephone;
         $product->description = $request->description;
+        $product->bidang_usaha = $request->bidang_usaha;
+        $product->jenis_usaha = $request->jenis_usaha;
 
-        
         $product->save();
         
         if ($request->hasFile('images')) {
@@ -93,7 +101,7 @@ class ProductController extends Controller
                 ]);
             }
         }
-        // dd($request->all());
+
         return redirect()->route('products.index', ['page' => $request->page ?? 1])
             ->with('message', 'Product created successfully.');
     }
@@ -103,7 +111,9 @@ class ProductController extends Controller
         $product->load('images');
 
         return Inertia::render('Admin/Products/Edit', [
-            'product' => $product
+            'product' => $product,
+            'bidangUsahaOptions' => BidangUsaha::values(),
+            'jenisUsahaOptions' => JenisUsaha::values(),
         ]);
     }
 
@@ -114,6 +124,8 @@ class ProductController extends Controller
             'lokasi' => 'required|string',
             'email' => 'required|email',
             'telephone' => 'required|string',
+            'bidang_usaha' => 'required|in:' . implode(',', BidangUsaha::values()),
+            'jenis_usaha' => 'required|in:' . implode(',', JenisUsaha::values()),
             'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
@@ -122,6 +134,8 @@ class ProductController extends Controller
         $product->email = $request->email;
         $product->telephone = $request->telephone;
         $product->description = $request->description;
+        $product->bidang_usaha = $request->bidang_usaha;
+        $product->jenis_usaha = $request->jenis_usaha;
 
         if ($request->hasFile('images')) {
             foreach ($request->file('images') as $image) {
@@ -150,6 +164,7 @@ class ProductController extends Controller
         return redirect()->route('products.index')
             ->with('message', 'Product deleted successfully.');
     }
+
     public function show(Product $product)
     {
         $product->load('images');
@@ -157,6 +172,7 @@ class ProductController extends Controller
             'product' => $product
         ]);
     }
+
     public function deleteImage($id)
     {
         $image = ProductImage::findOrFail($id);
@@ -170,6 +186,7 @@ class ProductController extends Controller
 
         return back()->with('message', 'Image deleted successfully');
     }
+
     public function showPublic(Product $product)
     {
         $product->load('images');

@@ -2,8 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useForm, router, usePage, Link } from "@inertiajs/react";
 
 const Search = () => {
-    const [businessField, setBusinessField] = useState('');
-    const [location, setLocation] = useState('');
     const { filters } = usePage().props;
     const [searchQuery, setSearchQuery] = useState(filters?.search || "");
 
@@ -27,81 +25,72 @@ const Search = () => {
     }, [searchQuery]);
 
     const handleSearch = (e) => {
-            setSearchQuery(e.target.value);
-            router.get(
-                route("homepage"),
-                { search: e.target.value },
-                {
-                    preserveState: true,
-                    preserveScroll: true,
-                    only: ["products", "filters"],
-                }
-            );
+        e.preventDefault();
+        router.get(
+            route("homepage"),
+            { search: searchQuery },
+            {
+                preserveState: true,
+                preserveScroll: true,
+                only: ["products", "filters"],
+            }
+        );
     };
 
     return (
         <section className="sticky top-0 z-10 bg-white transition-shadow duration-300">
-            <div className="max-w-5xl mx-auto px-4 py-4 shadow-sm">
+            <div className="max-w-5xl mx-auto px-4 py-4">
                 <div className="text-center mb-4">
                 </div>
                 
-                <form onSubmit={handleSearch} className="mb-8">
-                    <div className="flex flex-col md:flex-row gap-4 bg-white rounded-lg shadow-md p-2">
-                        <div className="relative flex-1">
+                <div className="mb-8">
+                    <div className="flex items-center bg-white rounded-full border border-gray-500">
+                        <div className="flex-grow pl-4">
                             <input
                                 type="text"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                placeholder="Cari nama usaha..."
-                                className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                placeholder="Cari jenis usaha..."
+                                className="w-full py-3 focus:outline-none text-gray-600 border-0"
                             />
                         </div>
                         
-                        <div className="relative flex-1">
-                            <select
-                                value={location}
-                                onChange={(e) => setLocation(e.target.value)}
-                                className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white"
-                            >
-                                <option value="">Lokasi</option>
-                                <option value="jakarta">Jakarta</option>
-                                <option value="bandung">Bandung</option>
-                                <option value="surabaya">Surabaya</option>
-                            </select>
-                            <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                                <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                </svg>
+                        <div className="py-3 px-1">
+                            <div className="flex items-center">
+                                <select
+                                    className="focus:outline-none appearance-none bg-white text-gray-600 border-0"
+                                >
+                                    <option value="">Jenis Usaha</option>
+                                    <option value="jakarta">Jakarta</option>
+                                    <option value="bandung">Bandung</option>
+                                    <option value="surabaya">Surabaya</option>
+                                </select>
                             </div>
                         </div>
                         
-                        <div className="relative flex-1">
-                            <select
-                                value={businessField}
-                                onChange={(e) => setBusinessField(e.target.value)}
-                                className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white"
-                            >
-                                <option value="">Semua Kategori</option>
-                                <option value="makanan">Makanan & Minuman</option>
-                                <option value="fashion">Fashion</option>
-                                <option value="jasa">Jasa</option>
-                                <option value="kerajinan">Kerajinan Tangan</option>
-                            </select>
-                            <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                                <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                </svg>
+                        <div className="py-3 px-1">
+                            <div className="flex items-center">
+                                <select
+                                    className="focus:outline-none appearance-none bg-white text-gray-600 border-0"
+                                >
+                                    <option value="">Bidang Usaha</option>
+                                    <option value="jakarta">Jakarta</option>
+                                    <option value="bandung">Bandung</option>
+                                    <option value="surabaya">Surabaya</option>
+                                </select>
                             </div>
                         </div>
                         
                         <button
-                            type="submit"
-                            className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-lg transition duration-200"
+                            onClick={handleSearch}
+                            className="ml-2 p-3 mr-4"
                         >
-                            Cari
+                            <svg className="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
                         </button>
                     </div>
-                </form>
+                </div>
 
                 <div className="mt-6">
                     <div className="flex flex-wrap justify-center items-center gap-2">

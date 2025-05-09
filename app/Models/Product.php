@@ -5,6 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Enums\BidangUsaha;
+use App\Enums\JenisUsaha;
 
 class Product extends Model
 {
@@ -16,7 +18,14 @@ class Product extends Model
         'email',
         'telephone',
         'image',
-        'description'
+        'description',
+        'bidang_usaha',
+        'jenis_usaha'
+    ];
+
+    protected $casts = [
+        'bidang_usaha' => BidangUsaha::class,
+        'jenis_usaha' => JenisUsaha::class,
     ];
 
     public function images()

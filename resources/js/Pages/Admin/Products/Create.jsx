@@ -5,7 +5,7 @@ import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 
-export default function Create() {
+export default function Create({ bidangUsahaOptions, jenisUsahaOptions }) {
     const {
         data,
         setData,
@@ -20,6 +20,8 @@ export default function Create() {
         telephone: "",
         description: "",
         images: [],
+        bidang_usaha: "",
+        jenis_usaha: "",
     });
 
     const [imagePreviewUrls, setImagePreviewUrls] = useState([]);
@@ -260,6 +262,56 @@ export default function Create() {
                                         )}
                                     </div>
                                 ))}
+
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Bidang Usaha
+                                    </label>
+                                    <select
+                                        id="bidang_usaha"
+                                        className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+                                        value={data.bidang_usaha}
+                                        onChange={(e) => setData("bidang_usaha", e.target.value)}
+                                        required
+                                    >
+                                        <option value="">Select Bidang Usaha</option>
+                                        {bidangUsahaOptions.map((option) => (
+                                            <option key={option} value={option}>
+                                                {option.charAt(0).toUpperCase() + option.slice(1)}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    {errors.bidang_usaha && (
+                                        <p className="mt-1 text-sm text-red-600">
+                                            {errors.bidang_usaha}
+                                        </p>
+                                    )}
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Jenis Usaha
+                                    </label>
+                                    <select
+                                        id="jenis_usaha"
+                                        className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+                                        value={data.jenis_usaha}
+                                        onChange={(e) => setData("jenis_usaha", e.target.value)}
+                                        required
+                                    >
+                                        <option value="">Select Jenis Usaha</option>
+                                        {jenisUsahaOptions.map((option) => (
+                                            <option key={option} value={option}>
+                                                {option.charAt(0).toUpperCase() + option.slice(1)}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    {errors.jenis_usaha && (
+                                        <p className="mt-1 text-sm text-red-600">
+                                            {errors.jenis_usaha}
+                                        </p>
+                                    )}
+                                </div>
 
                                 <div className="mb-4">
                                     <label className="block text-sm font-medium text-gray-700 mb-2">
