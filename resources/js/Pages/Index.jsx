@@ -13,11 +13,13 @@ const Index = () => {
     const { products = [], filters = {} } = usePage().props;
 
     return (
-        <div>
+        <div className="min-h-screen bg-gray-50">
             <Header />
-            <Hero />
-            <Search filters={filters} />
-            <BusinessShowcase products={products.data || products} />
+            <main className="px-1">
+                <Hero />
+                <Search filters={filters} />
+                <BusinessShowcase products={products.data || products} />
+            </main>
         </div>
     );
 };

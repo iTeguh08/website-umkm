@@ -13,8 +13,8 @@ const BusinessShowcase = ({ products }) => {
     }
 
     return (
-        <section className="py-16">
-            <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
+        <section className="py-16 px-4">
+            <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                 {productList.map((product) => (
                     product && product.id && (
                         <div 
@@ -26,19 +26,19 @@ const BusinessShowcase = ({ products }) => {
                                     <img 
                                         src={`/storage/${product.images[0].image_path}`} 
                                         alt={product.nama_usaha} 
-                                        className="aspect-[16/9] object-cover"
+                                        className="aspect-[16/9] object-cover w-full"
                                     />
                                 )}
                             </Link>
-                            <div className="p-6">
+                            <div className="p-4">
                                 <Link 
                                     href={route('product.detail', product.id)} 
-                                    className="block text-lg font-semibold text-gray-900 hover:text-blue-600 transition-colors"
+                                    className="block text-base sm:text-lg font-semibold text-gray-900 hover:text-blue-600 transition-colors"
                                 >
                                     {product.nama_usaha}
                                 </Link>
                                 <div 
-                                    className="text-gray-600 mt-2 line-clamp-2"
+                                    className="text-sm sm:text-base text-gray-600 mt-2 line-clamp-2"
                                     dangerouslySetInnerHTML={{ __html: product.description || '' }}
                                 />
                                 <div className="mt-4">

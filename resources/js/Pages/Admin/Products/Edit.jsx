@@ -202,11 +202,113 @@ export default function Edit({ auth, product, bidangUsahaOptions, jenisUsahaOpti
                             <form onSubmit={handleSubmit} className="p-6 space-y-6">
                                 {[
                                     { label: "Nama Usaha", name: "nama_usaha", type: "text", placeholder: "Masukkan nama usaha" },
+                                ].map((field) => (
+                                    <div key={field.name}>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                            {field.label}
+                                        </label>
+                                        {field.type === "richtext" ? (
+                                            <div className="mt-1">
+                                                <ReactQuill
+                                                    theme="snow"
+                                                    value={data.description}
+                                                    onChange={handleDescriptionChange}
+                                                    modules={modules}
+                                                    formats={formats}
+                                                    className="h-64 mb-16"
+                                                    placeholder="Masukkan deskripsi usaha..."
+                                                />
+                                            </div>
+                                        ) : field.type === "select" ? (
+                                            <select
+                                                id={field.name}
+                                                className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+                                                value={data[field.name]}
+                                                onChange={(e) => setData(field.name, e.target.value)}
+                                                required
+                                            >
+                                                <option value="">Select {field.label}</option>
+                                                {field.name === "bidang_usaha" ? bidangUsahaOptions.map((option) => (
+                                                    <option key={option} value={option}>
+                                                        {option.charAt(0).toUpperCase() + option.slice(1)}
+                                                    </option>
+                                                )) : jenisUsahaOptions.map((option) => (
+                                                    <option key={option} value={option}>
+                                                        {option.charAt(0).toUpperCase() + option.slice(1)}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        ) : (
+                                            <input
+                                                type={field.type}
+                                                name={field.name}
+                                                placeholder={field.placeholder}
+                                                value={data[field.name]}
+                                                onChange={(e) => setData(field.name, e.target.value)}
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-[#5b9cff] transition duration-300"
+                                                required
+                                            />
+                                        )}
+                                        {errors[field.name] && (
+                                            <p className="mt-1 text-sm text-red-600">{errors[field.name]}</p>
+                                        )}
+                                    </div>
+                                ))}
+
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Bidang Usaha
+                                    </label>
+                                    <select
+                                        id="bidang_usaha"
+                                        className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+                                        value={data.bidang_usaha}
+                                        onChange={(e) => setData("bidang_usaha", e.target.value)}
+                                        required
+                                    >
+                                        <option value="">Select Bidang Usaha</option>
+                                        {bidangUsahaOptions.map((option) => (
+                                            <option key={option} value={option}>
+                                                {option.charAt(0).toUpperCase() + option.slice(1)}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    {errors.bidang_usaha && (
+                                        <p className="mt-1 text-sm text-red-600">
+                                            {errors.bidang_usaha}
+                                        </p>
+                                    )}
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Jenis Usaha
+                                    </label>
+                                    <select
+                                        id="jenis_usaha"
+                                        className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+                                        value={data.jenis_usaha}
+                                        onChange={(e) => setData("jenis_usaha", e.target.value)}
+                                        required
+                                    >
+                                        <option value="">Select Jenis Usaha</option>
+                                        {jenisUsahaOptions.map((option) => (
+                                            <option key={option} value={option}>
+                                                {option.charAt(0).toUpperCase() + option.slice(1)}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    {errors.jenis_usaha && (
+                                        <p className="mt-1 text-sm text-red-600">
+                                            {errors.jenis_usaha}
+                                        </p>
+                                    )}
+                                </div>
+
+                                {[
                                     { label: "Lokasi", name: "lokasi", type: "text", placeholder: "Masukkan lokasi usaha" },
                                     { label: "Email", name: "email", type: "email", placeholder: "Masukkan email usaha" },
                                     { label: "Telephone", name: "telephone", type: "tel", placeholder: "Masukkan nomor telepon" },
-                                    { label: "Bidang Usaha", name: "bidang_usaha", type: "select", placeholder: "Pilih bidang usaha" },
-                                    { label: "Jenis Usaha", name: "jenis_usaha", type: "select", placeholder: "Pilih jenis usaha" },
                                     { label: "Description", name: "description", type: "richtext", placeholder: "Masukkan deskripsi (opsional)" },
                                 ].map((field) => (
                                     <div key={field.name}>
