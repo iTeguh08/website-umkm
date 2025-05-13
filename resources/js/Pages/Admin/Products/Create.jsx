@@ -2,8 +2,8 @@ import { useForm, Link } from "@inertiajs/react";
 import { useState, useEffect } from "react";
 import Sidebar from "@/Components/Sidebar";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
-import ReactQuill from 'react-quill';
-import 'react-quill/dist/quill.snow.css';
+import ReactQuill from "react-quill";
+import "react-quill/dist/quill.snow.css";
 
 export default function Create({ bidangUsahaOptions, jenisUsahaOptions }) {
     const {
@@ -22,6 +22,8 @@ export default function Create({ bidangUsahaOptions, jenisUsahaOptions }) {
         images: [],
         bidang_usaha: "",
         jenis_usaha: "",
+        latitude: "",
+        longitude: "",
     });
 
     const [imagePreviewUrls, setImagePreviewUrls] = useState([]);
@@ -29,24 +31,28 @@ export default function Create({ bidangUsahaOptions, jenisUsahaOptions }) {
     const [isUploading, setIsUploading] = useState(false);
 
     const handleDescriptionChange = (value) => {
-        setData('description', value);
+        setData("description", value);
     };
 
     const modules = {
         toolbar: [
-            [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
-            ['bold', 'italic', 'underline', 'strike'],
-            [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-            ['link'],
-            ['clean']
+            [{ header: [1, 2, 3, 4, 5, 6, false] }],
+            ["bold", "italic", "underline", "strike"],
+            [{ list: "ordered" }, { list: "bullet" }],
+            ["link"],
+            ["clean"],
         ],
     };
 
     const formats = [
-        'header',
-        'bold', 'italic', 'underline', 'strike',
-        'list', 'bullet',
-        'link'
+        "header",
+        "bold",
+        "italic",
+        "underline",
+        "strike",
+        "list",
+        "bullet",
+        "link",
     ];
 
     const handleSubmit = (e) => {
@@ -91,14 +97,14 @@ export default function Create({ bidangUsahaOptions, jenisUsahaOptions }) {
                 // Tambahkan artificial delay untuk menunjukkan loading state
                 setTimeout(() => {
                     newPreviewUrls.push(reader.result);
-                    
+
                     // Update the loading state for this specific image
                     const updatedLoadingStates = [...loadingStates];
                     // Mencari index yang sesuai berdasarkan jumlah gambar yang ada
                     const currentIndex = currentImages.length + index;
                     updatedLoadingStates[currentIndex] = false;
                     setLoadingStates(updatedLoadingStates);
-                    
+
                     loadedCount++;
 
                     // When all images are loaded, update the preview state
@@ -106,18 +112,18 @@ export default function Create({ bidangUsahaOptions, jenisUsahaOptions }) {
                         setImagePreviewUrls(newPreviewUrls);
                         setIsUploading(false);
                     }
-                }, 100 + (index * 50)); // Tambahkan delay bertahap untuk setiap gambar
+                }, 100 + index * 50); // Tambahkan delay bertahap untuk setiap gambar
             };
 
             reader.onerror = () => {
                 console.error("Error reading file:", file.name);
-                
+
                 // Update the loading state for this specific image
                 const updatedLoadingStates = [...loadingStates];
                 const currentIndex = currentImages.length + index;
                 updatedLoadingStates[currentIndex] = false;
                 setLoadingStates(updatedLoadingStates);
-                
+
                 loadedCount++;
                 if (loadedCount === files.length) {
                     setIsUploading(false);
@@ -129,7 +135,7 @@ export default function Create({ bidangUsahaOptions, jenisUsahaOptions }) {
     };
 
     const removeTempImage = (index) => {
-        if (confirm('Are you sure you want to remove this image? ')) {
+        if (confirm("Are you sure you want to remove this image? ")) {
             // Get the current images array
             const currentImages = [...data.images];
 
@@ -137,7 +143,7 @@ export default function Create({ bidangUsahaOptions, jenisUsahaOptions }) {
             currentImages.splice(index, 1);
 
             // Update the form data
-            setData('images', currentImages);
+            setData("images", currentImages);
 
             // Update the preview URLs
             const newPreviewUrls = [...imagePreviewUrls];
@@ -181,7 +187,10 @@ export default function Create({ bidangUsahaOptions, jenisUsahaOptions }) {
     const renderLoadingPlaceholders = () => {
         const placeholders = generatePlaceholders();
         return placeholders.map((_, index) => (
-            <div key={`placeholder-${index}`} className="aspect-[16/9] overflow-hidden rounded-sm">
+            <div
+                key={`placeholder-${index}`}
+                className="aspect-[16/9] overflow-hidden rounded-sm"
+            >
                 <div className="flex items-center justify-center h-full bg-gray-100">
                     <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-green-600"></div>
                 </div>
@@ -253,13 +262,23 @@ export default function Create({ bidangUsahaOptions, jenisUsahaOptions }) {
                                         id="bidang_usaha"
                                         className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
                                         value={data.bidang_usaha}
-                                        onChange={(e) => setData("bidang_usaha", e.target.value)}
+                                        onChange={(e) =>
+                                            setData(
+                                                "bidang_usaha",
+                                                e.target.value
+                                            )
+                                        }
                                         required
                                     >
-                                        <option value="">Select Bidang Usaha</option>
+                                        <option value="">
+                                            Select Bidang Usaha
+                                        </option>
                                         {bidangUsahaOptions.map((option) => (
                                             <option key={option} value={option}>
-                                                {option.charAt(0).toUpperCase() + option.slice(1)}
+                                                {option
+                                                    .charAt(0)
+                                                    .toUpperCase() +
+                                                    option.slice(1)}
                                             </option>
                                         ))}
                                     </select>
@@ -278,13 +297,23 @@ export default function Create({ bidangUsahaOptions, jenisUsahaOptions }) {
                                         id="jenis_usaha"
                                         className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
                                         value={data.jenis_usaha}
-                                        onChange={(e) => setData("jenis_usaha", e.target.value)}
+                                        onChange={(e) =>
+                                            setData(
+                                                "jenis_usaha",
+                                                e.target.value
+                                            )
+                                        }
                                         required
                                     >
-                                        <option value="">Select Jenis Usaha</option>
+                                        <option value="">
+                                            Select Jenis Usaha
+                                        </option>
                                         {jenisUsahaOptions.map((option) => (
                                             <option key={option} value={option}>
-                                                {option.charAt(0).toUpperCase() + option.slice(1)}
+                                                {option
+                                                    .charAt(0)
+                                                    .toUpperCase() +
+                                                    option.slice(1)}
                                             </option>
                                         ))}
                                     </select>
@@ -360,6 +389,38 @@ export default function Create({ bidangUsahaOptions, jenisUsahaOptions }) {
                                         </p>
                                     )}
                                 </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Latitude
+                                    </label>
+                                    <input
+                                        type="text"
+                                        name="latitude"
+                                        placeholder="Enter latitude"
+                                        value={data.latitude}
+                                        onChange={(e) =>
+                                            setData("latitude", e.target.value)
+                                        }
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#5b9cff] transition duration-300"
+                                        required
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Longitude
+                                    </label>
+                                    <input
+                                        type="text"
+                                        name="longitude"
+                                        placeholder="Enter longitude"
+                                        value={data.longitude}
+                                        onChange={(e) =>
+                                            setData("longitude", e.target.value)
+                                        }
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#5b9cff] transition duration-300"
+                                        required
+                                    />
+                                </div>
 
                                 {/* Field untuk multiple images */}
                                 <div className="mb-4">
@@ -369,8 +430,19 @@ export default function Create({ bidangUsahaOptions, jenisUsahaOptions }) {
                                     <div className="relative">
                                         <div className="relative inline-block min-w-[120px]">
                                             <div className="inline-flex items-center justify-center px-4 py-1 bg-green-100 text-green-600 text-sm font-medium rounded-full hover:bg-green-200 transition-colors duration-200 shadow-sm border border-green-200">
-                                                <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                                <svg
+                                                    className="w-4 h-4 mr-1"
+                                                    fill="none"
+                                                    stroke="currentColor"
+                                                    viewBox="0 0 24 24"
+                                                    xmlns="http://www.w3.org/2000/svg"
+                                                >
+                                                    <path
+                                                        strokeLinecap="round"
+                                                        strokeLinejoin="round"
+                                                        strokeWidth={2}
+                                                        d="M12 4v16m8-8H4"
+                                                    />
                                                 </svg>
                                                 Tambahkan Image
                                             </div>
@@ -385,10 +457,25 @@ export default function Create({ bidangUsahaOptions, jenisUsahaOptions }) {
                                         </div>
                                         {data.images.length > 0 && (
                                             <span className="ml-3 px-3 py-1.5 bg-gray-100 text-gray-600 text-sm rounded-full inline-flex items-center">
-                                                <svg className="w-4 h-4 mr-1.5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                <svg
+                                                    className="w-4 h-4 mr-1.5 text-green-500"
+                                                    fill="none"
+                                                    stroke="currentColor"
+                                                    viewBox="0 0 24 24"
+                                                    xmlns="http://www.w3.org/2000/svg"
+                                                >
+                                                    <path
+                                                        strokeLinecap="round"
+                                                        strokeLinejoin="round"
+                                                        strokeWidth={2}
+                                                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                                                    />
                                                 </svg>
-                                                {data.images.length} file{data.images.length > 1 ? 's' : ''} ditambahkan
+                                                {data.images.length} file
+                                                {data.images.length > 1
+                                                    ? "s"
+                                                    : ""}{" "}
+                                                ditambahkan
                                             </span>
                                         )}
                                     </div>
@@ -402,7 +489,10 @@ export default function Create({ bidangUsahaOptions, jenisUsahaOptions }) {
                                     <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4">
                                         {/* Render existing image previews */}
                                         {imagePreviewUrls.map((url, index) => (
-                                            <div key={index} className="relative">
+                                            <div
+                                                key={index}
+                                                className="relative"
+                                            >
                                                 <img
                                                     src={url}
                                                     alt={`Preview ${index + 1}`}
@@ -411,7 +501,9 @@ export default function Create({ bidangUsahaOptions, jenisUsahaOptions }) {
                                                 <button
                                                     type="button"
                                                     className="absolute top-2 right-2 w-6 h-6 bg-red-600 text-white rounded-sm flex items-center justify-center hover:bg-red-600 transition-colors duration-200"
-                                                    onClick={() => removeTempImage(index)}
+                                                    onClick={() =>
+                                                        removeTempImage(index)
+                                                    }
                                                 >
                                                     <svg
                                                         className="w-4 h-4"
@@ -429,9 +521,10 @@ export default function Create({ bidangUsahaOptions, jenisUsahaOptions }) {
                                                 </button>
                                             </div>
                                         ))}
-                                        
+
                                         {/* Render loading placeholders for images being uploaded */}
-                                        {isUploading && renderLoadingPlaceholders()}
+                                        {isUploading &&
+                                            renderLoadingPlaceholders()}
                                     </div>
                                 </div>
 

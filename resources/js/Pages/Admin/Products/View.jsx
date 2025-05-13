@@ -65,7 +65,7 @@ export default function View({ product }) {
         slidesToShow: 1,
         slidesToScroll: 1,
         autoplay: true,
-        autoplaySpeed: 3000,
+        autoplaySpeed: 5000,
         fade: true,
         arrows: true,
         prevArrow: (
@@ -150,20 +150,11 @@ export default function View({ product }) {
                             </div>
 
                             <div className="p-8">
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 bg-gray-50 p-6 rounded-lg">
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 bg-gray-50 p-6 rounded-lg shadow-sm">
                                     {[
-                                        {
-                                            label: "Location",
-                                            value: product?.lokasi || "N/A",
-                                        },
-                                        {
-                                            label: "Email",
-                                            value: product?.email || "N/A",
-                                        },
-                                        {
-                                            label: "Telephone",
-                                            value: product?.telephone || "N/A",
-                                        },
+                                        { label: "Location", value: product?.lokasi || "N/A" },
+                                        { label: "Email", value: product?.email || "N/A" },
+                                        { label: "Telephone", value: product?.telephone || "N/A" },
                                         {
                                             label: "Bidang Usaha",
                                             value: product?.bidang_usaha
@@ -176,6 +167,8 @@ export default function View({ product }) {
                                                 ? product.jenis_usaha.charAt(0).toUpperCase() + product.jenis_usaha.slice(1)
                                                 : "N/A",
                                         },
+                                        { label: "Latitude", value: product?.latitude || "N/A" },
+                                        { label: "Longitude", value: product?.longitude || "N/A" },
                                     ].map((detail, index) => (
                                         <div
                                             key={index}
@@ -190,28 +183,23 @@ export default function View({ product }) {
                                         </div>
                                     ))}
                                 </div>
-
-                                <div className="mt-8 bg-gray-50 p-6 rounded-lg">
+                            
+                                <div className="mt-8 bg-gray-50 p-6 rounded-lg shadow-sm">
                                     <h3 className="text-lg font-semibold text-gray-700 mb-4">
                                         Description
                                     </h3>
                                     <div
                                         className="prose max-w-none"
                                         dangerouslySetInnerHTML={{
-                                            __html:
-                                                product?.description ||
-                                                "No description provided",
+                                            __html: product?.description || "No description provided",
                                         }}
                                     />
                                 </div>
-
+                            
                                 <div className="mt-8 flex justify-end">
                                     <Link
-                                        href={route(
-                                            "products.edit",
-                                            product?.id
-                                        )}
-                                        className="px-4 py-2 bg-[#5b9cff] text-white rounded-md shadow-md hover:bg-blue-600 transition duration-300"
+                                        href={route("products.edit", product?.id)}
+                                        className="px-4 py-2 bg-blue-500 text-white rounded-md shadow-md hover:bg-blue-600 transition duration-300"
                                     >
                                         Edit Product
                                     </Link>

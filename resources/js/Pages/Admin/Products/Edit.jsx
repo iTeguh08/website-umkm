@@ -2,10 +2,15 @@ import React, { useState, useEffect } from "react";
 import { Head, Link, useForm, router } from "@inertiajs/react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import Sidebar from "@/Components/Sidebar";
-import ReactQuill from 'react-quill';
-import 'react-quill/dist/quill.snow.css';
+import ReactQuill from "react-quill";
+import "react-quill/dist/quill.snow.css";
 
-export default function Edit({ auth, product, bidangUsahaOptions, jenisUsahaOptions }) {
+export default function Edit({
+    auth,
+    product,
+    bidangUsahaOptions,
+    jenisUsahaOptions,
+}) {
     const queryString = window.location.search;
     const urlParams = new URLSearchParams(queryString);
     const page = urlParams.get("page");
@@ -26,6 +31,8 @@ export default function Edit({ auth, product, bidangUsahaOptions, jenisUsahaOpti
         description: product.description || "",
         bidang_usaha: product.bidang_usaha || "",
         jenis_usaha: product.jenis_usaha || "",
+        latitude: product.latitude || "",
+        longitude: product.longitude || "",
         page: page,
         _method: "PUT",
     });
@@ -83,7 +90,7 @@ export default function Edit({ auth, product, bidangUsahaOptions, jenisUsahaOpti
                         setImagePreviewUrls(newPreviewUrls);
                         setIsUploading(false);
                     }
-                }, 100 + (index * 50));
+                }, 100 + index * 50);
             };
             reader.onerror = () => {
                 console.error("Error reading file:", file.name);
@@ -104,10 +111,16 @@ export default function Edit({ auth, product, bidangUsahaOptions, jenisUsahaOpti
         if (confirm("Are you sure you want to delete this image?")) {
             router.delete(route("product-images.delete", id), {
                 onSuccess: () => {
-                    const index = existingImages.findIndex(img => img.id === id);
+                    const index = existingImages.findIndex(
+                        (img) => img.id === id
+                    );
                     if (index !== -1) {
-                        setExistingImages(existingImages.filter(img => img.id !== id));
-                        setExistingImagesLoading(prev => prev.filter((_, i) => i !== index));
+                        setExistingImages(
+                            existingImages.filter((img) => img.id !== id)
+                        );
+                        setExistingImagesLoading((prev) =>
+                            prev.filter((_, i) => i !== index)
+                        );
                     }
                 },
                 preserveScroll: true,
@@ -130,7 +143,7 @@ export default function Edit({ auth, product, bidangUsahaOptions, jenisUsahaOpti
     };
 
     const handleDescriptionChange = (value) => {
-        setData('description', value);
+        setData("description", value);
     };
 
     const calculatePlaceholdersCount = () => {
@@ -147,7 +160,10 @@ export default function Edit({ auth, product, bidangUsahaOptions, jenisUsahaOpti
     const renderLoadingPlaceholders = () => {
         const placeholders = generatePlaceholders();
         return placeholders.map((_, index) => (
-            <div key={`placeholder-${index}`} className="aspect-[16/9] overflow-hidden rounded-sm">
+            <div
+                key={`placeholder-${index}`}
+                className="aspect-[16/9] overflow-hidden rounded-sm"
+            >
                 <div className="flex items-center justify-center h-full bg-gray-100">
                     <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
                 </div>
@@ -163,19 +179,23 @@ export default function Edit({ auth, product, bidangUsahaOptions, jenisUsahaOpti
 
     const modules = {
         toolbar: [
-            [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
-            ['bold', 'italic', 'underline', 'strike'],
-            [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-            ['link'],
-            ['clean']
+            [{ header: [1, 2, 3, 4, 5, 6, false] }],
+            ["bold", "italic", "underline", "strike"],
+            [{ list: "ordered" }, { list: "bullet" }],
+            ["link"],
+            ["clean"],
         ],
     };
 
     const formats = [
-        'header',
-        'bold', 'italic', 'underline', 'strike',
-        'list', 'bullet',
-        'link'
+        "header",
+        "bold",
+        "italic",
+        "underline",
+        "strike",
+        "list",
+        "bullet",
+        "link",
     ];
 
     return (
@@ -199,9 +219,17 @@ export default function Edit({ auth, product, bidangUsahaOptions, jenisUsahaOpti
                                 </Link>
                             </div>
 
-                            <form onSubmit={handleSubmit} className="p-6 space-y-6">
+                            <form
+                                onSubmit={handleSubmit}
+                                className="p-6 space-y-6"
+                            >
                                 {[
-                                    { label: "Nama Usaha", name: "nama_usaha", type: "text", placeholder: "Masukkan nama usaha" },
+                                    {
+                                        label: "Nama Usaha",
+                                        name: "nama_usaha",
+                                        type: "text",
+                                        placeholder: "Masukkan nama usaha",
+                                    },
                                 ].map((field) => (
                                     <div key={field.name}>
                                         <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -212,7 +240,9 @@ export default function Edit({ auth, product, bidangUsahaOptions, jenisUsahaOpti
                                                 <ReactQuill
                                                     theme="snow"
                                                     value={data.description}
-                                                    onChange={handleDescriptionChange}
+                                                    onChange={
+                                                        handleDescriptionChange
+                                                    }
                                                     modules={modules}
                                                     formats={formats}
                                                     className="h-64 mb-16"
@@ -224,19 +254,48 @@ export default function Edit({ auth, product, bidangUsahaOptions, jenisUsahaOpti
                                                 id={field.name}
                                                 className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
                                                 value={data[field.name]}
-                                                onChange={(e) => setData(field.name, e.target.value)}
+                                                onChange={(e) =>
+                                                    setData(
+                                                        field.name,
+                                                        e.target.value
+                                                    )
+                                                }
                                                 required
                                             >
-                                                <option value="">Select {field.label}</option>
-                                                {field.name === "bidang_usaha" ? bidangUsahaOptions.map((option) => (
-                                                    <option key={option} value={option}>
-                                                        {option.charAt(0).toUpperCase() + option.slice(1)}
-                                                    </option>
-                                                )) : jenisUsahaOptions.map((option) => (
-                                                    <option key={option} value={option}>
-                                                        {option.charAt(0).toUpperCase() + option.slice(1)}
-                                                    </option>
-                                                ))}
+                                                <option value="">
+                                                    Select {field.label}
+                                                </option>
+                                                {field.name === "bidang_usaha"
+                                                    ? bidangUsahaOptions.map(
+                                                          (option) => (
+                                                              <option
+                                                                  key={option}
+                                                                  value={option}
+                                                              >
+                                                                  {option
+                                                                      .charAt(0)
+                                                                      .toUpperCase() +
+                                                                      option.slice(
+                                                                          1
+                                                                      )}
+                                                              </option>
+                                                          )
+                                                      )
+                                                    : jenisUsahaOptions.map(
+                                                          (option) => (
+                                                              <option
+                                                                  key={option}
+                                                                  value={option}
+                                                              >
+                                                                  {option
+                                                                      .charAt(0)
+                                                                      .toUpperCase() +
+                                                                      option.slice(
+                                                                          1
+                                                                      )}
+                                                              </option>
+                                                          )
+                                                      )}
                                             </select>
                                         ) : (
                                             <input
@@ -244,13 +303,20 @@ export default function Edit({ auth, product, bidangUsahaOptions, jenisUsahaOpti
                                                 name={field.name}
                                                 placeholder={field.placeholder}
                                                 value={data[field.name]}
-                                                onChange={(e) => setData(field.name, e.target.value)}
+                                                onChange={(e) =>
+                                                    setData(
+                                                        field.name,
+                                                        e.target.value
+                                                    )
+                                                }
                                                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-[#5b9cff] transition duration-300"
                                                 required
                                             />
                                         )}
                                         {errors[field.name] && (
-                                            <p className="mt-1 text-sm text-red-600">{errors[field.name]}</p>
+                                            <p className="mt-1 text-sm text-red-600">
+                                                {errors[field.name]}
+                                            </p>
                                         )}
                                     </div>
                                 ))}
@@ -263,13 +329,23 @@ export default function Edit({ auth, product, bidangUsahaOptions, jenisUsahaOpti
                                         id="bidang_usaha"
                                         className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
                                         value={data.bidang_usaha}
-                                        onChange={(e) => setData("bidang_usaha", e.target.value)}
+                                        onChange={(e) =>
+                                            setData(
+                                                "bidang_usaha",
+                                                e.target.value
+                                            )
+                                        }
                                         required
                                     >
-                                        <option value="">Select Bidang Usaha</option>
+                                        <option value="">
+                                            Select Bidang Usaha
+                                        </option>
                                         {bidangUsahaOptions.map((option) => (
                                             <option key={option} value={option}>
-                                                {option.charAt(0).toUpperCase() + option.slice(1)}
+                                                {option
+                                                    .charAt(0)
+                                                    .toUpperCase() +
+                                                    option.slice(1)}
                                             </option>
                                         ))}
                                     </select>
@@ -288,13 +364,23 @@ export default function Edit({ auth, product, bidangUsahaOptions, jenisUsahaOpti
                                         id="jenis_usaha"
                                         className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
                                         value={data.jenis_usaha}
-                                        onChange={(e) => setData("jenis_usaha", e.target.value)}
+                                        onChange={(e) =>
+                                            setData(
+                                                "jenis_usaha",
+                                                e.target.value
+                                            )
+                                        }
                                         required
                                     >
-                                        <option value="">Select Jenis Usaha</option>
+                                        <option value="">
+                                            Select Jenis Usaha
+                                        </option>
                                         {jenisUsahaOptions.map((option) => (
                                             <option key={option} value={option}>
-                                                {option.charAt(0).toUpperCase() + option.slice(1)}
+                                                {option
+                                                    .charAt(0)
+                                                    .toUpperCase() +
+                                                    option.slice(1)}
                                             </option>
                                         ))}
                                     </select>
@@ -306,10 +392,31 @@ export default function Edit({ auth, product, bidangUsahaOptions, jenisUsahaOpti
                                 </div>
 
                                 {[
-                                    { label: "Lokasi", name: "lokasi", type: "text", placeholder: "Masukkan lokasi usaha" },
-                                    { label: "Email", name: "email", type: "email", placeholder: "Masukkan email usaha" },
-                                    { label: "Telephone", name: "telephone", type: "tel", placeholder: "Masukkan nomor telepon" },
-                                    { label: "Description", name: "description", type: "richtext", placeholder: "Masukkan deskripsi (opsional)" },
+                                    {
+                                        label: "Lokasi",
+                                        name: "lokasi",
+                                        type: "text",
+                                        placeholder: "Masukkan lokasi usaha",
+                                    },
+                                    {
+                                        label: "Email",
+                                        name: "email",
+                                        type: "email",
+                                        placeholder: "Masukkan email usaha",
+                                    },
+                                    {
+                                        label: "Telephone",
+                                        name: "telephone",
+                                        type: "tel",
+                                        placeholder: "Masukkan nomor telepon",
+                                    },
+                                    {
+                                        label: "Description",
+                                        name: "description",
+                                        type: "richtext",
+                                        placeholder:
+                                            "Masukkan deskripsi (opsional)",
+                                    },
                                 ].map((field) => (
                                     <div key={field.name}>
                                         <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -320,7 +427,9 @@ export default function Edit({ auth, product, bidangUsahaOptions, jenisUsahaOpti
                                                 <ReactQuill
                                                     theme="snow"
                                                     value={data.description}
-                                                    onChange={handleDescriptionChange}
+                                                    onChange={
+                                                        handleDescriptionChange
+                                                    }
                                                     modules={modules}
                                                     formats={formats}
                                                     className="h-64 mb-16"
@@ -332,19 +441,48 @@ export default function Edit({ auth, product, bidangUsahaOptions, jenisUsahaOpti
                                                 id={field.name}
                                                 className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
                                                 value={data[field.name]}
-                                                onChange={(e) => setData(field.name, e.target.value)}
+                                                onChange={(e) =>
+                                                    setData(
+                                                        field.name,
+                                                        e.target.value
+                                                    )
+                                                }
                                                 required
                                             >
-                                                <option value="">Select {field.label}</option>
-                                                {field.name === "bidang_usaha" ? bidangUsahaOptions.map((option) => (
-                                                    <option key={option} value={option}>
-                                                        {option.charAt(0).toUpperCase() + option.slice(1)}
-                                                    </option>
-                                                )) : jenisUsahaOptions.map((option) => (
-                                                    <option key={option} value={option}>
-                                                        {option.charAt(0).toUpperCase() + option.slice(1)}
-                                                    </option>
-                                                ))}
+                                                <option value="">
+                                                    Select {field.label}
+                                                </option>
+                                                {field.name === "bidang_usaha"
+                                                    ? bidangUsahaOptions.map(
+                                                          (option) => (
+                                                              <option
+                                                                  key={option}
+                                                                  value={option}
+                                                              >
+                                                                  {option
+                                                                      .charAt(0)
+                                                                      .toUpperCase() +
+                                                                      option.slice(
+                                                                          1
+                                                                      )}
+                                                              </option>
+                                                          )
+                                                      )
+                                                    : jenisUsahaOptions.map(
+                                                          (option) => (
+                                                              <option
+                                                                  key={option}
+                                                                  value={option}
+                                                              >
+                                                                  {option
+                                                                      .charAt(0)
+                                                                      .toUpperCase() +
+                                                                      option.slice(
+                                                                          1
+                                                                      )}
+                                                              </option>
+                                                          )
+                                                      )}
                                             </select>
                                         ) : (
                                             <input
@@ -352,24 +490,75 @@ export default function Edit({ auth, product, bidangUsahaOptions, jenisUsahaOpti
                                                 name={field.name}
                                                 placeholder={field.placeholder}
                                                 value={data[field.name]}
-                                                onChange={(e) => setData(field.name, e.target.value)}
+                                                onChange={(e) =>
+                                                    setData(
+                                                        field.name,
+                                                        e.target.value
+                                                    )
+                                                }
                                                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-[#5b9cff] transition duration-300"
                                                 required
                                             />
                                         )}
                                         {errors[field.name] && (
-                                            <p className="mt-1 text-sm text-red-600">{errors[field.name]}</p>
+                                            <p className="mt-1 text-sm text-red-600">
+                                                {errors[field.name]}
+                                            </p>
                                         )}
                                     </div>
                                 ))}
 
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Latitude
+                                    </label>
+                                    <input
+                                        type="text"
+                                        name="latitude"
+                                        placeholder="Enter latitude"
+                                        value={data.latitude}
+                                        onChange={(e) =>
+                                            setData("latitude", e.target.value)
+                                        }
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#5b9cff] transition duration-300"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Longitude
+                                    </label>
+                                    <input
+                                        type="text"
+                                        name="longitude"
+                                        placeholder="Enter longitude"
+                                        value={data.longitude}
+                                        onChange={(e) =>
+                                            setData("longitude", e.target.value)
+                                        }
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#5b9cff] transition duration-300"
+                                    />
+                                </div>
+
                                 <div className="mb-4">
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">Gambar</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Gambar
+                                    </label>
                                     <div className="relative">
                                         <div className="relative inline-block min-w-[120px]">
                                             <div className="inline-flex items-center justify-center px-4 py-1 bg-blue-100 text-blue-600 text-sm font-medium rounded-full hover:bg-blue-200 transition-colors duration-200 shadow-sm border border-blue-200">
-                                                <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                                <svg
+                                                    className="w-4 h-4 mr-1"
+                                                    fill="none"
+                                                    stroke="currentColor"
+                                                    viewBox="0 0 24 24"
+                                                    xmlns="http://www.w3.org/2000/svg"
+                                                >
+                                                    <path
+                                                        strokeLinecap="round"
+                                                        strokeLinejoin="round"
+                                                        strokeWidth={2}
+                                                        d="M12 4v16m8-8H4"
+                                                    />
                                                 </svg>
                                                 Tambahkan Image
                                             </div>
@@ -384,72 +573,156 @@ export default function Edit({ auth, product, bidangUsahaOptions, jenisUsahaOpti
                                         </div>
                                         {data.images.length > 0 && (
                                             <span className="ml-3 px-3 py-1.5 bg-gray-100 text-gray-600 text-sm rounded-full inline-flex items-center">
-                                                <svg className="w-4 h-4 mr-1.5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                <svg
+                                                    className="w-4 h-4 mr-1.5 text-blue-500"
+                                                    fill="none"
+                                                    stroke="currentColor"
+                                                    viewBox="0 0 24 24"
+                                                    xmlns="http://www.w3.org/2000/svg"
+                                                >
+                                                    <path
+                                                        strokeLinecap="round"
+                                                        strokeLinejoin="round"
+                                                        strokeWidth={2}
+                                                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                                                    />
                                                 </svg>
-                                                {data.images.length} file{data.images.length > 1 ? 's' : ''} dipilih
+                                                {data.images.length} file
+                                                {data.images.length > 1
+                                                    ? "s"
+                                                    : ""}{" "}
+                                                dipilih
                                             </span>
                                         )}
                                     </div>
                                     {errors.image && (
-                                        <p className="mt-1 text-sm text-red-600">{errors.image}</p>
+                                        <p className="mt-1 text-sm text-red-600">
+                                            {errors.image}
+                                        </p>
                                     )}
 
                                     <div className="mt-4">
                                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                            {existingImages.map((image, index) => (
-                                                <div key={image.id} className="relative aspect-[16/9] overflow-hidden rounded-sm">
-                                                    {existingImagesLoading[index] && (
-                                                        <div className="absolute inset-0 flex items-center justify-center bg-gray-100 z-10">
-                                                            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
-                                                        </div>
-                                                    )}
-                                                    <img
-                                                        src={`/storage/${image.image_path}`}
-                                                        alt="Product"
-                                                        className={`w-full h-full object-cover ${existingImagesLoading[index] ? 'invisible' : 'visible'}`}
-                                                        onLoad={() => {
-                                                            setTimeout(() => {
-                                                                setExistingImagesLoading(prev => {
-                                                                    const newLoading = [...prev];
-                                                                    newLoading[index] = false;
-                                                                    return newLoading;
-                                                                });
-                                                            }, 500); // Delay 500ms
-                                                        }}
-                                                    />
-                                                    {!existingImagesLoading[index] && (
+                                            {existingImages.map(
+                                                (image, index) => (
+                                                    <div
+                                                        key={image.id}
+                                                        className="relative aspect-[16/9] overflow-hidden rounded-sm"
+                                                    >
+                                                        {existingImagesLoading[
+                                                            index
+                                                        ] && (
+                                                            <div className="absolute inset-0 flex items-center justify-center bg-gray-100 z-10">
+                                                                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
+                                                            </div>
+                                                        )}
+                                                        <img
+                                                            src={`/storage/${image.image_path}`}
+                                                            alt="Product"
+                                                            className={`w-full h-full object-cover ${
+                                                                existingImagesLoading[
+                                                                    index
+                                                                ]
+                                                                    ? "invisible"
+                                                                    : "visible"
+                                                            }`}
+                                                            onLoad={() => {
+                                                                setTimeout(
+                                                                    () => {
+                                                                        setExistingImagesLoading(
+                                                                            (
+                                                                                prev
+                                                                            ) => {
+                                                                                const newLoading =
+                                                                                    [
+                                                                                        ...prev,
+                                                                                    ];
+                                                                                newLoading[
+                                                                                    index
+                                                                                ] = false;
+                                                                                return newLoading;
+                                                                            }
+                                                                        );
+                                                                    },
+                                                                    500
+                                                                ); // Delay 500ms
+                                                            }}
+                                                        />
+                                                        {!existingImagesLoading[
+                                                            index
+                                                        ] && (
+                                                            <button
+                                                                type="button"
+                                                                className="absolute top-2 right-2 w-6 h-6 bg-red-600 text-white rounded-sm flex items-center justify-center hover:bg-red-700 transition-colors duration-200 z-20"
+                                                                onClick={() =>
+                                                                    removeExistingImage(
+                                                                        image.id
+                                                                    )
+                                                                }
+                                                            >
+                                                                <svg
+                                                                    className="w-4 h-4"
+                                                                    fill="none"
+                                                                    stroke="currentColor"
+                                                                    viewBox="0 0 24 24"
+                                                                >
+                                                                    <path
+                                                                        strokeLinecap="round"
+                                                                        strokeLinejoin="round"
+                                                                        strokeWidth={
+                                                                            2
+                                                                        }
+                                                                        d="M6 18L18 6M6 6l12 12"
+                                                                    />
+                                                                </svg>
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                )
+                                            )}
+                                            {imagePreviewUrls.map(
+                                                (url, index) => (
+                                                    <div
+                                                        key={`new-${index}`}
+                                                        className="relative aspect-[16/9] overflow-hidden rounded-sm"
+                                                    >
+                                                        <img
+                                                            src={url}
+                                                            alt={`New upload ${
+                                                                index + 1
+                                                            }`}
+                                                            className="w-full h-full object-cover border-4 border-blue-200"
+                                                        />
                                                         <button
                                                             type="button"
-                                                            className="absolute top-2 right-2 w-6 h-6 bg-red-600 text-white rounded-sm flex items-center justify-center hover:bg-red-700 transition-colors duration-200 z-20"
-                                                            onClick={() => removeExistingImage(image.id)}
+                                                            className="absolute top-2 right-2 w-6 h-6 bg-red-600 text-white rounded-sm flex items-center justify-center hover:bg-red-700 transition-colors duration-200"
+                                                            onClick={() =>
+                                                                removeTempImage(
+                                                                    index
+                                                                )
+                                                            }
                                                         >
-                                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                                            <svg
+                                                                className="w-4 h-4"
+                                                                fill="none"
+                                                                stroke="currentColor"
+                                                                viewBox="0 0 24 24"
+                                                            >
+                                                                <path
+                                                                    strokeLinecap="round"
+                                                                    strokeLinejoin="round"
+                                                                    strokeWidth={
+                                                                        2
+                                                                    }
+                                                                    d="M6 18L18 6M6 6l12 12"
+                                                                />
                                                             </svg>
                                                         </button>
-                                                    )}
-                                                </div>
-                                            ))}
-                                            {imagePreviewUrls.map((url, index) => (
-                                                <div key={`new-${index}`} className="relative aspect-[16/9] overflow-hidden rounded-sm">
-                                                    <img
-                                                        src={url}
-                                                        alt={`New upload ${index + 1}`}
-                                                        className="w-full h-full object-cover border-4 border-blue-200"
-                                                    />
-                                                    <button
-                                                        type="button"
-                                                        className="absolute top-2 right-2 w-6 h-6 bg-red-600 text-white rounded-sm flex items-center justify-center hover:bg-red-700 transition-colors duration-200"
-                                                        onClick={() => removeTempImage(index)}
-                                                    >
-                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                                        </svg>
-                                                    </button>
-                                                </div>
-                                            ))}
-                                            {isUploading && renderLoadingPlaceholders()}
+                                                    </div>
+                                                )
+                                            )}
+                                            {isUploading &&
+                                                renderLoadingPlaceholders()}
                                         </div>
                                     </div>
                                 </div>

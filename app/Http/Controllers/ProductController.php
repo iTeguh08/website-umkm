@@ -56,13 +56,13 @@ class ProductController extends Controller
         $search = $request->query('search');
         $jenisUsaha = $request->query('jenis_usaha');
         $bidangUsaha = $request->query('bidang_usaha');
-        
+
         $products = Product::with('images')
             ->when($search, function ($query) use ($search) {
-                return $query->where(function($q) use ($search) {
+                return $query->where(function ($q) use ($search) {
                     $q->where('nama_usaha', 'like', '%' . $search . '%')
-                      ->orWhere('lokasi', 'like', '%' . $search . '%')
-                      ->orWhere('email', 'like', '%' . $search . '%');
+                        ->orWhere('lokasi', 'like', '%' . $search . '%')
+                        ->orWhere('email', 'like', '%' . $search . '%');
                 });
             })
             ->when($jenisUsaha, function ($query) use ($jenisUsaha) {
@@ -108,6 +108,8 @@ class ProductController extends Controller
             'jenis_usaha' => 'required|in:' . implode(',', JenisUsaha::values()),
             'images' => 'nullable|array',
             'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
+            'latitude' => 'nullable|numeric|between:-90,90',
+            'longitude' => 'nullable|numeric|between:-180,180',
         ]);
 
         $product = new Product();
@@ -115,12 +117,11 @@ class ProductController extends Controller
         $product->lokasi = $request->lokasi;
         $product->email = $request->email;
         $product->telephone = $request->telephone;
-        $product->description = $request->description;
-        $product->bidang_usaha = $request->bidang_usaha;
-        $product->jenis_usaha = $request->jenis_usaha;
+        $product->latitude = $request->latitude;
+        $product->longitude = $request->longitude;
 
         $product->save();
-        
+
         if ($request->hasFile('images')) {
             foreach ($request->file('images') as $image) {
                 $path = $image->store('products', 'public');
@@ -156,6 +157,8 @@ class ProductController extends Controller
             'bidang_usaha' => 'required|in:' . implode(',', BidangUsaha::values()),
             'jenis_usaha' => 'required|in:' . implode(',', JenisUsaha::values()),
             'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
+            'latitude' => 'nullable|numeric|between:-90,90',
+            'longitude' => 'nullable|numeric|between:-180,180',
         ]);
 
         $product->nama_usaha = $request->nama_usaha;
@@ -165,6 +168,8 @@ class ProductController extends Controller
         $product->description = $request->description;
         $product->bidang_usaha = $request->bidang_usaha;
         $product->jenis_usaha = $request->jenis_usaha;
+        $product->latitude = $request->latitude;
+        $product->longitude = $request->longitude;
 
         if ($request->hasFile('images')) {
             foreach ($request->file('images') as $image) {
