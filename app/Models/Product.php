@@ -20,7 +20,9 @@ class Product extends Model
         'image',
         'description',
         'bidang_usaha',
-        'jenis_usaha'
+        'jenis_usaha',
+        'latitude',
+        'longitude'
     ];
 
     protected $casts = [

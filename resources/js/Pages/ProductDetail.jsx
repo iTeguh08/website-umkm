@@ -113,7 +113,7 @@ const ProductDetail = () => {
                 <div className="py-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         {/* Left column - Image Carousel */}
-                        <div className="relative">
+                        <div className="relative z-0">
                             {product.images && product.images.length > 0 ? (
                                 <Slider ref={sliderRef} {...settings}>
                                     {product.images.map((image, index) => (

@@ -1,13 +1,14 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useForm, router, usePage, Link } from "@inertiajs/react";
-import { Inertia } from "@inertiajs/inertia"; // Pastikan Anda mengimpor Inertia
+import { Inertia } from "@inertiajs/inertia";
 import DeleteButton from "@/Components/DeleteButton";
 import Sidebar from "@/Components/Sidebar";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 
 const Index = () => {
-    const { products, filters } = usePage().props; // Get products from page props
+    const { products, filters } = usePage().props;
     const [searchQuery, setSearchQuery] = useState(filters?.search || "");
+    const [timestampType, setTimestampType] = useState(filters?.timestamp_type || "created_at");
     const [showPreview, setShowPreview] = useState(false);
     const [previewImage, setPreviewImage] = useState(null);
     const [isAnimating, setIsAnimating] = useState(false);
@@ -16,7 +17,7 @@ const Index = () => {
         setSearchQuery(e.target.value);
         router.get(
             route("products.index"),
-            { search: e.target.value },
+            { search: e.target.value, timestamp_type: timestampType },
             {
                 preserveState: true,
                 preserveScroll: true,
@@ -25,12 +26,40 @@ const Index = () => {
         );
     };
 
+    const handleTimestampChange = (e) => {
+        const newTimestampType = e.target.value;
+        setTimestampType(newTimestampType);
+        router.get(
+            route("products.index"),
+            { search: searchQuery, timestamp_type: newTimestampType },
+            {
+                preserveState: true,
+                preserveScroll: true,
+                only: ["products", "filters"],
+            }
+        );
+    };
+
+    const formatTimestamp = (dateString) => {
+        if (!dateString) return "-";
+        const date = new Date(dateString);
+        return date.toLocaleString('id-ID', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: false
+        });
+    };
+
     const handleImageClick = (imageUrl) => {
         setPreviewImage(imageUrl);
         setIsAnimating(true);
         setTimeout(() => {
             setShowPreview(true);
-        }, 100); // Small delay for animation
+        }, 100);
     };
 
     const handleClosePreview = () => {
@@ -38,15 +67,11 @@ const Index = () => {
         setTimeout(() => {
             setShowPreview(false);
             setPreviewImage(null);
-        }, 100); // Small delay for animation
+        }, 100);
     };
 
     const queryString = window.location.search;
-
-    // Buat objek URLSearchParams dari query string
     const urlParams = new URLSearchParams(queryString);
-
-    // Ambil nilai parameter 'page'
     const page = urlParams.get("page");
 
     return (
@@ -112,11 +137,18 @@ const Index = () => {
                                                 <th className="w-[20%] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                                     Lokasi
                                                 </th>
-                                                <th className="w-[20%] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    Email
-                                                </th>
-                                                <th className="w-[20%] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    Telephone
+                                                <th className="w-[30%] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                    <div className="flex items-center space-x-2">
+                                                        <span>Timestamp</span>
+                                                        <select
+                                                            value={timestampType}
+                                                            onChange={handleTimestampChange}
+                                                            className="w-[105px] text-xs font-medium text-gray-700 border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                                        >
+                                                            <option value="created_at">Created At</option>
+                                                            <option value="updated_at">Updated At</option>
+                                                        </select>
+                                                    </div>
                                                 </th>
                                                 <th className="w-[10%] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                                     Aksi
@@ -152,10 +184,7 @@ const Index = () => {
                                                             {product.lokasi}
                                                         </td>
                                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                            {product.email}
-                                                        </td>
-                                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                            {product.telephone}
+                                                            {formatTimestamp(product[timestampType])}
                                                         </td>
                                                         <td className="px-6 py-4 whitespace-nowrap text-sm space-x-3">
                                                             <Link

@@ -17,17 +17,36 @@ class ProductController extends Controller
     public function index(Request $request)
     {
         $search = $request->query('search');
+        $createdFrom = $request->query('created_from');
+        $createdTo = $request->query('created_to');
+        $updatedFrom = $request->query('updated_from');
+        $updatedTo = $request->query('updated_to');
+        $timestampType = $request->query('timestamp_type', 'created_at');
+
         $products = Product::with('images')
             ->when($search, function ($query, $search) {
                 return $query->where('nama_usaha', 'like', '%' . $search . '%')
                     ->orWhere('lokasi', 'like', "%{$search}%")
                     ->orWhere('email', 'like', "%{$search}%");
-            })->latest()->paginate(10);
+            })
+            ->when($createdFrom && $createdTo, function ($query) use ($createdFrom, $createdTo) {
+                return $query->whereBetween('created_at', [$createdFrom, $createdTo]);
+            })
+            ->when($updatedFrom && $updatedTo, function ($query) use ($updatedFrom, $updatedTo) {
+                return $query->whereBetween('updated_at', [$updatedFrom, $updatedTo]);
+            })
+            ->latest($timestampType) // Order by the selected timestamp type
+            ->paginate(10);
 
         return Inertia::render('Admin/Products/Index', [
             'products' => $products,
             'filters' => [
-                'search' => $search
+                'search' => $search,
+                'created_from' => $createdFrom,
+                'created_to' => $createdTo,
+                'updated_from' => $updatedFrom,
+                'updated_to' => $updatedTo,
+                'timestamp_type' => $timestampType
             ]
         ]);
     }
