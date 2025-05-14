@@ -1,0 +1,40 @@
+const Ziggy = {
+    url: window.location.protocol + '//' + window.location.host,
+    port: window.location.port,
+    defaults: {},
+    routes: {
+        'login': { uri: 'login', methods: ['GET', 'HEAD'] },
+        'logout': { uri: 'logout', methods: ['POST'] },
+        'dashboard': { uri: 'admin/dashboard', methods: ['GET', 'HEAD'] },
+        'profile.edit': { uri: 'profile', methods: ['GET', 'HEAD'] },
+        'profile.update': { uri: 'profile', methods: ['PATCH'] },
+        'profile.destroy': { uri: 'profile', methods: ['DELETE'] },
+        'products.index': { uri: 'admin/products', methods: ['GET', 'HEAD'] },
+        'products.create': { uri: 'admin/products/create', methods: ['GET', 'HEAD'] },
+        'products.store': { uri: 'admin/products', methods: ['POST'] },
+        'products.show': { uri: 'admin/products/{product}', methods: ['GET', 'HEAD'] },
+        'products.edit': { uri: 'admin/products/{product}/edit', methods: ['GET', 'HEAD'] },
+        'products.update': { uri: 'admin/products/{product}', methods: ['PUT', 'PATCH'] },
+        'products.destroy': { uri: 'admin/products/{product}', methods: ['DELETE'] },
+        'posts.index': { uri: 'admin/posts', methods: ['GET', 'HEAD'] },
+        'posts.create': { uri: 'admin/posts/create', methods: ['GET', 'HEAD'] },
+        'posts.store': { uri: 'admin/posts', methods: ['POST'] },
+        'posts.show': { uri: 'admin/posts/{post}', methods: ['GET', 'HEAD'] },
+        'posts.edit': { uri: 'admin/posts/{post}/edit', methods: ['GET', 'HEAD'] },
+        'posts.update': { uri: 'admin/posts/{post}', methods: ['PUT', 'PATCH'] },
+        'posts.destroy': { uri: 'admin/posts/{post}', methods: ['DELETE'] },
+        'tags.index': { uri: 'admin/tags', methods: ['GET', 'HEAD'] },
+        'tags.create': { uri: 'admin/tags/create', methods: ['GET', 'HEAD'] },
+        'tags.store': { uri: 'admin/tags', methods: ['POST'] },
+        'tags.show': { uri: 'admin/tags/{tag}', methods: ['GET', 'HEAD'] },
+        'tags.edit': { uri: 'admin/tags/{tag}/edit', methods: ['GET', 'HEAD'] },
+        'tags.update': { uri: 'admin/tags/{tag}', methods: ['PUT', 'PATCH'] },
+        'tags.destroy': { uri: 'admin/tags/{tag}', methods: ['DELETE'] },
+        'homepage': { uri: '/', methods: ['GET', 'HEAD'] },
+        'product.detail': { uri: 'product/{product}', methods: ['GET', 'HEAD'] },
+        'products.reorder-images': { uri: 'products/{product}/reorder-images', methods: ['POST'] },
+        'product-images.delete': { uri: 'product-images/{id}', methods: ['DELETE'] }
+    }
+};
+
+export { Ziggy };

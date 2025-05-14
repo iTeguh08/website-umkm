@@ -32,8 +32,8 @@ const Sidebar = () => {
         {
             section: 'MANAGEMENT',
             items: [
-                { name: 'badges', label: 'Badges', href: '/admin/dashboard/badges', icon: 'badge' },
-                { name: 'pages', label: 'Pages', href: route('posts.index'), icon: 'document' }
+                { name: 'tag', label: 'Tags', href: route('tags.index'), icon: 'tag' },
+                { name: 'post', label: 'Posts', href: route('posts.index'), icon: 'document' }
             ]
         }
     ];

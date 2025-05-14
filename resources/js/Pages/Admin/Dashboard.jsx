@@ -12,7 +12,7 @@ export default function Index({ auth }) {
             <Sidebar />
             <div className="pl-64">
                 <AuthenticatedLayout user={auth.user}>
-                    DASHBARD
+                    DASHBOARD
                 </AuthenticatedLayout>
             </div>
         </>
