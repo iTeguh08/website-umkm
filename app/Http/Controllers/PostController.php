@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Post;
+use App\Models\Tag;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
@@ -12,7 +13,7 @@ class PostController extends Controller
     public function index()
     {
         $posts = Post::latest()->get();
-        
+
         return Inertia::render('Admin/Posts/Index', [
             'posts' => $posts
         ]);
@@ -20,7 +21,10 @@ class PostController extends Controller
 
     public function create()
     {
-        return Inertia::render('Admin/Posts/Create');
+        $tags = Tag::all();
+        return Inertia::render('Admin/Posts/Create', [
+            'tags' => $tags
+        ]);
     }
 
     public function store(Request $request)
@@ -43,24 +47,34 @@ class PostController extends Controller
 
         $post->save();
 
+        // Attach tags if provided
+        if ($request->has('tags') && !empty($request->tags)) {
+            // Pastikan hanya ID yang dikirim ke attach
+            $tagIds = collect($request->tags)->pluck('id')->toArray();
+            $post->tags()->attach($tagIds);
+        }
+
         return redirect()->route('posts.index')
             ->with('message', 'Post created successfully.');
     }
 
     public function edit(Post $post)
     {
+        $tags = Tag::all();
         return Inertia::render('Admin/Posts/Edit', [
-            'post' => $post
+            'post' => $post->load('tags'),
+            'tags' => $tags
         ]);
     }
 
     public function update(Request $request, Post $post)
     {
-        dd($request->all());
         $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'required|string',
             'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            // 'tags' => 'nullable|array',
+            // 'tags.*' => 'exists:tags,id',
         ]);
 
         $post->title = $request->title;
@@ -71,14 +85,21 @@ class PostController extends Controller
             if ($post->photo) {
                 Storage::delete('public/posts/' . $post->photo);
             }
-            
+
             $file = $request->file('photo');
-            // $fileName = time() . '.' . $file->getClientOriginalExtension();
             $path = $file->store('posts', 'public');
             $post->photo = basename($path);
         }
 
         $post->save();
+
+        // Sync tags
+        if ($request->has('tags')) {
+            $tagIds = collect($request->tags)->pluck('id')->toArray();
+            $post->tags()->sync($tagIds);
+        } else {
+            $post->tags()->detach();
+        }
 
         return redirect()->route('posts.index')
             ->with('message', 'Post updated successfully.');
@@ -89,7 +110,7 @@ class PostController extends Controller
         if ($post->photo) {
             Storage::delete('public/posts/' . $post->photo);
         }
-        
+
         $post->delete();
 
         return redirect()->route('posts.index')

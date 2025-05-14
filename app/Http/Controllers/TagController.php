@@ -27,19 +27,10 @@ class TagController extends Controller
     {
         $request->validate([
             'title' => 'required|string|max:255',
-            'description' => 'required|string',
-            'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
         $tag = new Tag();
         $tag->title = $request->title;
-        $tag->description = $request->description;
-
-        if ($request->hasFile('photo')) {
-            $file = $request->file('photo');
-            $path = $file->store('tags', 'public');
-            $tag->photo = basename($path);
-        }
 
         $tag->save();
 
@@ -56,27 +47,11 @@ class TagController extends Controller
 
     public function update(Request $request, Tag $tag)
     {
-        // dd($request->all());
         $request->validate([
             'title' => 'required|string|max:255',
-            'description' => 'required|string',
-            'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
         $tag->title = $request->title;
-        $tag->description = $request->description;
-
-        if ($request->hasFile('photo')) {
-            // Delete old photo if exists
-            if ($tag->photo) {
-                Storage::delete('public/tags/' . $tag->photo);
-            }
-            
-            $file = $request->file('photo');
-            // $fileName = time() . '.' . $file->getClientOriginalExtension();
-            $path = $file->store('tags', 'public');
-            $tag->photo = basename($path);
-        }
 
         $tag->save();
 
@@ -86,10 +61,6 @@ class TagController extends Controller
 
     public function destroy(Tag $tag)
     {
-        if ($tag->photo) {
-            Storage::delete('public/tags/' . $tag->photo);
-        }
-        
         $tag->delete();
 
         return redirect()->route('tags.index')

@@ -4,47 +4,26 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
 import TextInput from '@/Components/TextInput';
-import TextArea from '@/Components/TextArea';
 import PrimaryButton from '@/Components/PrimaryButton';
 import Sidebar from '@/Components/Sidebar';
 
 export default function Create({ auth }) {
-    const { data, setData, tag, processing, errors, reset } = useForm({
+    const { data, setData, post, processing, errors, reset } = useForm({
         title: '',
-        description: '',
-        photo: null,
     });
-
-    const [photoPreview, setPhotoPreview] = useState(null);
-
+    
     const handleSubmit = (e) => {
         e.preventDefault();
-        tag(route('tags.store'), {
+        post(route('tags.store'), {
             preserveScroll: true,
             onSuccess: () => reset(),
         });
-    };
-
-    const handlePhotoChange = (e) => {
-        const file = e.target.files[0];
-        setData('photo', file);
-
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                setPhotoPreview(e.target.result);
-            };
-            reader.readAsDataURL(file);
-        } else {
-            setPhotoPreview(null);
-        }
     };
 
     return (
         <>
             <Sidebar />
             <div className="pl-64 bg-gray-50 min-h-screen">
-
                 <AuthenticatedLayout user={auth.user}>
                     <Head title="Create Tag" />
 
@@ -75,44 +54,6 @@ export default function Create({ auth }) {
                                             />
                                             <InputError message={errors.title} className="mt-2" />
                                         </div>
-
-                                        <div>
-                                            <InputLabel htmlFor="description" value="Description" />
-                                            <TextArea
-                                                id="description"
-                                                className="mt-1 block w-full"
-                                                value={data.description}
-                                                onChange={(e) => setData('description', e.target.value)}
-                                                // required
-                                                rows={6}
-                                            />
-                                            <InputError message={errors.description} className="mt-2" />
-                                        </div>
-
-                                        <div>
-                                            <InputLabel htmlFor="photo" value="Photo (Optional)" />
-                                            <input
-                                                id="photo"
-                                                type="file"
-                                                className="mt-1 block w-full"
-                                                onChange={handlePhotoChange}
-                                                accept="image/*"
-                                            />
-                                            <InputError message={errors.photo} className="mt-2" />
-
-                                            {photoPreview && (
-                                                <div className="mt-4">
-                                                    <div className="h-48 w-full md:w-1/2 overflow-hidden rounded-md">
-                                                        <img
-                                                            src={photoPreview}
-                                                            alt="Preview"
-                                                            className="w-full h-full object-cover"
-                                                        />
-                                                    </div>
-                                                </div>
-                                            )}
-                                        </div>
-
                                         <div className="flex items-center justify-end">
                                             <PrimaryButton className="ml-4" disabled={processing}>
                                                 Create Tag

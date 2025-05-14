@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Head, Link, useForm } from '@inertiajs/react';
+import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
@@ -9,13 +9,17 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import Sidebar from '@/Components/Sidebar';
 
 export default function Create({ auth }) {
+    const { tags } = usePage().props;
     const { data, setData, post, processing, errors, reset } = useForm({
         title: '',
         description: '',
         photo: null,
+        tags: [],
     });
 
     const [photoPreview, setPhotoPreview] = useState(null);
+    const [searchTag, setSearchTag] = useState('');
+    const [tagSuggestions, setTagSuggestions] = useState([]);
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -40,6 +44,33 @@ export default function Create({ auth }) {
         }
     };
 
+    const handleTagSearch = (e) => {
+        const query = e.target.value;
+        setSearchTag(query);
+        
+        if (query.length > 0) {
+            const filteredTags = tags.filter(tag => 
+                tag.title.toLowerCase().includes(query.toLowerCase()) && 
+                !data.tags.some(selectedTag => selectedTag.id === tag.id)
+            );
+            setTagSuggestions(filteredTags);
+        } else {
+            setTagSuggestions([]);
+        }
+    };
+
+    const handleSelectTag = (tag) => {
+        setData('tags', [...data.tags, tag]);
+        setSearchTag('');
+        setTagSuggestions([]);
+    };
+
+    const handleRemoveTag = (tagId) => {
+        setData('tags', data.tags.filter(tag => tag.id !== tagId));
+    };
+
+    console.log('errors', errors);
+    
     return (
         <>
             <Sidebar />
@@ -83,10 +114,51 @@ export default function Create({ auth }) {
                                                 className="mt-1 block w-full"
                                                 value={data.description}
                                                 onChange={(e) => setData('description', e.target.value)}
-                                                // required
                                                 rows={6}
                                             />
                                             <InputError message={errors.description} className="mt-2" />
+                                        </div>
+
+                                        <div>
+                                            <InputLabel htmlFor="tags" value="Tags" />
+                                            <div className="mt-1">
+                                                <div className="flex flex-wrap gap-2 mb-2">
+                                                    {data.tags.map(tag => (
+                                                        <div key={tag.id} className="flex items-center bg-blue-100 text-blue-800 px-3 py-1 rounded-full">
+                                                            <span>{tag.title}</span>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => handleRemoveTag(tag.id)}
+                                                                className="ml-2 text-blue-600 hover:text-blue-800"
+                                                            >
+                                                                &times;
+                                                            </button>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                                <TextInput
+                                                    id="tags"
+                                                    type="text"
+                                                    className="block w-full"
+                                                    value={searchTag}
+                                                    onChange={handleTagSearch}
+                                                    placeholder="Search for tags..."
+                                                />
+                                                {tagSuggestions.length > 0 && (
+                                                    <ul className="border rounded-md mt-1 max-h-40 overflow-y-auto">
+                                                        {tagSuggestions.map(tag => (
+                                                            <li
+                                                                key={tag.id}
+                                                                onClick={() => handleSelectTag(tag)}
+                                                                className="p-2 hover:bg-gray-100 cursor-pointer"
+                                                            >
+                                                                {tag.title}
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                )}
+                                            </div>
+                                            <InputError message={errors.tags} className="mt-2" />
                                         </div>
 
                                         <div>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Head, Link, useForm } from '@inertiajs/react';
+import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
@@ -9,14 +9,18 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import Sidebar from '@/Components/Sidebar';
 
 export default function Edit({ auth, post }) {
+    const { tags } = usePage().props;
     const { data, setData, post: submitForm, processing, errors, reset } = useForm({
         title: post.title || '',
         description: post.description || '',
         photo: null,
+        tags: post.tags || [],
         _method: 'PUT',
     });
 
     const [photoPreview, setPhotoPreview] = useState(post.photo ? `/storage/posts/${post.photo}` : null);
+    const [searchTag, setSearchTag] = useState('');
+    const [tagSuggestions, setTagSuggestions] = useState([]);
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -36,6 +40,31 @@ export default function Edit({ auth, post }) {
             };
             reader.readAsDataURL(file);
         }
+    };
+
+    const handleTagSearch = (e) => {
+        const query = e.target.value;
+        setSearchTag(query);
+        
+        if (query.length > 0) {
+            const filteredTags = tags.filter(tag => 
+                tag.title.toLowerCase().includes(query.toLowerCase()) && 
+                !data.tags.some(selectedTag => selectedTag.id === tag.id)
+            );
+            setTagSuggestions(filteredTags);
+        } else {
+            setTagSuggestions([]);
+        }
+    };
+
+    const handleSelectTag = (tag) => {
+        setData('tags', [...data.tags, tag]);
+        setSearchTag('');
+        setTagSuggestions([]);
+    };
+
+    const handleRemoveTag = (tagId) => {
+        setData('tags', data.tags.filter(tag => tag.id !== tagId));
     };
 
     return (
@@ -85,6 +114,48 @@ export default function Edit({ auth, post }) {
                                                 rows={6}
                                             />
                                             <InputError message={errors.description} className="mt-2" />
+                                        </div>
+
+                                        <div>
+                                            <InputLabel htmlFor="tags" value="Tags" />
+                                            <div className="mt-1">
+                                                <div className="flex flex-wrap gap-2 mb-2">
+                                                    {data.tags.map(tag => (
+                                                        <div key={tag.id} className="flex items-center bg-blue-100 text-blue-800 px-3 py-1 rounded-full">
+                                                            <span>{tag.title}</span>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => handleRemoveTag(tag.id)}
+                                                                className="ml-2 text-blue-600 hover:text-blue-800"
+                                                            >
+                                                                &times;
+                                                            </button>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                                <TextInput
+                                                    id="tags"
+                                                    type="text"
+                                                    className="block w-full"
+                                                    value={searchTag}
+                                                    onChange={handleTagSearch}
+                                                    placeholder="Search for tags..."
+                                                />
+                                                {tagSuggestions.length > 0 && (
+                                                    <ul className="border rounded-md mt-1 max-h-40 overflow-y-auto">
+                                                        {tagSuggestions.map(tag => (
+                                                            <li
+                                                                key={tag.id}
+                                                                onClick={() => handleSelectTag(tag)}
+                                                                className="p-2 hover:bg-gray-100 cursor-pointer"
+                                                            >
+                                                                {tag.title}
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                )}
+                                            </div>
+                                            <InputError message={errors.tags} className="mt-2" />
                                         </div>
 
                                         <div>
