@@ -13,40 +13,57 @@ const BusinessShowcase = ({ products }) => {
     }
 
     return (
-        <section className="py-16 px-4">
-            <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <section className="py-12 px-4 sm:px-6 lg:px-8">
+            <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
                 {productList.map((product) => (
                     product && product.id && (
                         <div 
                             key={product.id} 
-                            className="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden"
+                            className="group bg-white rounded-lg shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden flex flex-col h-full"
                         >
-                            <Link href={route('product.detail', product.id)}>
-                                {product.images?.[0]?.image_path && (
+                            <Link href={route('product.detail', product.id)} className="block overflow-hidden">
+                                {product.images?.[0]?.image_path ? (
                                     <img 
                                         src={`/storage/${product.images[0].image_path}`} 
                                         alt={product.nama_usaha} 
-                                        className="aspect-[16/9] object-cover w-full"
+                                        className="w-full h-48 sm:h-56 object-cover transition-transform duration-500 group-hover:scale-105"
                                     />
+                                ) : (
+                                    <div className="w-full h-48 sm:h-56 bg-white flex items-center justify-center text-gray-400">
+                                        <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                        </svg>
+                                    </div>
                                 )}
                             </Link>
-                            <div className="p-4">
+                            <div className="p-6 flex-1 flex flex-col">
                                 <Link 
                                     href={route('product.detail', product.id)} 
-                                    className="block text-base sm:text-lg font-semibold text-gray-900 hover:text-blue-600 transition-colors"
+                                    className="block text-lg font-bold text-gray-900 hover:text-blue-600 transition-colors mb-2"
                                 >
                                     {product.nama_usaha}
                                 </Link>
-                                <div 
-                                    className="text-sm sm:text-base text-gray-600 mt-2 line-clamp-2"
-                                    dangerouslySetInnerHTML={{ __html: product.description || '' }}
-                                />
-                                <div className="mt-4">
+                                
+                                <div className="flex-1">
+                                    <div 
+                                        className="text-gray-600 text-sm leading-relaxed line-clamp-2"
+                                        dangerouslySetInnerHTML={{ 
+                                            __html: product.description?.length > 200 
+                                                ? `${product.description.substring(0, 200)}...` 
+                                                : product.description || 'Tidak ada deskripsi' 
+                                        }}
+                                    />
+                                </div>
+                                
+                                <div className="mt-4 pt-4">
                                     <Link 
                                         href={route('product.detail', product.id)} 
-                                        className="text-blue-600 text-sm font-medium hover:underline hover:text-blue-700 transition-colors"
+                                        className="inline-flex items-center text-blue-600 font-medium text-sm hover:text-blue-700 transition-colors group-has-link"
                                     >
-                                        DETAIL
+                                        Lihat Detail
+                                        <svg className="w-4 h-4 ml-1 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                                        </svg>
                                     </Link>
                                 </div>
                             </div>
