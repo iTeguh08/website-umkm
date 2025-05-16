@@ -10,7 +10,9 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             UserSeeder::class,
-            ProductDummySeeder::class,
+            TagSeeder::class,
+            PostSeeder::class, // Menambahkan PostSeeder
+            // ProductDummySeeder::class,
         ]);
     }
 }

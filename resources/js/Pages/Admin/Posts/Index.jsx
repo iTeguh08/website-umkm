@@ -1,10 +1,31 @@
-import React from 'react';
-import { Head, Link, usePage } from '@inertiajs/react';
+import React, { useState } from 'react';
+import { Head, Link, usePage, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Sidebar from '@/Components/Sidebar';
 
 export default function Index({ auth }) {
-    const { posts, flash } = usePage().props;
+    const { posts: initialPosts, flash } = usePage().props;
+    const [posts, setPosts] = useState(initialPosts);
+    const [isDeleting, setIsDeleting] = useState(false);
+
+    const handleDelete = (postId) => {
+        if (!confirm('Are you sure you want to delete this post?')) {
+            return;
+        }
+
+        setIsDeleting(true);
+        
+        router.delete(route('posts.destroy', postId), {
+            preserveScroll: true, // Mencegah scroll ke atas
+            onSuccess: () => {
+                // Update daftar posts setelah penghapusan
+                setPosts(posts.filter(post => post.id !== postId));
+            },
+            onFinish: () => {
+                setIsDeleting(false);
+            }
+        });
+    };
 
     return (
         <>
@@ -54,19 +75,17 @@ export default function Index({ auth }) {
                                                     >
                                                         Edit
                                                     </Link>
-                                                    <Link
-                                                        href={route('posts.destroy', post.id)}
-                                                        method="delete"
-                                                        as="button"
-                                                        className="px-3 py-1 bg-red-500 text-white rounded-md hover:bg-red-600"
-                                                        onClick={(e) => {
-                                                            if (!confirm('Are you sure you want to delete this post?')) {
-                                                                e.preventDefault();
-                                                            }
-                                                        }}
+                                                    <button
+                                                        onClick={() => handleDelete(post.id)}
+                                                        disabled={isDeleting}
+                                                        className={`px-3 py-1 rounded-md ${
+                                                            isDeleting 
+                                                                ? 'bg-gray-400 cursor-not-allowed' 
+                                                                : 'bg-red-500 hover:bg-red-600'
+                                                        } text-white`}
                                                     >
-                                                        Delete
-                                                    </Link>
+                                                        {isDeleting ? 'Deleting...' : 'Delete'}
+                                                    </button>
                                                 </div>
                                             </div>
                                         </div>

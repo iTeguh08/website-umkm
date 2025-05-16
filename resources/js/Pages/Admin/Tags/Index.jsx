@@ -5,7 +5,6 @@ import Sidebar from '@/Components/Sidebar';
 
 export default function Index({ auth }) {
     const { tags, flash } = usePage().props;
-    const [search, setSearch] = useState('');
     const [suggestions, setSuggestions] = useState([]);
 
     // Inisialisasi useForm untuk penghapusan
@@ -22,23 +21,6 @@ export default function Index({ auth }) {
                 },
             });
         }
-    };
-
-    const handleSearchChange = (e) => {
-        const query = e.target.value;
-        setSearch(query);
-        if (query.length > 0) {
-            const filteredTags = tags.filter(tag => tag.title.toLowerCase().includes(query.toLowerCase()));
-            setSuggestions(filteredTags);
-        } else {
-            setSuggestions([]);
-        }
-    };
-
-    const handleSelectTag = (tag) => {
-        setSearch(tag.title);
-        setSuggestions([]);
-        // You can now send this tag to PostController or handle it as needed
     };
 
     return (
@@ -65,29 +47,6 @@ export default function Index({ auth }) {
                                         {flash.message}
                                     </div>
                                 )}
-
-                                <div className="mb-6">
-                                    <input
-                                        type="text"
-                                        value={search}
-                                        onChange={handleSearchChange}
-                                        placeholder="Search Tags..."
-                                        className="border p-2 rounded-md w-full"
-                                    />
-                                    {suggestions.length > 0 && (
-                                        <ul className="border rounded-md mt-2">
-                                            {suggestions.map(suggestion => (
-                                                <li
-                                                    key={suggestion.id}
-                                                    onClick={() => handleSelectTag(suggestion)}
-                                                    className="p-2 hover:bg-gray-100 cursor-pointer"
-                                                >
-                                                    {suggestion.title}
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    )}
-                                </div>
 
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                                     {tags.map((tag) => (

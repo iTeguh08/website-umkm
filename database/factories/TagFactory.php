@@ -23,7 +23,6 @@ class TagFactory extends Factory
 
         return [
             'title' => $this->faker->unique()->randomElement($tags),
-            'description' => null,
         ];
     }
 }

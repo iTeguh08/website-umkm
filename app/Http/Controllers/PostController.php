@@ -10,12 +10,32 @@ use Inertia\Inertia;
 
 class PostController extends Controller
 {
+    /**
+     * Display a listing of the posts for admin.
+     */
     public function index()
-    {
-        $posts = Post::latest()->get();
+{
+    $posts = Post::latest()->get();
+    return Inertia::render('Admin/Posts/Index', compact('posts'));
+}
 
-        return Inertia::render('Admin/Posts/Index', [
-            'posts' => $posts
+    /**
+     * Display a listing of the posts for frontend.
+     */
+    public function frontendIndex()
+    {
+        $posts = Post::with(['tags'])
+            ->latest()
+            ->paginate(9);
+
+        return Inertia::render('PostIndex', [
+            'posts' => $posts->items(),
+            'pagination' => [
+                'current_page' => $posts->currentPage(),
+                'last_page' => $posts->lastPage(),
+                'per_page' => $posts->perPage(),
+                'total' => $posts->total(),
+            ]
         ]);
     }
 

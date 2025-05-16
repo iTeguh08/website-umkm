@@ -17,11 +17,12 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/admin/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 });
 
-// POSTS
 Route::middleware(['auth'])->group(function () {
-    Route::resource('admin/posts', PostController::class);
+    Route::resource('admin/posts', PostController::class)->names('posts');
 });
+
 ///
+
 
 // PRODUCTS
 Route::middleware(['auth'])->group(function () {
@@ -58,6 +59,7 @@ Route::delete('/product-images/{id}', [ProductController::class, 'deleteImage'])
 // });
 Route::get('/', [ProductController::class, 'homeProduct'])->name('homepage');
 Route::get('/product/{product}', [ProductController::class, 'showPublic'])->name('product.detail');
+Route::get('/posts', [PostController::class, 'frontendIndex'])->name('frontend.posts.index');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
