@@ -15,6 +15,9 @@ export default function Create({ auth }) {
         description: '',
         photo: null,
         tags: [],
+        sticky: false,
+        published: false,
+        featured: false,
     });
 
     const [photoPreview, setPhotoPreview] = useState(null);
@@ -120,6 +123,71 @@ export default function Create({ auth }) {
                                         </div>
 
                                         <div>
+                                            <InputLabel htmlFor="photo" value="Photo (Optional)" />
+                                            <input
+                                                id="photo"
+                                                type="file"
+                                                className="mt-1 block w-full"
+                                                onChange={handlePhotoChange}
+                                                accept="image/*"
+                                            />
+                                            <InputError message={errors.photo} className="mt-2" />
+
+                                            {photoPreview && (
+                                                <div className="mt-4">
+                                                    <div className="w-full md:w-1/2 overflow-hidden rounded-md">
+                                                        <img
+                                                            src={photoPreview}
+                                                            alt="Preview"
+                                                            className="w-full h-full object-cover"
+                                                        />
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="space-y-4">
+                                            <div>
+                                                <label className="flex items-center space-x-2">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={data.sticky}
+                                                        onChange={(e) => setData('sticky', e.target.checked)}
+                                                        className="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                                                    />
+                                                    <span className="text-sm text-gray-700">Sticky (Penting)</span>
+                                                </label>
+                                                <InputError message={errors.sticky} className="mt-2" />
+                                            </div>
+
+                                            <div>
+                                                <label className="flex items-center space-x-2">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={data.published}
+                                                        onChange={(e) => setData('published', e.target.checked)}
+                                                        className="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                                                    />
+                                                    <span className="text-sm text-gray-700">Published (Tayang)</span>
+                                                </label>
+                                                <InputError message={errors.published} className="mt-2" />
+                                            </div>
+
+                                            <div>
+                                                <label className="flex items-center space-x-2">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={data.featured}
+                                                        onChange={(e) => setData('featured', e.target.checked)}
+                                                        className="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                                                    />
+                                                    <span className="text-sm text-gray-700">Featured (Utama)</span>
+                                                </label>
+                                                <InputError message={errors.featured} className="mt-2" />
+                                            </div>
+                                        </div>
+
+                                        <div>
                                             <InputLabel htmlFor="tags" value="Tags" />
                                             <div className="mt-1">
                                                 <div className="flex flex-wrap gap-2 mb-2">
@@ -159,30 +227,6 @@ export default function Create({ auth }) {
                                                 )}
                                             </div>
                                             <InputError message={errors.tags} className="mt-2" />
-                                        </div>
-
-                                        <div>
-                                            <InputLabel htmlFor="photo" value="Photo (Optional)" />
-                                            <input
-                                                id="photo"
-                                                type="file"
-                                                className="mt-1 block w-full"
-                                                onChange={handlePhotoChange}
-                                                accept="image/*"
-                                            />
-                                            <InputError message={errors.photo} className="mt-2" />
-
-                                            {photoPreview && (
-                                                <div className="mt-4">
-                                                    <div className="h-48 w-full md:w-1/2 overflow-hidden rounded-md">
-                                                        <img
-                                                            src={photoPreview}
-                                                            alt="Preview"
-                                                            className="w-full h-full object-cover"
-                                                        />
-                                                    </div>
-                                                </div>
-                                            )}
                                         </div>
 
                                         <div className="flex items-center justify-end">

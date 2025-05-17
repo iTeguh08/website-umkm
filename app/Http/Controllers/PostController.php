@@ -14,28 +14,51 @@ class PostController extends Controller
      * Display a listing of the posts for admin.
      */
     public function index()
-{
-    $posts = Post::latest()->get();
-    return Inertia::render('Admin/Posts/Index', compact('posts'));
-}
+    {
+        $posts = Post::latest()->get();
+        return Inertia::render('Admin/Posts/Index', compact('posts'));
+    }
 
     /**
      * Display a listing of the posts for frontend.
      */
-    public function frontendIndex()
+    public function frontendIndex(Request $request)
     {
-        $posts = Post::with(['tags'])
+        $category = $request->query('category', 'Semua');
+    
+        // Get featured posts first
+        $featuredPosts = Post::where('published', true)
+            ->where('featured', true)
+            ->with(['tags', 'user'])
             ->latest()
-            ->paginate(9);
-
+            ->take(3) // Get up to 3 featured posts
+            ->get();
+    
+        $query = Post::with(['tags', 'user'])
+            ->where('published', true)
+            ->latest();
+    
+        if ($category !== 'Semua') {
+            $query->whereHas('tags', function ($query) use ($category) {
+                $query->where('title', $category);
+            });
+        }
+    
+        $posts = $query->paginate(9);
+    
+        $categories = Tag::pluck('title')->toArray();
+    
         return Inertia::render('PostIndex', [
             'posts' => $posts->items(),
+            'featuredPosts' => $featuredPosts,
             'pagination' => [
                 'current_page' => $posts->currentPage(),
                 'last_page' => $posts->lastPage(),
                 'per_page' => $posts->perPage(),
                 'total' => $posts->total(),
-            ]
+            ],
+            'activeCategory' => $category,
+            'categories' => $categories
         ]);
     }
 
@@ -53,11 +76,17 @@ class PostController extends Controller
             'title' => 'required|string|max:255',
             'description' => 'required|string',
             'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'sticky' => 'boolean',
+            'published' => 'boolean',
+            'featured' => 'boolean',
         ]);
 
         $post = new Post();
         $post->title = $request->title;
         $post->description = $request->description;
+        $post->sticky = $request->boolean('sticky');
+        $post->published = $request->boolean('published');
+        $post->featured = $request->boolean('featured');
 
         if ($request->hasFile('photo')) {
             $file = $request->file('photo');
@@ -93,12 +122,18 @@ class PostController extends Controller
             'title' => 'required|string|max:255',
             'description' => 'required|string',
             'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'sticky' => 'boolean',
+            'published' => 'boolean',
+            'featured' => 'boolean',
             // 'tags' => 'nullable|array',
             // 'tags.*' => 'exists:tags,id',
         ]);
 
         $post->title = $request->title;
         $post->description = $request->description;
+        $post->sticky = $request->boolean('sticky');
+        $post->published = $request->boolean('published');
+        $post->featured = $request->boolean('featured');
 
         if ($request->hasFile('photo')) {
             // Delete old photo if exists
