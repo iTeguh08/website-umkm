@@ -38,11 +38,11 @@ const Search = () => {
         { value: "kreatif", label: "Kreatif" },
     ];
 
-    const handleSearch = () => {
+    const handleSearch = (query = searchQuery) => {
         router.get(
             route("homepage"),
             {
-                search: searchQuery,
+                search: query,
                 jenis_usaha: jenisUsaha,
                 bidang_usaha: bidangUsaha,
             },
@@ -52,6 +52,11 @@ const Search = () => {
                 only: ["products", "filters"],
             }
         );
+    };
+
+    const handlePopularSearch = (tag) => {
+        setSearchQuery(tag);
+        handleSearch(tag);
     };
 
     return (
@@ -119,7 +124,7 @@ const Search = () => {
                         )}
 
                         <button
-                            onClick={handleSearch}
+                            onClick={() => handleSearch()}
                             className="ml-1 p-3 mr-2 text-white bg-blue-600 hover:bg-blue-700 rounded-full transition-colors"
                             aria-label="Cari"
                         >
@@ -141,14 +146,11 @@ const Search = () => {
                         "Laundry",
                         "Cargo",
                         "Warung",
-                        "Toko Bunga",
+                        "Toko Souvenir",
                     ].map((tag, index) => (
                         <button
                             key={index}
-                            onClick={() => {
-                                setSearchQuery(tag);
-                                handleSearch();
-                            }}
+                            onClick={() => handlePopularSearch(tag)}
                             className="bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm px-3 py-1.5 rounded-full transition duration-200"
                         >
                             {tag}

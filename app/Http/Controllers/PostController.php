@@ -25,40 +25,105 @@ class PostController extends Controller
     public function frontendIndex(Request $request)
     {
         $category = $request->query('category', 'Semua');
-    
-        // Get featured posts first
-        $featuredPosts = Post::where('published', true)
-            ->where('featured', true)
+        $showAll = $request->query('show_all', false);
+
+        // Get sticky posts (not affected by category filter)
+        $stickyQuery = Post::query()
             ->with(['tags', 'user'])
-            ->latest()
-            ->take(3) // Get up to 3 featured posts
-            ->get();
-    
-        $query = Post::with(['tags', 'user'])
-            ->where('published', true)
-            ->latest();
-    
+            ->where('sticky', true);
+
+        if (!$showAll) {
+            $stickyQuery->where('published', true);
+        }
+
+        $stickyPosts = $stickyQuery->latest()->take(3)->get();
+        $stickyPostIds = $stickyPosts->pluck('id')->toArray();
+
+        // Get featured posts (non-sticky)
+        $featuredQuery = Post::query()
+            ->with(['tags', 'user'])
+            ->where('featured', true)
+            ->where('sticky', false) // Exclude sticky posts
+            ->whereNotIn('id', $stickyPostIds); // Also exclude sticky posts by ID
+
+        if (!$showAll) {
+            $featuredQuery->where('published', true);
+        }
+
+        // Filter featured posts by category if not 'Semua'
         if ($category !== 'Semua') {
-            $query->whereHas('tags', function ($query) use ($category) {
+            $featuredQuery->whereHas('tags', function ($query) use ($category) {
                 $query->where('title', $category);
             });
         }
-    
-        $posts = $query->paginate(9);
-    
-        $categories = Tag::pluck('title')->toArray();
-    
+
+        $featuredPosts = $featuredQuery->latest()
+            ->get();
+
+        $featuredPostIds = $featuredPosts->pluck('id')->toArray();
+
+        // Get all posts (non-sticky, non-featured, and not in sticky posts)
+        $query = Post::query()
+            ->with(['tags', 'user'])
+            ->where('sticky', false) // Exclude sticky posts
+            ->whereNotIn('id', $stickyPostIds) // Also exclude by ID to be safe
+            ->whereNotIn('id', $featuredPostIds); // Exclude featured posts
+
+        // Filter by published status if not showing all
+        if (!$showAll) {
+            $query->where('published', true);
+        }
+
+        // If category is not 'Semua', filter by category
+        if ($category !== 'Semua') {
+            $categoryPosts = Post::query()
+                ->with('tags')
+                ->where('sticky', false) // Exclude sticky posts from category filter
+                ->whereNotIn('id', $stickyPostIds) // Exclude sticky posts by ID
+                ->whereHas('tags', function ($query) use ($category) {
+                    $query->where('title', $category);
+                });
+
+            if (!$showAll) {
+                $categoryPosts->where('published', true);
+            }
+
+            $categoryPostIds = $categoryPosts->pluck('id')->toArray();
+            $query->whereIn('id', $categoryPostIds);
+        }
+
+        $posts = $query->latest()->paginate(9);
+
+        // Get all tags that have been used by posts
+        $usedTagsQuery = Post::query()->with('tags');
+        if (!$showAll) {
+            $usedTagsQuery->where('published', true);
+        }
+
+        $usedTags = $usedTagsQuery->get()
+            ->pluck('tags')
+            ->flatten()
+            ->unique('title')
+            ->pluck('title')
+            ->toArray();
+
+        // Add 'Semua' to the categories array
+        $categories = array_merge(['Semua'], $usedTags);
+
+        // Combine sticky and regular posts
+        $paginatedPosts = $stickyPosts->merge($posts->items())->forPage(1, 9);
+
         return Inertia::render('PostIndex', [
-            'posts' => $posts->items(),
-            'featuredPosts' => $featuredPosts,
+            'posts' => $paginatedPosts,
             'pagination' => [
                 'current_page' => $posts->currentPage(),
                 'last_page' => $posts->lastPage(),
-                'per_page' => $posts->perPage(),
-                'total' => $posts->total(),
+                'total' => $posts->total() + $stickyPosts->count(),
             ],
+            'categories' => $categories,
             'activeCategory' => $category,
-            'categories' => $categories
+            'featuredPosts' => $featuredPosts,
+            'stickyPosts' => $stickyPosts, // Add sticky posts to the response
         ]);
     }
 
@@ -158,6 +223,24 @@ class PostController extends Controller
 
         return redirect()->route('posts.index')
             ->with('message', 'Post updated successfully.');
+    }
+
+    public function show(Post $post)
+    {
+        $posts = Post::where('published', true)
+            ->where('id', '!=', $post->id)
+            ->with(['user', 'tags'])
+            ->latest()
+            ->take(6)
+            ->get();
+
+        // Load relasi yang diperlukan
+        $post->load(['user', 'tags']);
+
+        return Inertia::render('PostDetail', [  // Ubah dari 'Posts/Show' menjadi 'PostDetail'
+            'post' => $post,
+            'posts' => $posts
+        ]);
     }
 
     public function destroy(Post $post)

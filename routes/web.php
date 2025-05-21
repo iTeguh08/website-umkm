@@ -60,6 +60,7 @@ Route::delete('/product-images/{id}', [ProductController::class, 'deleteImage'])
 Route::get('/', [ProductController::class, 'homeProduct'])->name('homepage');
 Route::get('/product/{product}', [ProductController::class, 'showPublic'])->name('product.detail');
 Route::get('/posts', [PostController::class, 'frontendIndex'])->name('frontend.posts.index');
+Route::get('/posts/{post}', [PostController::class, 'show'])->name('posts.show');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

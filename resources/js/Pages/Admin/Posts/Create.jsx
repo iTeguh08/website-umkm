@@ -52,10 +52,21 @@ export default function Create({ auth }) {
         setSearchTag(query);
         
         if (query.length > 0) {
-            const filteredTags = tags.filter(tag => 
-                tag.title.toLowerCase().includes(query.toLowerCase()) && 
-                !data.tags.some(selectedTag => selectedTag.id === tag.id)
-            );
+            const selectedTagIds = new Set(data.tags.map(tag => tag.id));
+            const seenTitles = new Set();
+            
+            const filteredTags = tags.filter(tag => {
+                const isMatch = tag.title.toLowerCase().includes(query.toLowerCase());
+                const isNotSelected = !selectedTagIds.has(tag.id);
+                const isNotDuplicate = !seenTitles.has(tag.title.toLowerCase());
+                
+                if (isMatch && isNotSelected && isNotDuplicate) {
+                    seenTitles.add(tag.title.toLowerCase());
+                    return true;
+                }
+                return false;
+            });
+            
             setTagSuggestions(filteredTags);
         } else {
             setTagSuggestions([]);
@@ -82,7 +93,7 @@ export default function Create({ auth }) {
                 <AuthenticatedLayout user={auth.user}>
                     <Head title="Create Post" />
 
-                    <div className="py-12">
+                    <div className="py-8">
                         <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
                             <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                                 <div className="p-6 bg-white border-b border-gray-200">
