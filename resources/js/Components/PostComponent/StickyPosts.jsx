@@ -99,7 +99,7 @@ const StickyPosts = ({ stickyPosts = [] }) => {
                                                 </span>
                                             </div>
                                         )}
-                                        <span className="text-sm font-medium text-white">
+                                        <span className="ml-2 text-sm font-medium text-white">
                                             {post.user?.name || 'Admin'}
                                         </span>
                                     </div>

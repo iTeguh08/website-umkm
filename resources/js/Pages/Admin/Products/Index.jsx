@@ -8,10 +8,29 @@ import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 const Index = () => {
     const { products, filters } = usePage().props;
     const [searchQuery, setSearchQuery] = useState(filters?.search || "");
-    const [timestampType, setTimestampType] = useState(filters?.timestamp_type || "created_at");
+    const [timestampType, setTimestampType] = useState(
+        filters?.timestamp_type || "created_at"
+    );
     const [showPreview, setShowPreview] = useState(false);
     const [previewImage, setPreviewImage] = useState(null);
     const [isAnimating, setIsAnimating] = useState(false);
+
+    const truncateText = (text, maxLength = 30) => {
+        if (!text) return "-"; // Return dash for empty/null values
+        return text.length > maxLength
+            ? `${text.substring(0, maxLength)}...`
+            : text;
+    };
+
+    // Function to capitalize first letter of each word
+    const capitalizeFirstLetter = (text) => {
+        if (!text) return "-";
+        return text
+            .toLowerCase()
+            .split(' ')
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(' ');
+    };
 
     const handleSearch = (e) => {
         setSearchQuery(e.target.value);
@@ -43,14 +62,14 @@ const Index = () => {
     const formatTimestamp = (dateString) => {
         if (!dateString) return "-";
         const date = new Date(dateString);
-        return date.toLocaleString('id-ID', {
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit',
-            hour12: false
+        return date.toLocaleString("id-ID", {
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit",
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+            hour12: false,
         });
     };
 
@@ -124,33 +143,69 @@ const Index = () => {
                     <main className="p-8">
                         <div className="bg-white shadow">
                             <div className="p-6">
-                                <div className="overflow-x-auto">
+                                {/* Tambahkan style untuk container tabel dengan overflow-x-auto */}
+                                <div
+                                    className="overflow-x-auto relative scrollbar-hide"
+                                    style={{
+                                        scrollbarWidth: "none" /* Firefox */,
+                                        msOverflowStyle:
+                                            "none" /* IE and Edge */,
+                                    }}
+                                >
+                                    {/* Custom style untuk menyembunyikan scrollbar di Chrome, Safari dan Opera */}
+                                    <style jsx>{`
+                                        .scrollbar-hide::-webkit-scrollbar {
+                                            display: none;
+                                        }
+                                        .scrollbar-hide {
+                                            -ms-overflow-style: none;
+                                            scrollbar-width: none;
+                                        }
+                                    `}</style>
                                     <table className="min-w-full divide-y divide-gray-200">
                                         <thead>
                                             <tr className="bg-gray-50">
-                                                <th className="w-[30%] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                                     Gambar
                                                 </th>
-                                                <th className="w-[30%] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                                     Nama Usaha
                                                 </th>
-                                                <th className="w-[20%] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    Lokasi
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                    Jenis Usaha
                                                 </th>
-                                                <th className="w-[30%] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                    Bidang Usaha
+                                                </th>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                    Email
+                                                </th>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                    Telephone
+                                                </th>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                                     <div className="flex items-center space-x-2">
                                                         <span>Timestamp</span>
                                                         <select
-                                                            value={timestampType}
-                                                            onChange={handleTimestampChange}
+                                                            value={
+                                                                timestampType
+                                                            }
+                                                            onChange={
+                                                                handleTimestampChange
+                                                            }
                                                             className="w-[105px] text-xs font-medium text-gray-700 border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500"
                                                         >
-                                                            <option value="created_at">Created At</option>
-                                                            <option value="updated_at">Updated At</option>
+                                                            <option value="created_at">
+                                                                Created At
+                                                            </option>
+                                                            <option value="updated_at">
+                                                                Updated At
+                                                            </option>
                                                         </select>
                                                     </div>
                                                 </th>
-                                                <th className="w-[10%] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                {/* Ubah th kolom Aksi dengan style sticky */}
+                                                <th className="w-[10%] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky right-0 bg-gray-50 shadow-l z-10">
                                                     Aksi
                                                 </th>
                                             </tr>
@@ -160,33 +215,87 @@ const Index = () => {
                                                 products.data.map((product) => (
                                                     <tr key={product.id}>
                                                         <td className="px-6 py-4 whitespace-nowrap">
-                                                            {product.images && product.images.length > 0 && (
-                                                                <div
-                                                                    className="relative cursor-pointer"
-                                                                    onClick={() =>
-                                                                        handleImageClick(
-                                                                            `/storage/${product.images[0].image_path}`
-                                                                        )
-                                                                    }
-                                                                >
-                                                                    <img
-                                                                        src={`/storage/${product.images[0].image_path}`}
-                                                                        alt={product.nama_usaha}
-                                                                        className="w-12 h-12 object-cover rounded"
-                                                                    />
-                                                                </div>
+                                                            {product.images &&
+                                                                product.images
+                                                                    .length >
+                                                                    0 && (
+                                                                    <div
+                                                                        className="relative cursor-pointer"
+                                                                        onClick={() =>
+                                                                            handleImageClick(
+                                                                                `/storage/${product.images[0].image_path}`
+                                                                            )
+                                                                        }
+                                                                    >
+                                                                        <img
+                                                                            src={`/storage/${product.images[0].image_path}`}
+                                                                            alt={
+                                                                                product.nama_usaha
+                                                                            }
+                                                                            className="w-12 h-12 object-cover rounded"
+                                                                        />
+                                                                    </div>
+                                                                )}
+                                                        </td>
+                                                        <td className="px-6 py-4 text-sm text-gray-900">
+                                                            <div
+                                                                className="w-[22ch] truncate"
+                                                                title={product.nama_usaha}
+                                                            >
+                                                                {product.nama_usaha}
+                                                            </div>
+                                                        </td>
+                                                        <td className="px-6 py-4 text-sm text-gray-600">
+                                                            <div 
+                                                                className="w-[11ch] truncate"
+                                                                title={product.jenis_usaha}
+                                                            >
+                                                                {product.jenis_usaha 
+                                                                    ? capitalizeFirstLetter(product.jenis_usaha)
+                                                                    : "-"}
+                                                            </div>
+                                                        </td>
+                                                        <td className="px-6 py-4 text-sm text-gray-600">
+                                                            <div 
+                                                                className="w-[11ch] truncate"
+                                                                title={product.bidang_usaha}
+                                                            >
+                                                                {product.bidang_usaha 
+                                                                    ? capitalizeFirstLetter(product.bidang_usaha)
+                                                                    : "-"}
+                                                            </div>
+                                                        </td>
+                                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                                            <div
+                                                                className="max-w-[25ch] truncate"
+                                                                title={
+                                                                    product.email
+                                                                }
+                                                            >
+                                                                {product.email ||
+                                                                    "-"}
+                                                            </div>
+                                                        </td>
+                                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                                            <div
+                                                                className="max-w-[14ch] truncate"
+                                                                title={
+                                                                    product.telephone
+                                                                }
+                                                            >
+                                                                {product.telephone ||
+                                                                    "-"}
+                                                            </div>
+                                                        </td>
+                                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                            {formatTimestamp(
+                                                                product[
+                                                                    timestampType
+                                                                ]
                                                             )}
                                                         </td>
-                                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                            {product.nama_usaha}
-                                                        </td>
-                                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                            {product.lokasi}
-                                                        </td>
-                                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                            {formatTimestamp(product[timestampType])}
-                                                        </td>
-                                                        <td className="px-6 py-4 whitespace-nowrap text-sm space-x-3">
+                                                        {/* Ubah td kolom Aksi dengan style sticky */}
+                                                        <td className="px-6 py-4 whitespace-nowrap text-sm space-x-3 sticky right-0 bg-white z-10">
                                                             <Link
                                                                 href={route(
                                                                     "products.edit",
@@ -260,7 +369,7 @@ const Index = () => {
                                             ) : (
                                                 <tr>
                                                     <td
-                                                        colSpan="5"
+                                                        colSpan="8"
                                                         className="px-6 py-4 text-center text-sm text-gray-500"
                                                     >
                                                         {searchQuery
@@ -338,19 +447,22 @@ const Index = () => {
                 </AuthenticatedLayout>
             </div>
             <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
-                <div className="fixed inset-0 bg-black" style={{
-                    opacity: showPreview ? 0.5 : 0,
-                    transition: 'opacity 0.1s cubic-bezier(0.1, 0, 0.1, 0.1)'
-                }}>
-                </div>
-                <div 
+                <div
+                    className="fixed inset-0 bg-black"
+                    style={{
+                        opacity: showPreview ? 0.5 : 0,
+                        transition:
+                            "opacity 0.1s cubic-bezier(0.1, 0, 0.1, 0.1)",
+                    }}
+                ></div>
+                <div
                     className="bg-white rounded-sm shadow-xl max-w-4xl max-h-[90vh] overflow-auto relative pointer-events-auto"
                     style={{
-                        transform: showPreview ? 'scale(1)' : 'scale(0.90)',
+                        transform: showPreview ? "scale(1)" : "scale(0.90)",
                         opacity: showPreview ? 1 : 0,
-                        transition: 'all 0.05s',
-                        willChange: 'transform, opacity',
-                        transformOrigin: 'center center'
+                        transition: "all 0.05s",
+                        willChange: "transform, opacity",
+                        transformOrigin: "center center",
                     }}
                 >
                     {showPreview && (
