@@ -145,15 +145,10 @@ const Index = () => {
                             <div className="p-6">
                                 {/* Tambahkan style untuk container tabel dengan overflow-x-auto */}
                                 <div
-                                    className="overflow-x-auto relative scrollbar-hide"
-                                    style={{
-                                        scrollbarWidth: "none" /* Firefox */,
-                                        msOverflowStyle:
-                                            "none" /* IE and Edge */,
-                                    }}
+                                    className="overflow-x-auto relative"
                                 >
                                     {/* Custom style untuk menyembunyikan scrollbar di Chrome, Safari dan Opera */}
-                                    <style jsx>{`
+                                    {/* <style jsx>{`
                                         .scrollbar-hide::-webkit-scrollbar {
                                             display: none;
                                         }
@@ -161,7 +156,7 @@ const Index = () => {
                                             -ms-overflow-style: none;
                                             scrollbar-width: none;
                                         }
-                                    `}</style>
+                                    `}</style> */}
                                     <table className="min-w-full divide-y divide-gray-200">
                                         <thead>
                                             <tr className="bg-gray-50">
