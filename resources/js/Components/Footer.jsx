@@ -53,7 +53,15 @@ const Footer = () => {
                         <ul className="space-y-2">
                             <li>
                                 <a
-                                    href="/tentang-kami"
+                                    href={route("frontend.posts.index")}
+                                    className="text-gray-600 hover:text-blue-600 transition-colors"
+                                >
+                                    Posts
+                                </a>
+                            </li>
+                            <li>
+                                <a
+                                    // href={route("frontend.about")}
                                     className="text-gray-600 hover:text-blue-600 transition-colors"
                                 >
                                     Tentang Kami
@@ -61,7 +69,7 @@ const Footer = () => {
                             </li>
                             <li>
                                 <a
-                                    href="/kebijakan-privasi"
+                                    // href={route("frontend.privacy")}
                                     className="text-gray-600 hover:text-blue-600 transition-colors"
                                 >
                                     Kebijakan Privasi
@@ -69,15 +77,7 @@ const Footer = () => {
                             </li>
                             <li>
                                 <a
-                                    href="/syarat-ketentuan"
-                                    className="text-gray-600 hover:text-blue-600 transition-colors"
-                                >
-                                    Syarat & Ketentuan
-                                </a>
-                            </li>
-                            <li>
-                                <a
-                                    href="/kontak"
+                                    // href={route("frontend.contact")}
                                     className="text-gray-600 hover:text-blue-600 transition-colors"
                                 >
                                     Kontak

@@ -17,12 +17,12 @@ const Header = () => {
 
                 <nav className="absolute left-1/2 transform -translate-x-1/2">
                     <div className="flex space-x-6">
-                        <Link
+                        {/* <Link
                             href={route("frontend.posts.index")}
                             className="text-base text-gray-700 hover:text-blue-600"
                         >
                             Posts
-                        </Link>
+                        </Link> */}
                         {/* <Link href={route('about')} className="text-gray-700 hover:text-gray-900 font-medium">
                             About Us
                         </Link>

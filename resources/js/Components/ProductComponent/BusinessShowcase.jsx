@@ -4,6 +4,15 @@ import { Link } from "@inertiajs/react";
 const BusinessShowcase = ({ products }) => {
     const productList = Array.isArray(products) ? products : [];
 
+    const capitalizeFirstLetter = (text) => {
+        if (!text) return "-";
+        return text
+            .toLowerCase()
+            .split(' ')
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(' ');
+    };
+
     if (productList.length === 0) {
         return (
             <div className="text-center py-16">
@@ -58,12 +67,12 @@ const BusinessShowcase = ({ products }) => {
                                     <div className="flex flex-wrap gap-2 mb-3">
                                         {product.jenis_usaha && (
                                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-lg text-xs font-medium bg-blue-100 text-blue-800">
-                                                {product.jenis_usaha}
+                                                {capitalizeFirstLetter(product.jenis_usaha)}
                                             </span>
                                         )}
                                         {product.bidang_usaha && (
                                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-lg text-xs font-medium bg-green-100 text-green-800">
-                                                {product.bidang_usaha}
+                                                {capitalizeFirstLetter(product.bidang_usaha)}
                                             </span>
                                         )}
                                     </div>

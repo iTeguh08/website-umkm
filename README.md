@@ -49,6 +49,63 @@ We would like to extend our thanks to the following sponsors for funding Laravel
 - **[byte5](https://byte5.de)**
 - **[OP.GG](https://op.gg)**
 
+## Email Configuration
+
+To enable the welcome email functionality for newsletter subscriptions, you need to configure your email settings in the `.env` file. Here's an example configuration for using Mailtrap (for development) or SMTP (for production):
+
+### For Development (Mailtrap)
+```env
+MAIL_MAILER=smtp
+MAIL_HOST=sandbox.smtp.mailtrap.io
+MAIL_PORT=2525
+MAIL_USERNAME=your_mailtrap_username
+MAIL_PASSWORD=your_mailtrap_password
+MAIL_ENCRYPTION=tls
+MAIL_FROM_ADDRESS="hello@example.com"
+MAIL_FROM_NAME="${APP_NAME}"
+```
+
+### For Production (SMTP)
+```env
+MAIL_MAILER=smtp
+MAIL_HOST=your_smtp_host
+MAIL_PORT=587
+MAIL_USERNAME=your_smtp_username
+MAIL_PASSWORD=your_smtp_password
+MAIL_ENCRYPTION=tls
+MAIL_FROM_ADDRESS="noreply@yourdomain.com"
+MAIL_FROM_NAME="${APP_NAME}"
+```
+
+### Testing Email in Development
+To test emails in development without sending real emails, you can use the `log` driver which will write emails to your log files:
+
+```env
+MAIL_MAILER=log
+```
+
+## Queue Configuration (Recommended for Production)
+For better performance in production, it's recommended to use queues for sending emails. First, configure your queue connection in `.env`:
+
+```env
+QUEUE_CONNECTION=database  # or 'redis' if you have Redis installed
+```
+
+Then run these commands to create the jobs table and start the queue worker:
+
+```bash
+php artisan queue:table
+php artisan migrate
+```
+
+Start the queue worker:
+
+```bash
+php artisan queue:work
+```
+
+Or use a process manager like Supervisor to keep the queue worker running in production.
+
 ## Contributing
 
 Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
