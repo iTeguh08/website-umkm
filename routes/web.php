@@ -63,6 +63,14 @@ Route::get('/product/{product}', [ProductController::class, 'showPublic'])->name
 Route::get('/posts', [PostController::class, 'frontendIndex'])->name('frontend.posts.index');
 Route::get('/posts/{post}', [PostController::class, 'show'])->name('posts.show');
 Route::post('/newsletter/subscribe', [NewsletterController::class, 'subscribe'])->name('newsletter.subscribe');
+// Web Routes
+Route::get('/tentang-kami', function () {
+    return Inertia::render('AboutUs');
+})->name('frontend.about');
+
+Route::get('/kontak', function () {
+    return Inertia::render('ContactUs');
+})->name('frontend.contactus');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
