@@ -1,9 +1,100 @@
+import React from "react";
 import { useForm, Link } from "@inertiajs/react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Sidebar from "@/Components/Sidebar";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
+import { DndProvider, useDrag, useDrop } from "react-dnd";
+import { HTML5Backend } from "react-dnd-html5-backend";
+
+const ImageItem = ({
+    id,
+    src,
+    index,
+    moveImage,
+    removeTempImage,
+    isLoading,
+}) => {
+    const ref = React.useRef(null);
+
+    const [{ isDragging }, drag] = useDrag(() => ({
+        type: "image",
+        item: () => ({ id, index }),
+        collect: (monitor) => ({
+            isDragging: monitor.isDragging(),
+        }),
+    }));
+
+    const [, drop] = useDrop({
+        accept: "image",
+        hover(item, monitor) {
+            if (!ref.current) {
+                return;
+            }
+            const dragIndex = item.index;
+            const hoverIndex = index;
+
+            if (dragIndex === hoverIndex) {
+                return;
+            }
+
+            moveImage(dragIndex, hoverIndex);
+            item.index = hoverIndex;
+        },
+    });
+
+    const opacity = isDragging ? 0.5 : 1;
+    drag(drop(ref));
+
+    return (
+        <div
+            ref={ref}
+            style={{ opacity }}
+            className="relative group aspect-[16/9] overflow-hidden rounded-sm border border-gray-200"
+        >
+            {isLoading ? (
+                <div className="flex items-center justify-center h-full bg-gray-100">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
+                </div>
+            ) : (
+                <>
+                    <img
+                        src={src}
+                        alt={`Preview ${index + 1}`}
+                        className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button
+                            type="button"
+                            onClick={() => removeTempImage(index)}
+                            className="bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition-colors"
+                            title="Hapus gambar"
+                        >
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                className="h-4 w-4"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                            >
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                />
+                            </svg>
+                        </button>
+                    </div>
+                    <div className="absolute top-1 left-1 bg-black bg-opacity-60 text-white text-xs px-2 py-1 rounded">
+                        {index === 0 ? "Thumbnail" : index + 1}
+                    </div>
+                </>
+            )}
+        </div>
+    );
+};
 
 export default function Create({ bidangUsahaOptions, jenisUsahaOptions }) {
     const {
@@ -198,8 +289,37 @@ export default function Create({ bidangUsahaOptions, jenisUsahaOptions }) {
         ));
     };
 
+    const moveImage = useCallback(
+        (dragIndex, hoverIndex) => {
+            setData((prevData) => {
+                const newImages = [...prevData.images];
+                const newPreviewUrls = [...imagePreviewUrls];
+                const newLoadingStates = [...loadingStates];
+
+                // Reorder images
+                const [movedImage] = newImages.splice(dragIndex, 1);
+                newImages.splice(hoverIndex, 0, movedImage);
+
+                // Reorder preview URLs
+                const [movedPreview] = newPreviewUrls.splice(dragIndex, 1);
+                newPreviewUrls.splice(hoverIndex, 0, movedPreview);
+
+                // Reorder loading states
+                const [movedLoading] = newLoadingStates.splice(dragIndex, 1);
+                newLoadingStates.splice(hoverIndex, 0, movedLoading);
+
+                // Update state
+                setImagePreviewUrls(newPreviewUrls);
+                setLoadingStates(newLoadingStates);
+
+                return { ...prevData, images: newImages };
+            });
+        },
+        [imagePreviewUrls, loadingStates]
+    );
+
     return (
-        <>
+        <DndProvider backend={HTML5Backend}>
             <Sidebar />
             <div className="pl-64 bg-gray-50 min-h-screen">
                 <AuthenticatedLayout>
@@ -487,39 +607,18 @@ export default function Create({ bidangUsahaOptions, jenisUsahaOptions }) {
 
                                     {/* Preview images dan placeholders */}
                                     <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4">
-                                        {/* Render existing image previews */}
                                         {imagePreviewUrls.map((url, index) => (
-                                            <div
-                                                key={index}
-                                                className="relative"
-                                            >
-                                                <img
-                                                    src={url}
-                                                    alt={`Preview ${index + 1}`}
-                                                    className="aspect-[16/9] object-cover rounded"
-                                                />
-                                                <button
-                                                    type="button"
-                                                    className="absolute top-2 right-2 w-6 h-6 bg-red-600 text-white rounded-sm flex items-center justify-center hover:bg-red-600 transition-colors duration-200"
-                                                    onClick={() =>
-                                                        removeTempImage(index)
-                                                    }
-                                                >
-                                                    <svg
-                                                        className="w-4 h-4"
-                                                        fill="none"
-                                                        stroke="currentColor"
-                                                        viewBox="0 0 24 24"
-                                                    >
-                                                        <path
-                                                            strokeLinecap="round"
-                                                            strokeLinejoin="round"
-                                                            strokeWidth={2}
-                                                            d="M6 18L18 6M6 6l12 12"
-                                                        />
-                                                    </svg>
-                                                </button>
-                                            </div>
+                                            <ImageItem
+                                                key={`preview-${index}`}
+                                                id={`preview-${index}`}
+                                                src={url}
+                                                index={index}
+                                                moveImage={moveImage}
+                                                removeTempImage={
+                                                    removeTempImage
+                                                }
+                                                isLoading={loadingStates[index]}
+                                            />
                                         ))}
 
                                         {/* Render loading placeholders for images being uploaded */}
@@ -548,6 +647,6 @@ export default function Create({ bidangUsahaOptions, jenisUsahaOptions }) {
                     </div>
                 </AuthenticatedLayout>
             </div>
-        </>
+        </DndProvider>
     );
 }

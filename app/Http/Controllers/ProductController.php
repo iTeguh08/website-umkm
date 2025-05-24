@@ -147,8 +147,9 @@ class ProductController extends Controller
         ]);
     }
 
-    public function update(Request $request, Product $product)
+    public function update(Request $request, Product $product, $id)
     {
+        $product = Product::findOrFail($id);
         $request->validate([
             'nama_usaha' => 'required|string|max:255',
             'lokasi' => 'required|string',
@@ -171,15 +172,27 @@ class ProductController extends Controller
         $product->latitude = $request->latitude;
         $product->longitude = $request->longitude;
 
+        if ($request->has('existing_images')) {
+            foreach ($request->input('existing_images') as $imageData) {
+                $image = ProductImage::find($imageData['id']);
+                if ($image) {
+                    $image->update(['order' => $imageData['order']]);
+                }
+            }
+        }
+        
+        // Handle new image uploads
         if ($request->hasFile('images')) {
             foreach ($request->file('images') as $image) {
-                $path = $image->store('products', 'public');
-
+                $path = $image->store('product-images', 'public');
                 $product->images()->create([
-                    'image_path' => $path
+                    'path' => $path,
+                    'url' => Storage::url($path),
+                    'order' => $product->images()->count() + 1 // Adjust order as needed
                 ]);
             }
         }
+        $product->update($request->except(['images', 'existing_images']));
 
         $product->save();
 

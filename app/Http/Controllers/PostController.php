@@ -13,10 +13,33 @@ class PostController extends Controller
     /**
      * Display a listing of the posts for admin.
      */
-    public function index()
+    // In PostController.php
+    public function index(Request $request)
     {
-        $posts = Post::latest()->get();
-        return Inertia::render('Admin/Posts/Index', compact('posts'));
+        // First, get all posts to get all possible tags
+        $allPosts = Post::with('tags')->get();
+
+        // Get all unique tags from all posts for the filter
+        $allCategories = $allPosts->flatMap(function ($post) {
+            return $post->tags->pluck('title');
+        })->unique()->values()->all();
+
+        // Then create the filtered query
+        $query = Post::with('tags');
+
+        if ($request->has('category') && $request->category) {
+            $query->whereHas('tags', function ($q) use ($request) {
+                $q->where('title', $request->category);
+            });
+        }
+
+        $posts = $query->latest()->get();
+
+        return Inertia::render('Admin/Posts/Index', [
+            'posts' => $posts,
+            'all_categories' => $allCategories, // Pass all available categories
+            'filters' => $request->only(['category']),
+        ]);
     }
 
     /**
