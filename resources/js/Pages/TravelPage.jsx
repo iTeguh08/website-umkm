@@ -54,8 +54,7 @@ const PackageCard = ({ title, features, price, delay = 0 }) => (
         whileHover={{ scale: 1.02, transition: { duration: 0.1 } }}
     >
         <div>
-            <h3 className="text-[24px] sm:text-[1.1rem] font-bold text-[#145B89] mb-6 text-center tracking-normal" 
-                style={{ fontFamily: "'Oswald', sans-serif" }}>
+            <h3 className="text-xl sm:text-sm bebas-neue-regular font-extrabold text-[#145B89] mb-6 text-center">
                 {title}
             </h3>
             <ul className="space-y-[10px] mb-6 text-[14px] sm:text-[14px] leading-tight text-[#264653]">
@@ -75,15 +74,17 @@ const PackageCard = ({ title, features, price, delay = 0 }) => (
             </ul>
         </div>
         <motion.div 
-            className="bg-[rgb(27,134,162)] text-white py-2 px-4 rounded"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-        >
-            <div className="flex justify-center items-baseline">
-                <span className="text-xl font-bold">${price}</span>
-                <span className="text-sm ml-1">/Person</span>
-            </div>
-        </motion.div>
+      className="flex rounded-lg justify-between overflow-hidden shadow-lg bg-[#1B86A2]"
+      whileHover={{ scale: 1.05 }}
+      whileTap={{ scale: 0.95 }}
+    >
+      <div className=" text-white px-3 flex items-center">
+        <span className="text-lg font-extrabold bebas-neue-regular">${price}</span>
+      </div>
+      <div className="bg-[#093450] text-white px-4 rounded-lg flex items-center">
+        <span className="text-base font-medium py-2">/Person</span>
+      </div>
+    </motion.div>
     </motion.div>
 );
 
@@ -150,11 +151,15 @@ const TravelPage = () => {
                     {`
                     @font-face {
                         font-family: 'Beatcarb';
-                        src: url('/Beatcarb (Demo_Font).otf') format('opentype');
                         font-weight: normal;
                         font-style: normal;
                     }
-                    @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@600&display=swap');
+                    
+                    @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap');
+                    
+                    .bebas-neue-regular {
+                        font-family: "Bebas Neue", sans-serif;
+                    }
                     `}
                 </style>
             </Head>
@@ -228,7 +233,7 @@ const TravelPage = () => {
                         >
                             <motion.h2 
                                 variants={fadeInUp}
-                                className="text-[40px] sm:text-[65px] font-bold mb-6 sm:mb-8 leading-[1.1] tracking-wide"
+                                className="text-[40px] bebas-neue-regular font-semibold sm:text-[60px] mb-6 sm:mb-8 leading-[1.1] tracking-wide [text-shadow:0_2px_10px_rgba(0,0,0,0.5)]"
                             >
                                 EXPLORE THE<br />
                                 WORLD WITH US
@@ -483,7 +488,7 @@ const TravelPage = () => {
                                         alt="Orange Brush"
                                         className="absolute top-7 left-4 -translate-x-1/2 -translate-y-1/2 w-[80px] h-auto rotate-[90deg]"
                                     />
-                                    <h3 className="relative z-10 text-[3.5rem] font-bold leading-[1.1] text-white">
+                                    <h3 className="relative z-10 text-[3.5rem] bebas-neue-regular font-extrabold sm:text-[50px] leading-[1.1] text-white">
                                         ADVENTURE<br />
                                         AWAITS!
                                     </h3>

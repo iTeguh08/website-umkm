@@ -155,12 +155,12 @@ const Footer = () => {
                         </div>
                     </div>
                 </div>
-                <div className="mt-8 pt-8 border-t border-gray-200">
-                    <p className="text-center text-gray-500 text-sm">
-                        &copy; {new Date().getFullYear()} UMKM Marketplace. All
-                        rights reserved.
-                    </p>
-                </div>
+            </div>
+            <div className="py-8 border-t border-gray-200">
+                <p className="text-center text-gray-500 text-sm">
+                    &copy; {new Date().getFullYear()} UMKM Marketplace. All
+                    rights reserved.
+                </p>
             </div>
         </footer>
     );

@@ -134,7 +134,7 @@ const Search = () => {
             </div>
 
             <div className="px-4 pb-4">
-                <div className="flex flex-col items-center gap-2">
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-2">
                     <span className="text-gray-600 text-sm">
                         Pencarian populer:
                     </span>
