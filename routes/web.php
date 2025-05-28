@@ -72,6 +72,10 @@ Route::get('/kontak', function () {
     return Inertia::render('ContactUs');
 })->name('frontend.contactus');
 
+Route::get('/sample-1', function () {
+    return Inertia::render('TravelPage');
+})->name('sample.1');
+
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
