@@ -82,7 +82,7 @@ const NewsletterSection = () => {
                             <button
                                 type="submit"
                                 disabled={isSubmitting}
-                                className="bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-semibold px-6 py-3 rounded-md transition-colors duration-200 whitespace-nowrap disabled:opacity-70 disabled:cursor-not-allowed"
+                                className="bg-yellow-400 hover:bg-yellow-500 text-black px-6 py-3 rounded-md transition-colors duration-200 whitespace-nowrap disabled:opacity-70 disabled:cursor-not-allowed"
                             >
                                 {isSubmitting ? (
                                     <span className="flex items-center justify-center">

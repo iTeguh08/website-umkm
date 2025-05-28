@@ -1,5 +1,6 @@
 import React from "react";
 import { Head, Link } from "@inertiajs/react";
+import Footer from "@/Components/Footer";
 
 export default function PostDetail({ post, posts }) {
     // Format tanggal dengan JavaScript native
@@ -34,22 +35,31 @@ export default function PostDetail({ post, posts }) {
     `;
 
     return (
-        <>
+        <div className="min-h-screen flex flex-col">
             <Head title={post.title} />
 
             {/* Hero Section */}
-            <div className="relative bg-blue-700 text-white pb-16 md:pb-24">
-                <div className="container px-4 pt-4">
+            <div className="relative text-white pb-16 md:pb-24">
+                {/* Background Image */}
+                <div className="absolute inset-0">
+                    <img
+                        src="https://images.unsplash.com/photo-1542744173-8e7e53415bb0?q=80&w=2940&auto=format&fit=crop"
+                        alt="Blog Header Background"
+                        className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/50 to-black/70"></div>
+                </div>
+
+                <div className="relative container px-6 pt-4">
                     <Link
                         href={route("frontend.posts.index")}
-                        className="inline-flex items-center text-gray-100 hover:text-white hover:bg-blue-600 transition-colors duration-200 px-4 py-2 rounded-lg mb-8"
+                        className="inline-flex items-center text-white mb-6 group transition-colors duration-300"
                     >
                         <svg
-                            className="w-5 h-5 mr-2"
+                            className="w-5 h-5 mr-2 transform group-hover:-translate-x-1 transition-transform duration-300"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
-                            xmlns="http://www.w3.org/2000/svg"
                         >
                             <path
                                 strokeLinecap="round"
@@ -58,27 +68,27 @@ export default function PostDetail({ post, posts }) {
                                 d="M10 19l-7-7m0 0l7-7m-7 7h18"
                             />
                         </svg>
-                        Kembali ke Beranda
+                        <span className="font-medium">Kembali ke Beranda</span>
                     </Link>
                 </div>
-                <div className="container mx-auto px-4">
+                <div className="relative container mx-auto px-4">
                     <div className="max-w-4xl mx-auto text-center">
                         {post.tags?.length > 0 && (
                             <div className="flex justify-center gap-2 mb-4">
                                 {post.tags.slice(0, 2).map((tag) => (
                                     <span
                                         key={tag.id}
-                                        className="inline-block bg-blue-600 text-xs font-semibold px-3 py-1 rounded-full"
+                                        className="inline-block bg-white/10 backdrop-blur-sm text-white text-xs font-semibold px-3 py-1 rounded-full border border-white/20"
                                     >
                                         {tag.title}
                                     </span>
                                 ))}
                             </div>
                         )}
-                        <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-6 leading-tight">
+                        <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-6 leading-tight drop-shadow-lg">
                             {post.title}
                         </h1>
-                        <div className="flex items-center justify-center space-x-4 text-sm text-blue-100">
+                        <div className="flex items-center justify-center space-x-4 text-sm text-gray-200">
                             <span>Oleh {post.user?.name || "Admin"}</span>
                             <span>•</span>
                             <span>{formatDate(post.created_at)}</span>
@@ -96,16 +106,16 @@ export default function PostDetail({ post, posts }) {
                         </div>
                     </div>
                 </div>
-                <div className="absolute bottom-0 left-0 right-0 h-12 bg-white"></div>
+                <div className="absolute bottom-0 left-0 right-0 h-12  from-white via-white to-transparent"></div>
             </div>
 
             {/* Main Content */}
             <div className="relative -mt-12">
                 <div className="container mx-auto px-4">
-                    <div className="max-w-4xl mx-auto bg-white rounded-md shadow-lg overflow-hidden">
+                    <div className="max-w-4xl mx-auto bg-white shadow-lg overflow-hidden rounded-t-lg">
                         {/* Featured Image */}
                         {post.photo && (
-                            <div className="h-64 md:h-96 overflow-hidden">
+                            <div className="h-64 md:h-96 overflow-hidden rounded-t-lg">
                                 <img
                                     src={`/storage/posts/${post.photo}`}
                                     alt={post.title}
@@ -116,8 +126,11 @@ export default function PostDetail({ post, posts }) {
 
                         {/* Article Content */}
                         <article className="prose max-w-none p-6 md:p-10">
+                            <h1 className="text-2xl md:text-2xl lg:text-2xl font-bold mb-6 leading-tight">
+                                {post.title}
+                            </h1>
                             {post.description && (
-                                <p className="text-lg text-gray-700 mb-6 font-medium">
+                                <p className="text-gray-700 mb-6">
                                     {post.description}
                                 </p>
                             )}
@@ -157,8 +170,7 @@ export default function PostDetail({ post, posts }) {
                                             className="h-12 w-12 rounded-full"
                                             src={
                                                 post.user?.profile_photo_url ||
-                                                `https://ui-avatars.com/api/?name=${
-                                                    post.user?.name || "Admin"
+                                                `https://ui-avatars.com/api/?name=${post.user?.name || "Admin"
                                                 }&background=3b82f6&color=fff`
                                             }
                                             alt={post.user?.name || "Admin"}
@@ -221,10 +233,10 @@ export default function PostDetail({ post, posts }) {
                                                 </span>
                                                 {relatedPost.tags?.length >
                                                     0 && (
-                                                    <span className="mx-2">
-                                                        •
-                                                    </span>
-                                                )}
+                                                        <span className="mx-2">
+                                                            •
+                                                        </span>
+                                                    )}
                                                 <div className="flex flex-wrap gap-1">
                                                     {relatedPost.tags
                                                         ?.slice(0, 2)
@@ -274,6 +286,8 @@ export default function PostDetail({ post, posts }) {
                     </div>
                 </div>
             )}
-        </>
+
+            <Footer />
+        </div>
     );
 }

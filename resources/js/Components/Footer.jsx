@@ -20,27 +20,42 @@ const Footer = () => {
                         </h3>
                         <ul className="space-y-2">
                             <li>
-                                <a href="/kategori/kuliner" className="text-gray-600 hover:text-blue-600 transition-colors">
+                                <a
+                                    href="/kategori/kuliner"
+                                    className="text-gray-600 hover:text-blue-600 transition-colors"
+                                >
                                     Kuliner & Makanan
                                 </a>
                             </li>
                             <li>
-                                <a href="/kategori/fashion" className="text-gray-600 hover:text-blue-600 transition-colors">
+                                <a
+                                    href="/kategori/fashion"
+                                    className="text-gray-600 hover:text-blue-600 transition-colors"
+                                >
                                     Fashion & Aksesoris
                                 </a>
                             </li>
                             <li>
-                                <a href="/kategori/kerajinan" className="text-gray-600 hover:text-blue-600 transition-colors">
+                                <a
+                                    href="/kategori/kerajinan"
+                                    className="text-gray-600 hover:text-blue-600 transition-colors"
+                                >
                                     Kerajinan Tangan
                                 </a>
                             </li>
                             <li>
-                                <a href="/kategori/jasa" className="text-gray-600 hover:text-blue-600 transition-colors">
+                                <a
+                                    href="/kategori/jasa"
+                                    className="text-gray-600 hover:text-blue-600 transition-colors"
+                                >
                                     Jasa Profesional
                                 </a>
                             </li>
                             <li>
-                                <a href="/kategori/pertanian" className="text-gray-600 hover:text-blue-600 transition-colors">
+                                <a
+                                    href="/kategori/pertanian"
+                                    className="text-gray-600 hover:text-blue-600 transition-colors"
+                                >
                                     Produk Pertanian
                                 </a>
                             </li>
@@ -61,7 +76,7 @@ const Footer = () => {
                             </li>
                             <li>
                                 <a
-                                    // href={route("frontend.about")}
+                                    href={route("frontend.about")}
                                     className="text-gray-600 hover:text-blue-600 transition-colors"
                                 >
                                     Tentang Kami
@@ -77,7 +92,7 @@ const Footer = () => {
                             </li>
                             <li>
                                 <a
-                                    // href={route("frontend.contact")}
+                                    href={route("frontend.contactus")}
                                     className="text-gray-600 hover:text-blue-600 transition-colors"
                                 >
                                     Kontak
@@ -140,12 +155,12 @@ const Footer = () => {
                         </div>
                     </div>
                 </div>
-                <div className="mt-8 pt-8 border-t border-gray-200">
-                    <p className="text-center text-gray-500 text-sm">
-                        &copy; {new Date().getFullYear()} UMKM Marketplace. All
-                        rights reserved.
-                    </p>
-                </div>
+            </div>
+            <div className="py-8 border-t border-gray-200">
+                <p className="text-center text-gray-500 text-sm">
+                    &copy; {new Date().getFullYear()} UMKM Marketplace. All
+                    rights reserved.
+                </p>
             </div>
         </footer>
     );

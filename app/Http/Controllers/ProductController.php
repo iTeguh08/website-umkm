@@ -123,11 +123,12 @@ class ProductController extends Controller
         $product->save();
 
         if ($request->hasFile('images')) {
-            foreach ($request->file('images') as $image) {
+            foreach ($request->file('images') as $index => $image) {
                 $path = $image->store('products', 'public');
 
                 $product->images()->create([
-                    'image_path' => $path
+                    'image_path' => $path,
+                    'order' => $index // Set the order based on the upload sequence
                 ]);
             }
         }
