@@ -106,6 +106,24 @@ export default function Index({ auth, all_categories = [] }) {
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
                                     {filteredPosts.map((post) => (
                                         <div key={post.id} className="border rounded-md overflow-hidden">
+                                            {/* Status Markers */}
+                                            <div className="flex gap-2 p-2 bg-gray-50">
+                                                {post.published && (
+                                                    <span className="text-xs px-2 py-1 bg-green-100 text-green-800 rounded-full">
+                                                        Published
+                                                    </span>
+                                                )}
+                                                {post.featured && (
+                                                    <span className="text-xs px-2 py-1 bg-purple-100 text-purple-800 rounded-full">
+                                                        Featured
+                                                    </span>
+                                                )}
+                                                {post.sticky && (
+                                                    <span className="text-xs px-2 py-1 bg-amber-100 text-amber-800 rounded-full">
+                                                        Sticky
+                                                    </span>
+                                                )}
+                                            </div>
                                             {post.photo && (
                                                 <div className="h-48 overflow-hidden">
                                                     <img
