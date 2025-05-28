@@ -123,11 +123,12 @@ class ProductController extends Controller
         $product->save();
 
         if ($request->hasFile('images')) {
-            foreach ($request->file('images') as $image) {
+            foreach ($request->file('images') as $index => $image) {
                 $path = $image->store('products', 'public');
 
                 $product->images()->create([
-                    'image_path' => $path
+                    'image_path' => $path,
+                    'order' => $index // Set the order based on the upload sequence
                 ]);
             }
         }
@@ -147,9 +148,8 @@ class ProductController extends Controller
         ]);
     }
 
-    public function update(Request $request, Product $product, $id)
+    public function update(Request $request, Product $product)
     {
-        $product = Product::findOrFail($id);
         $request->validate([
             'nama_usaha' => 'required|string|max:255',
             'lokasi' => 'required|string',
@@ -186,9 +186,8 @@ class ProductController extends Controller
             foreach ($request->file('images') as $image) {
                 $path = $image->store('product-images', 'public');
                 $product->images()->create([
-                    'path' => $path,
-                    'url' => Storage::url($path),
-                    'order' => $product->images()->count() + 1 // Adjust order as needed
+                    'image_path' => $path,
+                    'order' => $product->images()->count() // Set the order for new images
                 ]);
             }
         }
