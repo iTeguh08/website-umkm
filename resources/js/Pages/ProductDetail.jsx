@@ -693,37 +693,34 @@ const ProductDetail = () => {
                                     </div>
                                 </div>
 
-                                {/* Grid Cards Layout with Lines */}
-                                <div className="relative z-10 grid grid-cols-1 lg:grid-cols-5 gap-12 lg:gap-8 items-center">
-                                    {nearbyProducts.slice(0, 6).map((product, index) => {
-                                        const items = [];
-                                        
-                                        // Add the product card
-                                        items.push(
-                                            <div key={product.id} className="lg:col-span-2 flex justify-center">
-                                                <div className="w-full max-w-lg lg:max-w-xl">
-                                                    {/* Step Number */}
-                                                    <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 z-20">
-                                                        <div className="bg-orange-500 text-white rounded-full w-12 h-12 flex items-center justify-center font-bold text-lg shadow-lg">
-                                                            {String(index + 1).padStart(2, '0')}
-                                                        </div>
+                                {/* Grid Cards Layout */}
+                                <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-16">
+                                    {nearbyProducts.slice(0, 6).map((product, index) => (
+                                        <div key={product.id} className="flex justify-center">
+                                            <div className="w-full max-w-lg lg:max-w-xl">
+                                                {/* Step Number */}
+                                                <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 z-20">
+                                                    <div className="bg-orange-500 text-white rounded-full w-12 h-12 flex items-center justify-center font-bold text-lg shadow-lg">
+                                                        {String(index + 1).padStart(2, '0')}
+                                                    </div>
+                                                </div>
+
+                                                {/* Polaroid Card - Larger Size */}
+                                                <div className="relative group pt-[100px] mb-4">
+                                                    {/* Binder Clip - SVG */}
+                                                    <div className="absolute top-16 left-1/2 transform -translate-x-1/2 z-30">
+                                                        <img src="/binderClipImage.svg" alt="Binder Clip" className="w-16 h-14" />
                                                     </div>
 
-                                                    {/* Polaroid Card - Larger Size */}
-                                                    <div className="relative group pt-8 mb-4">
-                                                        {/* Binder Clip - SVG */}
-                                                        <div className="absolute -top-2 left-1/2 transform -translate-x-1/2 z-30">
-                                                            <img src="/binderClipImage.svg" alt="Binder Clip" className="w-16 h-14" />
-                                                        </div>
-
-                                                        {/* Polaroid Frame - Professional & Attractive Design */}
-                                                        <div className={`bg-white p-4 shadow-2xl shadow-black/20 border border-gray-100 transform transition-all duration-500 hover:shadow-3xl hover:shadow-black/30 ${index % 2 === 0 ? 'rotate-2 hover:rotate-1' : '-rotate-2 hover:-rotate-1'} w-72 mx-[auto] backdrop-blur-sm`}>
-                                                            <div className="relative overflow-hidden aspect-square">
+                                                    {/* Polaroid Frame - Professional & Attractive Design */}
+                                                    <div className={`bg-white p-4 shadow-2xl shadow-black/20 border border-gray-100 transform transition-all duration-500 hover:shadow-3xl hover:shadow-black/30 ${index % 2 === 0 ? 'rotate-2 hover:rotate-1' : '-rotate-2 hover:-rotate-1'} w-72 mx-[auto] backdrop-blur-sm`}>
+                                                        <Link href={route("product.detail", product.id)} className="block">
+                                                            <div className="relative overflow-hidden aspect-square group cursor-pointer">
                                                                 {product.images && product.images.length > 0 ? (
                                                                     <img
                                                                         src={`/storage/${product.images[0].image_path}`}
                                                                         alt={product.nama_usaha}
-                                                                        className="w-full h-full object-cover"
+                                                                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                                                                     />
                                                                 ) : (
                                                                     <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
@@ -745,54 +742,37 @@ const ProductDetail = () => {
                                                                     </div>
                                                                 )}
                                                             </div>
-                                                        </div>
+                                                        </Link>
+                                                    </div>
 
-                                                        {/* Enhanced Content Section */}
-                                                        <div className="space-y-4 mt-5">
-                                                            {/* Business Name with improved styling */}
+                                                    {/* Enhanced Content Section */}
+                                                    <div className="space-y-4 mt-5">
+                                                        {/* Business Name with improved styling */}
+                                                        <Link href={route("product.detail", product.id)} className="block group">
                                                             <div className="relative">
                                                                 <img src="/backgroundTextOrange.svg" alt="Orange Background" className="w-full" />
                                                                 <div className="absolute inset-0 flex items-center justify-center">
-                                                                    <h3 className="font-bold bebas-neue-regular text-center text-3xl uppercase tracking-wider text-white line-clamp-2">
+                                                                    <h3 className="font-bold bebas-neue-regular text-center text-3xl uppercase tracking-wider text-white line-clamp-2 group-hover:scale-105 transition-transform duration-300">
                                                                         {product.nama_usaha}
                                                                     </h3>
                                                                 </div>
                                                             </div>
+                                                        </Link>
 
-                                                            {/* Enhanced Description */}
-                                                            <p className="text-md text-white leading-relaxed line-clamp-3 text-center mx-5">
+                                                        {/* Enhanced Description */}
+                                                        <Link href={route("product.detail", product.id)} className="block group">
+                                                            <p className="text-md text-white leading-relaxed line-clamp-3 text-center mx-5 group-hover:text-orange-200 transition-colors duration-300">
                                                                 {product.description ?
                                                                     product.description.replace(/<[^>]*>/g, '').substring(0, 160) + (product.description.length > 160 ? '...' : '')
                                                                     : 'Informasi detail tentang UMKM ini akan segera tersedia.'
                                                                 }
                                                             </p>
-                                                        </div>
+                                                        </Link>
                                                     </div>
                                                 </div>
                                             </div>
-                                        );
-                                        
-                                        // Add curved line after odd-indexed items (0,2,4) but not on mobile
-                                        if (index % 2 === 0 && index < nearbyProducts.slice(0, 6).length - 1) {
-                                            items.push(
-                                                <div key={`line-${index}`} className="hidden lg:flex lg:col-span-1 items-center justify-center scale-x-[400%] mb-40">
-                                                    <svg className="w-full h-16" viewBox="0 0 100 64" fill="none">
-                                                        {/* Horizontal curved path */}
-                                                        <path
-                                                            d="M10 32 Q30 20, 50 32 T90 32"
-                                                            stroke="#FFA500"
-                                                            strokeWidth="2"
-                                                            strokeDasharray="4,3"
-                                                            fill="none"
-                                                            opacity="0.9"
-                                                        />
-                                                    </svg>
-                                                </div>
-                                            );
-                                        }
-                                        
-                                        return items;
-                                    }).flat()}
+                                        </div>
+                                    ))}
                                 </div>
                             </div>
                         </div>
