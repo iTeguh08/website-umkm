@@ -170,7 +170,7 @@ class ProductController extends Controller
             'bidang_usaha' => 'required|in:' . implode(',', BidangUsaha::values()),
             'jenis_usaha' => 'required|in:' . implode(',', JenisUsaha::values()),
             'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
-            'existing_images' => 'nullable|array',
+            // 'existing_images' => 'nullable|array',
             'existing_images.*.id' => 'exists:product_images,id',
             'existing_images.*.order' => 'integer|min:0',
             'image_orders' => 'nullable|array',
@@ -261,31 +261,43 @@ class ProductController extends Controller
     {
         $product->load('images');
         
-        // Get nearby products within 25km radius using Haversine formula
-        $nearbyProducts = collect();
+        // Cache key untuk nearby products berdasarkan product ID dan koordinat
+        $cacheKey = 'nearby_products_' . $product->id . '_' . $product->latitude . '_' . $product->longitude;
         
-        if ($product->latitude && $product->longitude) {
-            $nearbyProducts = Product::with('images')
-                ->where('id', '!=', $product->id)
-                ->whereNotNull('latitude')
-                ->whereNotNull('longitude')
-                ->has('images')
-                ->selectRaw('
-                    *,
-                    (6371 * acos(
-                        cos(radians(?)) * 
-                        cos(radians(latitude)) * 
-                        cos(radians(longitude) - radians(?)) + 
-                        sin(radians(?)) * 
-                        sin(radians(latitude))
-                    )) AS distance', 
-                    [$product->latitude, $product->longitude, $product->latitude]
-                )
-                ->having('distance', '<=', 25) // 25km radius
-                ->orderBy('distance', 'asc')
-                ->limit(12) // Batasi untuk performa
-                ->get();
+        // Simpan cache key untuk management
+        $cacheKeys = cache()->get('nearby_products_keys', []);
+        if (!in_array($cacheKey, $cacheKeys)) {
+            $cacheKeys[] = $cacheKey;
+            cache()->forever('nearby_products_keys', $cacheKeys);
         }
+        
+        // Cache nearby products selama 1 jam untuk mengurangi query database
+        $nearbyProducts = cache()->remember($cacheKey, 3600, function() use ($product) {
+            if ($product->latitude && $product->longitude) {
+                return Product::with('images')
+                    ->where('id', '!=', $product->id)
+                    ->whereNotNull('latitude')
+                    ->whereNotNull('longitude')
+                    ->has('images')
+                    ->selectRaw('
+                        *,
+                        (6371 * acos(
+                            cos(radians(?)) * 
+                            cos(radians(latitude)) * 
+                            cos(radians(longitude) - radians(?)) + 
+                            sin(radians(?)) * 
+                            sin(radians(latitude))
+                        )) AS distance', 
+                        [$product->latitude, $product->longitude, $product->latitude]
+                    )
+                    ->having('distance', '<=', 25) // 25km radius
+                    ->orderBy('distance', 'asc')
+                    ->limit(12) // Batasi untuk performa
+                    ->get();
+            }
+            
+            return collect();
+        });
 
         return Inertia::render('ProductDetail', [
             'product' => $product,

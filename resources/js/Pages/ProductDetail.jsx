@@ -82,32 +82,52 @@ const carouselStyles = `
 const NearbyProductsMap = ({ currentProduct, nearbyProducts = [], apiKey }) => {
     const [map, setMap] = useState(null);
     const [isLoaded, setIsLoaded] = useState(false);
+    const [isMapInitialized, setIsMapInitialized] = useState(false);
     const mapRef = useRef(null);
     const markersRef = useRef([]);
     const infoWindowRef = useRef(null);
+    const circleRef = useRef(null);
 
+    // Lazy load Google Maps script
     useEffect(() => {
         if (!apiKey) return;
 
         const loadGoogleMaps = () => {
-            if (window.google) {
+            // Check if already loaded
+            if (window.google && window.google.maps) {
                 setIsLoaded(true);
                 return;
             }
 
+            // Check if script already exists
+            const existingScript = document.querySelector('script[src*="maps.googleapis.com"]');
+            if (existingScript) {
+                existingScript.onload = () => setIsLoaded(true);
+                return;
+            }
+
+            // Load new script
             const script = document.createElement('script');
-            script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
+            script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&callback=initMap`;
             script.async = true;
             script.defer = true;
-            script.onload = () => setIsLoaded(true);
+            
+            // Global callback function
+            window.initMap = () => {
+                setIsLoaded(true);
+                delete window.initMap; // Clean up
+            };
+            
             document.head.appendChild(script);
         };
 
         loadGoogleMaps();
     }, [apiKey]);
 
+    // Initialize map only once
     useEffect(() => {
-        if (!isLoaded || !mapRef.current || !currentProduct.latitude || !currentProduct.longitude) return;
+        if (!isLoaded || !mapRef.current || isMapInitialized) return;
+        if (!currentProduct.latitude || !currentProduct.longitude) return;
 
         const mapOptions = {
             center: { 
@@ -118,10 +138,41 @@ const NearbyProductsMap = ({ currentProduct, nearbyProducts = [], apiKey }) => {
             mapTypeControl: true,
             streetViewControl: true,
             fullscreenControl: true,
+            // Optimize for performance
+            gestureHandling: 'greedy',
+            clickableIcons: false,
+            disableDefaultUI: false,
+            zoomControl: true,
         };
 
         const newMap = new window.google.maps.Map(mapRef.current, mapOptions);
         setMap(newMap);
+        setIsMapInitialized(true);
+
+        // Add radius circle (25km)
+        const circle = new window.google.maps.Circle({
+            map: newMap,
+            center: mapOptions.center,
+            radius: 25000, // 25km in meters
+            fillColor: '#3B82F6',
+            fillOpacity: 0.1,
+            strokeColor: '#2563EB',
+            strokeOpacity: 0.3,
+            strokeWeight: 2,
+        });
+        circleRef.current = circle;
+
+        // Fit bounds to include circle
+        newMap.fitBounds(circle.getBounds());
+    }, [isLoaded, currentProduct, isMapInitialized]);
+
+    // Update markers when products change
+    useEffect(() => {
+        if (!map || !isMapInitialized) return;
+
+        // Clear existing markers
+        markersRef.current.forEach(marker => marker.setMap(null));
+        markersRef.current = [];
 
         // Info window untuk semua markers
         const infoWindow = new window.google.maps.InfoWindow();
@@ -133,79 +184,89 @@ const NearbyProductsMap = ({ currentProduct, nearbyProducts = [], apiKey }) => {
                 lat: parseFloat(currentProduct.latitude), 
                 lng: parseFloat(currentProduct.longitude) 
             },
-            map: newMap,
+            map: map,
             title: currentProduct.nama_usaha,
             icon: {
                 url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
-                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="#DC2626"/>
-                        <circle cx="12" cy="9" r="2.5" fill="white"/>
+                        <circle cx="12" cy="9" r="3" fill="white"/>
+                        <text x="12" y="13" text-anchor="middle" fill="#DC2626" font-size="8" font-weight="bold">YOU</text>
                     </svg>
                 `),
-                scaledSize: new window.google.maps.Size(32, 32),
+                scaledSize: new window.google.maps.Size(40, 40),
+                anchor: new window.google.maps.Point(20, 40),
             },
+            animation: window.google.maps.Animation.DROP,
+            zIndex: 999,
         });
 
         currentMarker.addListener('click', () => {
             infoWindow.setContent(`
                 <div class="p-3 max-w-xs">
                     <h3 class="font-bold text-lg text-gray-900 mb-2">${currentProduct.nama_usaha}</h3>
-                    <p class="text-sm text-blue-600 font-medium mb-2">📍 Lokasi Saat Ini</p>
+                    <p class="text-sm text-red-600 font-medium mb-2">📍 Lokasi Anda Saat Ini</p>
                     <p class="text-sm text-gray-600 mb-2">${currentProduct.bidang_usaha || 'Bidang usaha tidak tersedia'}</p>
                     <p class="text-xs text-gray-500">${currentProduct.lokasi || 'Alamat lengkap tidak tersedia'}</p>
                 </div>
             `);
-            infoWindow.open(newMap, currentMarker);
+            infoWindow.open(map, currentMarker);
         });
 
         markersRef.current = [currentMarker];
 
-        // Markers untuk produk terdekat
+        // Markers untuk produk terdekat dengan animasi stagger
         nearbyProducts.forEach((product, index) => {
             if (product.latitude && product.longitude && product.id !== currentProduct.id) {
-                const marker = new window.google.maps.Marker({
-                    position: { 
-                        lat: parseFloat(product.latitude), 
-                        lng: parseFloat(product.longitude) 
-                    },
-                    map: newMap,
-                    title: product.nama_usaha,
-                    icon: {
-                        url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
-                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="#2563EB"/>
-                                <circle cx="12" cy="9" r="2.5" fill="white"/>
-                            </svg>
-                        `),
-                        scaledSize: new window.google.maps.Size(28, 28),
-                    },
-                });
+                setTimeout(() => {
+                    const marker = new window.google.maps.Marker({
+                        position: { 
+                            lat: parseFloat(product.latitude), 
+                            lng: parseFloat(product.longitude) 
+                        },
+                        map: map,
+                        title: product.nama_usaha,
+                        icon: {
+                            url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
+                                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="#2563EB"/>
+                                    <circle cx="12" cy="9" r="2.5" fill="white"/>
+                                    <text x="12" y="13" text-anchor="middle" fill="white" font-size="6" font-weight="bold">${index + 1}</text>
+                                </svg>
+                            `),
+                            scaledSize: new window.google.maps.Size(32, 32),
+                            anchor: new window.google.maps.Point(16, 32),
+                        },
+                        animation: window.google.maps.Animation.DROP,
+                    });
 
-                marker.addListener('click', () => {
-                    const distance = product.distance ? `${product.distance.toFixed(1)} km` : 'Jarak tidak diketahui';
-                    infoWindow.setContent(`
-                        <div class="p-3 max-w-xs">
-                            <h3 class="font-bold text-lg text-gray-900 mb-2">${product.nama_usaha}</h3>
-                            <p class="text-sm text-green-600 font-medium mb-2">📍 ${distance} dari sini</p>
-                            <p class="text-sm text-gray-600 mb-2">${product.bidang_usaha || 'Bidang usaha tidak tersedia'}</p>
-                            <p class="text-xs text-gray-500 mb-3">${product.lokasi || 'Alamat lengkap tidak tersedia'}</p>
-                            <a href="/products/${product.id}" class="inline-block bg-blue-600 text-white px-3 py-1 rounded text-xs hover:bg-blue-700 transition-colors">
-                                Lihat Detail
-                            </a>
-                        </div>
-                    `);
-                    infoWindow.open(newMap, marker);
-                });
+                    marker.addListener('click', () => {
+                        const distance = product.distance ? `${product.distance.toFixed(1)} km` : 'Jarak tidak diketahui';
+                        infoWindow.setContent(`
+                            <div class="p-3 max-w-xs">
+                                <h3 class="font-bold text-lg text-gray-900 mb-2">${product.nama_usaha}</h3>
+                                <p class="text-sm text-green-600 font-medium mb-2">📍 ${distance} dari lokasi Anda</p>
+                                <p class="text-sm text-gray-600 mb-2">${product.bidang_usaha || 'Bidang usaha tidak tersedia'}</p>
+                                <p class="text-xs text-gray-500 mb-3">${product.lokasi || 'Alamat lengkap tidak tersedia'}</p>
+                                <a href="/products/${product.id}" class="inline-block bg-blue-600 text-white px-3 py-1 rounded text-xs hover:bg-blue-700 transition-colors">
+                                    Lihat Detail
+                                </a>
+                            </div>
+                        `);
+                        infoWindow.open(map, marker);
+                    });
 
-                markersRef.current.push(marker);
+                    markersRef.current.push(marker);
+                }, index * 100); // Stagger animation
             }
         });
 
         return () => {
-            markersRef.current.forEach(marker => marker.setMap(null));
-            markersRef.current = [];
+            if (infoWindowRef.current) {
+                infoWindowRef.current.close();
+            }
         };
-    }, [isLoaded, currentProduct, nearbyProducts]);
+    }, [map, currentProduct, nearbyProducts, isMapInitialized]);
 
     if (!apiKey) {
         return (
@@ -222,8 +283,16 @@ const NearbyProductsMap = ({ currentProduct, nearbyProducts = [], apiKey }) => {
     }
 
     return (
-        <div className="rounded-xl overflow-hidden">
+        <div className="rounded-xl overflow-hidden relative">
             <div ref={mapRef} style={{ width: '100%', height: '450px' }} />
+            {!isMapInitialized && isLoaded && (
+                <div className="absolute inset-0 bg-gray-100 flex items-center justify-center">
+                    <div className="text-center">
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                        <p className="text-sm text-gray-600">Memuat peta...</p>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
@@ -526,15 +595,6 @@ const ProductDetail = () => {
                 </div>
 
                 <div className="bg-white rounded-md shadow-sm p-6 mb-8">
-                    <div className="flex items-center justify-center mb-6">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                        </svg>
-                        <h2 className="text-2xl font-bold text-gray-900">
-                            Lokasi & UMKM Terdekat
-                        </h2>
-                    </div>
                     <div className="mb-4 text-center text-gray-600">
                         {product.lokasi || 'Alamat lengkap tidak tersedia'}
                     </div>

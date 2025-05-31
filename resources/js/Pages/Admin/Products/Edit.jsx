@@ -63,6 +63,17 @@ export default function Edit({
         new Array(product.images.length).fill(true)
     );
 
+    // Handle initial load state for existing images
+    useEffect(() => {
+        // Set all existing images loading to false after a short delay
+        // This ensures the loading animation shows briefly but doesn't get stuck
+        const timer = setTimeout(() => {
+            setExistingImagesLoading(new Array(existingImages.length).fill(false));
+        }, 100);
+
+        return () => clearTimeout(timer);
+    }, []); // Run only once on mount
+
     // Sensors for @dnd-kit with better accessibility and touch support
     const sensors = useSensors(
         useSensor(PointerSensor),
@@ -104,7 +115,7 @@ export default function Edit({
                 const newImages = arrayMove(prevData.images, activeIndex, overIndex);
                 return { ...prevData, images: newImages };
             });
-            
+
             setImagePreviewUrls((prevUrls) => arrayMove(prevUrls, activeIndex, overIndex));
             setLoadingStates((prevStates) => arrayMove(prevStates, activeIndex, overIndex));
         }
@@ -113,7 +124,7 @@ export default function Edit({
     const handleSubmit = (e) => {
         e.preventDefault();
         const formData = new FormData();
-        
+
         // Add all form data
         formData.append('nama_usaha', data.nama_usaha);
         formData.append('lokasi', data.lokasi);
@@ -126,7 +137,7 @@ export default function Edit({
         formData.append('longitude', data.longitude);
         formData.append('page', data.page);
         formData.append('_method', 'PUT');
-        
+
         // Add existing images with their new order
         if (existingImages.length > 0) {
             existingImages.forEach((image, index) => {
@@ -134,7 +145,7 @@ export default function Edit({
                 formData.append(`existing_images[${index}][order]`, index);
             });
         }
-        
+
         // Add new images with their order
         if (data.images.length > 0) {
             for (let i = 0; i < data.images.length; i++) {
@@ -144,7 +155,7 @@ export default function Edit({
                 formData.append(`image_orders[${i}]`, newImageOrder);
             }
         }
-        
+
         // Alternative approach: Use router.post instead of submitForm
         router.post(route("products.update", product.id), formData, {
             preserveScroll: true,
@@ -314,60 +325,74 @@ export default function Edit({
             opacity: isDragging ? 0.5 : 1,
         };
 
+        const handleDeleteClick = (e) => {
+            // Stop all event propagation
+            e.preventDefault();
+            e.stopPropagation();
+
+            removeExistingImage(image.id);
+        };
+
         return (
             <div
                 ref={setNodeRef}
                 style={style}
-                {...attributes}
-                {...listeners}
-                className="relative aspect-[16/9] overflow-hidden rounded-sm cursor-grab active:cursor-grabbing"
+                className="relative group aspect-[16/9] overflow-hidden rounded-sm border border-gray-200"
             >
-                {isLoading && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-gray-100 z-10">
-                        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
-                    </div>
-                )}
-                <img
-                    src={`/storage/${image.image_path}`}
-                    alt="Product"
-                    className={`w-full h-full object-cover pointer-events-none ${
-                        isLoading ? "invisible" : "visible"
-                    }`}
-                    onLoad={() => {
-                        setTimeout(() => {
-                            setExistingImagesLoading((prev) => {
-                                const newLoading = [...prev];
-                                newLoading[index] = false;
-                                return newLoading;
-                            });
-                        }, 500);
-                    }}
-                />
+                {/* Drag handle area - only the image itself */}
+                <div
+                    {...attributes}
+                    {...listeners}
+                    className="w-full h-full cursor-grab active:cursor-grabbing"
+                >
+                    {isLoading ? (
+                        <div className="flex items-center justify-center h-full bg-gray-100">
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                        </div>
+                    ) : (
+                        <img
+                            src={`/storage/${image.image_path}`}
+                            alt="Product"
+                            className="w-full h-full object-cover pointer-events-none"
+                        />
+                    )}
+                </div>
+
+                {/* Delete button overlay - positioned outside drag area */}
                 {!isLoading && (
                     <>
+                        <div className="absolute inset-0 bg-black bg-opacity-30 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none" />
+
                         <button
                             type="button"
-                            className="absolute top-2 right-2 w-6 h-6 bg-red-600 text-white rounded-sm flex items-center justify-center hover:bg-red-700 transition-colors duration-200 z-20 pointer-events-auto"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                removeExistingImage(image.id);
+                            onClick={handleDeleteClick}
+                            onMouseDown={(e) => e.stopPropagation()}
+                            onMouseUp={(e) => e.stopPropagation()}
+                            className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition-colors opacity-0 group-hover:opacity-100 z-50 pointer-events-auto shadow-lg"
+                            title="Hapus gambar"
+                            style={{
+                                zIndex: 9999,
+                                position: 'absolute',
+                                pointerEvents: 'auto'
                             }}
                         >
                             <svg
-                                className="w-4 h-4"
+                                xmlns="http://www.w3.org/2000/svg"
+                                className="h-4 w-4"
                                 fill="none"
-                                stroke="currentColor"
                                 viewBox="0 0 24 24"
+                                stroke="currentColor"
                             >
                                 <path
                                     strokeLinecap="round"
                                     strokeLinejoin="round"
                                     strokeWidth={2}
-                                    d="M6 18L18 6M6 6l12 12"
+                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
                                 />
                             </svg>
                         </button>
-                        <div className="absolute top-1 left-1 bg-black bg-opacity-60 text-white text-xs px-2 py-1 rounded pointer-events-none">
+
+                        <div className="absolute top-2 left-2 bg-black bg-opacity-60 text-white text-xs px-2 py-1 rounded pointer-events-none z-10">
                             {index === 0 ? "Thumbnail" : index + 1}
                         </div>
                     </>
@@ -398,48 +423,74 @@ export default function Edit({
             opacity: isDragging ? 0.5 : 1,
         };
 
+        const handleDeleteClick = (e) => {
+            // Stop all event propagation
+            e.preventDefault();
+            e.stopPropagation();
+
+            removeTempImage(index);
+        };
+
         return (
             <div
                 ref={setNodeRef}
                 style={style}
-                {...attributes}
-                {...listeners}
-                className="relative aspect-[16/9] overflow-hidden rounded-sm cursor-grab active:cursor-grabbing border-4 border-blue-200"
+                className="relative group aspect-[16/9] overflow-hidden rounded-sm border-4 border-blue-200"
             >
-                {isLoading ? (
-                    <div className="flex items-center justify-center h-full bg-gray-100">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                    </div>
-                ) : (
-                    <>
+                {/* Drag handle area - only the image itself */}
+                <div
+                    {...attributes}
+                    {...listeners}
+                    className="w-full h-full cursor-grab active:cursor-grabbing"
+                >
+                    {isLoading ? (
+                        <div className="flex items-center justify-center h-full bg-gray-100">
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                        </div>
+                    ) : (
                         <img
                             src={src}
                             alt={`New upload ${index + 1}`}
                             className="w-full h-full object-cover pointer-events-none"
                         />
+                    )}
+                </div>
+
+                {/* Delete button overlay - positioned outside drag area */}
+                {!isLoading && (
+                    <>
+                        <div className="absolute inset-0 bg-black bg-opacity-30 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none" />
+
                         <button
                             type="button"
-                            className="absolute top-2 right-2 w-6 h-6 bg-red-600 text-white rounded-sm flex items-center justify-center hover:bg-red-700 transition-colors duration-200 pointer-events-auto"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                removeTempImage(index);
+                            onClick={handleDeleteClick}
+                            onMouseDown={(e) => e.stopPropagation()}
+                            onMouseUp={(e) => e.stopPropagation()}
+                            className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition-colors opacity-0 group-hover:opacity-100 z-50 pointer-events-auto shadow-lg"
+                            title="Hapus gambar"
+                            style={{
+                                zIndex: 9999,
+                                position: 'absolute',
+                                pointerEvents: 'auto'
                             }}
                         >
                             <svg
-                                className="w-4 h-4"
+                                xmlns="http://www.w3.org/2000/svg"
+                                className="h-4 w-4"
                                 fill="none"
-                                stroke="currentColor"
                                 viewBox="0 0 24 24"
+                                stroke="currentColor"
                             >
                                 <path
                                     strokeLinecap="round"
                                     strokeLinejoin="round"
                                     strokeWidth={2}
-                                    d="M6 18L18 6M6 6l12 12"
+                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
                                 />
                             </svg>
                         </button>
-                        <div className="absolute top-1 left-1 bg-blue-600 bg-opacity-80 text-white text-xs px-2 py-1 rounded pointer-events-none">
+
+                        <div className="absolute top-2 left-2 bg-blue-600 bg-opacity-80 text-white text-xs px-2 py-1 rounded pointer-events-none z-10">
                             New {index + 1}
                         </div>
                     </>
@@ -529,35 +580,35 @@ export default function Edit({
                                                     </option>
                                                     {field.name === "bidang_usaha"
                                                         ? bidangUsahaOptions.map(
-                                                              (option) => (
-                                                                  <option
-                                                                      key={option}
-                                                                      value={option}
-                                                                  >
-                                                                      {option
-                                                                          .charAt(0)
-                                                                          .toUpperCase() +
-                                                                          option.slice(
-                                                                              1
-                                                                          )}
-                                                                  </option>
-                                                              )
-                                                          )
+                                                            (option) => (
+                                                                <option
+                                                                    key={option}
+                                                                    value={option}
+                                                                >
+                                                                    {option
+                                                                        .charAt(0)
+                                                                        .toUpperCase() +
+                                                                        option.slice(
+                                                                            1
+                                                                        )}
+                                                                </option>
+                                                            )
+                                                        )
                                                         : jenisUsahaOptions.map(
-                                                              (option) => (
-                                                                  <option
-                                                                      key={option}
-                                                                      value={option}
-                                                                  >
-                                                                      {option
-                                                                          .charAt(0)
-                                                                          .toUpperCase() +
-                                                                          option.slice(
-                                                                              1
-                                                                          )}
-                                                                  </option>
-                                                              )
-                                                          )}
+                                                            (option) => (
+                                                                <option
+                                                                    key={option}
+                                                                    value={option}
+                                                                >
+                                                                    {option
+                                                                        .charAt(0)
+                                                                        .toUpperCase() +
+                                                                        option.slice(
+                                                                            1
+                                                                        )}
+                                                                </option>
+                                                            )
+                                                        )}
                                                 </select>
                                             ) : (
                                                 <input
@@ -716,35 +767,35 @@ export default function Edit({
                                                     </option>
                                                     {field.name === "bidang_usaha"
                                                         ? bidangUsahaOptions.map(
-                                                              (option) => (
-                                                                  <option
-                                                                      key={option}
-                                                                      value={option}
-                                                                  >
-                                                                      {option
-                                                                          .charAt(0)
-                                                                          .toUpperCase() +
-                                                                          option.slice(
-                                                                              1
-                                                                          )}
-                                                                  </option>
-                                                              )
-                                                          )
+                                                            (option) => (
+                                                                <option
+                                                                    key={option}
+                                                                    value={option}
+                                                                >
+                                                                    {option
+                                                                        .charAt(0)
+                                                                        .toUpperCase() +
+                                                                        option.slice(
+                                                                            1
+                                                                        )}
+                                                                </option>
+                                                            )
+                                                        )
                                                         : jenisUsahaOptions.map(
-                                                              (option) => (
-                                                                  <option
-                                                                      key={option}
-                                                                      value={option}
-                                                                  >
-                                                                      {option
-                                                                          .charAt(0)
-                                                                          .toUpperCase() +
-                                                                          option.slice(
-                                                                              1
-                                                                          )}
-                                                                  </option>
-                                                              )
-                                                          )}
+                                                            (option) => (
+                                                                <option
+                                                                    key={option}
+                                                                    value={option}
+                                                                >
+                                                                    {option
+                                                                        .charAt(0)
+                                                                        .toUpperCase() +
+                                                                        option.slice(
+                                                                            1
+                                                                        )}
+                                                                </option>
+                                                            )
+                                                        )}
                                                 </select>
                                             ) : (
                                                 <input
@@ -881,7 +932,7 @@ export default function Edit({
                                                                 }
                                                                 isLoading={
                                                                     existingImagesLoading[
-                                                                        index
+                                                                    index
                                                                     ]
                                                                 }
                                                                 setExistingImagesLoading={
@@ -891,7 +942,7 @@ export default function Edit({
                                                         )
                                                     )}
                                                 </SortableContext>
-                                                
+
                                                 <SortableContext
                                                     items={imagePreviewUrls.map((_, index) => `new-${index}`)}
                                                     strategy={verticalListSortingStrategy}
@@ -913,7 +964,7 @@ export default function Edit({
                                                         )
                                                     )}
                                                 </SortableContext>
-                                                
+
                                                 {isUploading &&
                                                     renderLoadingPlaceholders()}
                                             </div>
