@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Link, usePage } from "@inertiajs/react";
 import Header from "@/Components/Header";
 import Footer from "@/Components/Footer";
@@ -14,12 +14,11 @@ const carouselStyles = `
         border-radius: 50%;
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         opacity: 0.9;
-        background: rgba(255, 255, 255, 0.9) !important;
+        background: rgba(255, 255, 255, 0.48) !important;
         box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
     }
     .slick-arrow:hover {
         background: rgba(255, 255, 255, 1) !important;
-        transform: scale(1.1);
     }
     .slick-arrow:before {
         display: none;
@@ -47,6 +46,22 @@ const carouselStyles = `
         transform: rotate(-45deg);
         margin-right: 4px;
     }
+    .slick-slide {
+        opacity: 0;
+        transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .slick-slide.slick-active {
+        opacity: 1;
+    }
+    .slick-list {
+        height: 480px;
+    }
+    .slick-track {
+        height: 100%;
+    }
+    .slick-slide > div {
+        height: 100%;
+    }
     .thumbnail-container::-webkit-scrollbar {
         height: 6px;
     }
@@ -63,50 +78,264 @@ const carouselStyles = `
     }
 `;
 
+// Component untuk Nearby Products Map
+const NearbyProductsMap = ({ currentProduct, nearbyProducts = [], apiKey }) => {
+    const [map, setMap] = useState(null);
+    const [isLoaded, setIsLoaded] = useState(false);
+    const mapRef = useRef(null);
+    const markersRef = useRef([]);
+    const infoWindowRef = useRef(null);
+
+    useEffect(() => {
+        if (!apiKey) return;
+
+        const loadGoogleMaps = () => {
+            if (window.google) {
+                setIsLoaded(true);
+                return;
+            }
+
+            const script = document.createElement('script');
+            script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
+            script.async = true;
+            script.defer = true;
+            script.onload = () => setIsLoaded(true);
+            document.head.appendChild(script);
+        };
+
+        loadGoogleMaps();
+    }, [apiKey]);
+
+    useEffect(() => {
+        if (!isLoaded || !mapRef.current || !currentProduct.latitude || !currentProduct.longitude) return;
+
+        const mapOptions = {
+            center: { 
+                lat: parseFloat(currentProduct.latitude), 
+                lng: parseFloat(currentProduct.longitude) 
+            },
+            zoom: 12,
+            mapTypeControl: true,
+            streetViewControl: true,
+            fullscreenControl: true,
+        };
+
+        const newMap = new window.google.maps.Map(mapRef.current, mapOptions);
+        setMap(newMap);
+
+        // Info window untuk semua markers
+        const infoWindow = new window.google.maps.InfoWindow();
+        infoWindowRef.current = infoWindow;
+
+        // Marker untuk produk saat ini (warna khusus)
+        const currentMarker = new window.google.maps.Marker({
+            position: { 
+                lat: parseFloat(currentProduct.latitude), 
+                lng: parseFloat(currentProduct.longitude) 
+            },
+            map: newMap,
+            title: currentProduct.nama_usaha,
+            icon: {
+                url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="#DC2626"/>
+                        <circle cx="12" cy="9" r="2.5" fill="white"/>
+                    </svg>
+                `),
+                scaledSize: new window.google.maps.Size(32, 32),
+            },
+        });
+
+        currentMarker.addListener('click', () => {
+            infoWindow.setContent(`
+                <div class="p-3 max-w-xs">
+                    <h3 class="font-bold text-lg text-gray-900 mb-2">${currentProduct.nama_usaha}</h3>
+                    <p class="text-sm text-blue-600 font-medium mb-2">📍 Lokasi Saat Ini</p>
+                    <p class="text-sm text-gray-600 mb-2">${currentProduct.bidang_usaha || 'Bidang usaha tidak tersedia'}</p>
+                    <p class="text-xs text-gray-500">${currentProduct.lokasi || 'Alamat lengkap tidak tersedia'}</p>
+                </div>
+            `);
+            infoWindow.open(newMap, currentMarker);
+        });
+
+        markersRef.current = [currentMarker];
+
+        // Markers untuk produk terdekat
+        nearbyProducts.forEach((product, index) => {
+            if (product.latitude && product.longitude && product.id !== currentProduct.id) {
+                const marker = new window.google.maps.Marker({
+                    position: { 
+                        lat: parseFloat(product.latitude), 
+                        lng: parseFloat(product.longitude) 
+                    },
+                    map: newMap,
+                    title: product.nama_usaha,
+                    icon: {
+                        url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="#2563EB"/>
+                                <circle cx="12" cy="9" r="2.5" fill="white"/>
+                            </svg>
+                        `),
+                        scaledSize: new window.google.maps.Size(28, 28),
+                    },
+                });
+
+                marker.addListener('click', () => {
+                    const distance = product.distance ? `${product.distance.toFixed(1)} km` : 'Jarak tidak diketahui';
+                    infoWindow.setContent(`
+                        <div class="p-3 max-w-xs">
+                            <h3 class="font-bold text-lg text-gray-900 mb-2">${product.nama_usaha}</h3>
+                            <p class="text-sm text-green-600 font-medium mb-2">📍 ${distance} dari sini</p>
+                            <p class="text-sm text-gray-600 mb-2">${product.bidang_usaha || 'Bidang usaha tidak tersedia'}</p>
+                            <p class="text-xs text-gray-500 mb-3">${product.lokasi || 'Alamat lengkap tidak tersedia'}</p>
+                            <a href="/products/${product.id}" class="inline-block bg-blue-600 text-white px-3 py-1 rounded text-xs hover:bg-blue-700 transition-colors">
+                                Lihat Detail
+                            </a>
+                        </div>
+                    `);
+                    infoWindow.open(newMap, marker);
+                });
+
+                markersRef.current.push(marker);
+            }
+        });
+
+        return () => {
+            markersRef.current.forEach(marker => marker.setMap(null));
+            markersRef.current = [];
+        };
+    }, [isLoaded, currentProduct, nearbyProducts]);
+
+    if (!apiKey) {
+        return (
+            <div className="rounded-xl overflow-hidden bg-gray-100 h-96 flex items-center justify-center">
+                <div className="text-center text-gray-500">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-1.447-.894L15 4m0 13V4m-6 3l6-3" />
+                    </svg>
+                    <p className="text-sm">API Key Google Maps belum dikonfigurasi</p>
+                    <p className="text-xs text-gray-400 mt-1">Hubungi administrator untuk mengaktifkan peta</p>
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <div className="rounded-xl overflow-hidden">
+            <div ref={mapRef} style={{ width: '100%', height: '450px' }} />
+        </div>
+    );
+};
+
+// Component untuk daftar nearby products
+const NearbyProductsList = ({ nearbyProducts = [] }) => {
+    if (nearbyProducts.length === 0) {
+        return (
+            <div className="text-center py-8 text-gray-500">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                </svg>
+                <p>Tidak ada UMKM terdekat dalam radius 25 km</p>
+            </div>
+        );
+    }
+
+    return (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {nearbyProducts.map((product) => (
+                <div key={product.id} className="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200">
+                    <div className="relative">
+                        {product.images && product.images.length > 0 ? (
+                            <img 
+                                src={`/storage/${product.images[0].image_path}`} 
+                                alt={product.nama_usaha}
+                                className="w-full h-32 object-cover rounded-t-lg"
+                            />
+                        ) : (
+                            <div className="w-full h-32 bg-gray-100 rounded-t-lg flex items-center justify-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                            </div>
+                        )}
+                        {product.distance && (
+                            <div className="absolute top-2 right-2 bg-blue-600 text-white px-2 py-1 rounded-full text-xs font-medium">
+                                {product.distance.toFixed(1)} km
+                            </div>
+                        )}
+                    </div>
+                    <div className="p-4">
+                        <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2">{product.nama_usaha}</h3>
+                        <p className="text-sm text-gray-600 mb-2">{product.bidang_usaha || 'Bidang usaha tidak tersedia'}</p>
+                        <p className="text-xs text-gray-500 mb-3 line-clamp-2">{product.lokasi || 'Alamat tidak tersedia'}</p>
+                        <Link 
+                            href={`/products/${product.id}`}
+                            className="inline-block w-full text-center bg-blue-600 text-white px-4 py-2 rounded-md text-sm hover:bg-blue-700 transition-colors duration-200"
+                        >
+                            Lihat Detail
+                        </Link>
+                    </div>
+                </div>
+            ))}
+        </div>
+    );
+};
+
 const ProductDetail = () => {
-    const { product } = usePage().props;
+    const { product, nearbyProducts, googleMapsApiKey } = usePage().props;
     const [currentSlide, setCurrentSlide] = useState(0);
     const sliderRef = useRef(null);
+    const intervalRef = useRef(null);
 
     const capitalizeFirstLetter = (str) => {
         if (!str) return "";
         return str.charAt(0).toUpperCase() + str.slice(1);
     };
 
+    // Function to reset the auto-advance interval
+    const resetAutoAdvance = () => {
+        if (intervalRef.current) {
+            clearInterval(intervalRef.current);
+        }
+        
+        if (product.images?.length > 1) {
+            intervalRef.current = setInterval(() => {
+                setCurrentSlide((prev) => (prev + 1) % product.images.length);
+                if (sliderRef.current) {
+                    sliderRef.current.slickNext();
+                }
+            }, 5000);
+        }
+    };
+
+    // Auto-advance slides
+    useEffect(() => {
+        if (product.images?.length > 1) {
+            resetAutoAdvance();
+        }
+        
+        // Cleanup interval on component unmount
+        return () => {
+            if (intervalRef.current) {
+                clearInterval(intervalRef.current);
+            }
+        };
+    }, [product.images?.length]);
+
     const settings = {
-        dots: true,
         infinite: true,
-        speed: 500,
+        speed: 600,
         slidesToShow: 1,
         slidesToScroll: 1,
+        fade: true,
+        cssEase: 'cubic-bezier(0.4, 0, 0.2, 1)',
+        autoplay: false, // We handle autoplay manually for better control
         beforeChange: (current, next) => setCurrentSlide(next),
-        afterChange: (current) => setCurrentSlide(current),
-        prevArrow: (
-            <button className="absolute left-2 top-1/2 z-10 bg-white/90 hover:bg-white text-gray-800 rounded-full w-12 h-12 flex items-center justify-center shadow-lg transition-all duration-300 hover:scale-110">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
-            </button>
-        ),
-        nextArrow: (
-            <button className="absolute right-2 top-1/2 z-10 bg-white/90 hover:bg-white text-gray-800 rounded-full w-12 h-12 flex items-center justify-center shadow-lg transition-all duration-300 hover:scale-110">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-            </button>
-        ),
-        customPaging: (i) => (
-            <div
-                className={`w-2 h-2 mx-1 rounded-full transition-all duration-300 ${
-                    i === currentSlide ? "bg-blue-600 w-6" : "bg-gray-300 hover:bg-gray-400"
-                }`}
-            ></div>
-        ),
-        appendDots: (dots) => (
-            <div className="absolute bottom-4">
-                <ul className="flex justify-center items-center space-x-2">{dots}</ul>
-            </div>
-        ),
+        afterChange: (current) => {
+            setCurrentSlide(current);
+            resetAutoAdvance(); // Reset timer when slide changes (including arrow clicks)
+        },
     };
 
     const handleThumbnailClick = (index) => {
@@ -114,6 +343,7 @@ const ProductDetail = () => {
         if (sliderRef.current) {
             sliderRef.current.slickGoTo(index);
         }
+        resetAutoAdvance(); // Reset timer when user manually navigates
     };
 
     return (
@@ -148,7 +378,7 @@ const ProductDetail = () => {
                         <div className="relative">
                             {product.images && product.images.length > 0 ? (
                                 product.images.length === 1 ? (
-                                    <div className="outline-none mb-1 rounded-xl overflow-hidden shadow-lg">
+                                    <div className="outline-none rounded-xl overflow-hidden shadow-lg">
                                         <img
                                             src={`/storage/${product.images[0].image_path}`}
                                             alt={`${product.nama_usaha} - 1`}
@@ -185,15 +415,15 @@ const ProductDetail = () => {
                             )}
 
                             {product.images && product.images.length > 1 && (
-                                <div className="flex mt-6 space-x-3 overflow-x-auto pb-4 px-2 thumbnail-container">
+                                <div className="flex mt-6 space-x-3 overflow-x-auto py-4 px-2 thumbnail-container">
                                     {product.images.map((image, index) => (
                                         <div
                                             key={index}
-                                            className={`thumbnail-button flex-shrink-0`}
+                                            className="flex-shrink-0"
                                         >
                                             <button
                                                 onClick={() => handleThumbnailClick(index)}
-                                                className={`w-20 h-20 rounded-lg overflow-hidden transition-all duration-300 ${
+                                                className={`w-20 h-20 rounded-md overflow-hidden transition-all duration-300 ${
                                                     index === currentSlide
                                                         ? "ring-2 ring-blue-500 opacity-100"
                                                         : "opacity-60 hover:opacity-100"
@@ -302,23 +532,61 @@ const ProductDetail = () => {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                         </svg>
                         <h2 className="text-2xl font-bold text-gray-900">
-                            Lokasi UMKM
+                            Lokasi & UMKM Terdekat
                         </h2>
                     </div>
                     <div className="mb-4 text-center text-gray-600">
                         {product.lokasi || 'Alamat lengkap tidak tersedia'}
                     </div>
-                    <div className="rounded-xl overflow-hidden">
-                        <iframe
-                            width="100%"
-                            height="450"
-                            style={{ border: 0 }}
-                            loading="lazy"
-                            allowFullScreen
-                            src={`https://www.google.com/maps?q=${product.latitude},${product.longitude}&hl=es;z=14&output=embed`}
-                        ></iframe>
+                    
+                    {/* Interactive Google Maps dengan nearby products */}
+                    <NearbyProductsMap 
+                        currentProduct={product}
+                        nearbyProducts={nearbyProducts || []}
+                        apiKey={googleMapsApiKey}
+                    />
+                    
+                    {/* Legend/Info */}
+                    <div className="mt-4 flex justify-center space-x-6 text-sm text-gray-600">
+                        <div className="flex items-center">
+                            <div className="w-4 h-4 mr-2" style={{
+                                background: 'url(data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="#DC2626"/>
+                                        <circle cx="12" cy="9" r="2.5" fill="white"/>
+                                    </svg>
+                                `) + ')'
+                            }}></div>
+                            <span>Lokasi Saat Ini</span>
+                        </div>
+                        <div className="flex items-center">
+                            <div className="w-4 h-4 mr-2" style={{
+                                background: 'url(data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="#2563EB"/>
+                                        <circle cx="12" cy="9" r="2.5" fill="white"/>
+                                    </svg>
+                                `) + ')'
+                            }}></div>
+                            <span>UMKM Terdekat (radius 25km)</span>
+                        </div>
                     </div>
                 </div>
+
+                {/* Section untuk daftar UMKM terdekat */}
+                {(nearbyProducts && nearbyProducts.length > 0) && (
+                    <div className="bg-white rounded-md shadow-sm p-6 mb-8">
+                        <div className="flex items-center justify-center mb-6">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-green-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                            </svg>
+                            <h2 className="text-2xl font-bold text-gray-900">
+                                UMKM Terdekat ({nearbyProducts.length})
+                            </h2>
+                        </div>
+                        <NearbyProductsList nearbyProducts={nearbyProducts} />
+                    </div>
+                )}
             </div>
 
             <Footer />

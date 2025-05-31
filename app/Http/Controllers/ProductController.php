@@ -260,8 +260,37 @@ class ProductController extends Controller
     public function showPublic(Product $product)
     {
         $product->load('images');
+        
+        // Get nearby products within 25km radius using Haversine formula
+        $nearbyProducts = collect();
+        
+        if ($product->latitude && $product->longitude) {
+            $nearbyProducts = Product::with('images')
+                ->where('id', '!=', $product->id)
+                ->whereNotNull('latitude')
+                ->whereNotNull('longitude')
+                ->has('images')
+                ->selectRaw('
+                    *,
+                    (6371 * acos(
+                        cos(radians(?)) * 
+                        cos(radians(latitude)) * 
+                        cos(radians(longitude) - radians(?)) + 
+                        sin(radians(?)) * 
+                        sin(radians(latitude))
+                    )) AS distance', 
+                    [$product->latitude, $product->longitude, $product->latitude]
+                )
+                ->having('distance', '<=', 25) // 25km radius
+                ->orderBy('distance', 'asc')
+                ->limit(12) // Batasi untuk performa
+                ->get();
+        }
+
         return Inertia::render('ProductDetail', [
-            'product' => $product
+            'product' => $product,
+            'nearbyProducts' => $nearbyProducts,
+            'googleMapsApiKey' => config('services.google_maps.api_key', null)
         ]);
     }
 }
