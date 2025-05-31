@@ -104,10 +104,13 @@ class ProductController extends Controller
             'lokasi' => 'required|string',
             'email' => 'required|email',
             'telephone' => 'required|string',
+            'description' => 'nullable|string',
             'bidang_usaha' => 'required|in:' . implode(',', BidangUsaha::values()),
             'jenis_usaha' => 'required|in:' . implode(',', JenisUsaha::values()),
             'images' => 'nullable|array',
             'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
+            'image_orders' => 'nullable|array',
+            'image_orders.*' => 'integer|min:0',
             'latitude' => 'nullable|numeric|between:-90,90',
             'longitude' => 'nullable|numeric|between:-180,180',
         ]);
@@ -117,18 +120,26 @@ class ProductController extends Controller
         $product->lokasi = $request->lokasi;
         $product->email = $request->email;
         $product->telephone = $request->telephone;
+        $product->description = $request->description;
+        $product->bidang_usaha = $request->bidang_usaha;
+        $product->jenis_usaha = $request->jenis_usaha;
         $product->latitude = $request->latitude;
         $product->longitude = $request->longitude;
 
         $product->save();
 
         if ($request->hasFile('images')) {
+            $imageOrders = $request->input('image_orders', []);
+            
             foreach ($request->file('images') as $index => $image) {
                 $path = $image->store('products', 'public');
 
+                // Use the order from frontend drag & drop, fallback to index
+                $order = isset($imageOrders[$index]) ? $imageOrders[$index] : $index;
+
                 $product->images()->create([
                     'image_path' => $path,
-                    'order' => $index // Set the order based on the upload sequence
+                    'order' => $order
                 ]);
             }
         }
@@ -155,9 +166,15 @@ class ProductController extends Controller
             'lokasi' => 'required|string',
             'email' => 'required|email',
             'telephone' => 'required|string',
+            'description' => 'nullable|string',
             'bidang_usaha' => 'required|in:' . implode(',', BidangUsaha::values()),
             'jenis_usaha' => 'required|in:' . implode(',', JenisUsaha::values()),
             'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
+            'existing_images' => 'nullable|array',
+            'existing_images.*.id' => 'exists:product_images,id',
+            'existing_images.*.order' => 'integer|min:0',
+            'image_orders' => 'nullable|array',
+            'image_orders.*' => 'integer|min:0',
             'latitude' => 'nullable|numeric|between:-90,90',
             'longitude' => 'nullable|numeric|between:-180,180',
         ]);
@@ -172,27 +189,34 @@ class ProductController extends Controller
         $product->latitude = $request->latitude;
         $product->longitude = $request->longitude;
 
+        // Update existing images order
         if ($request->has('existing_images')) {
             foreach ($request->input('existing_images') as $imageData) {
                 $image = ProductImage::find($imageData['id']);
-                if ($image) {
+                if ($image && $image->product_id === $product->id) {
                     $image->update(['order' => $imageData['order']]);
                 }
             }
         }
         
-        // Handle new image uploads
+        // Handle new image uploads with proper ordering
         if ($request->hasFile('images')) {
-            foreach ($request->file('images') as $image) {
-                $path = $image->store('product-images', 'public');
+            $imageOrders = $request->input('image_orders', []);
+            
+            foreach ($request->file('images') as $index => $image) {
+                $path = $image->store('products', 'public');
+                
+                // Use the order from frontend drag & drop, fallback to calculated order
+                $order = isset($imageOrders[$index]) ? $imageOrders[$index] : $product->images()->count() + $index;
+                
                 $product->images()->create([
                     'image_path' => $path,
-                    'order' => $product->images()->count() // Set the order for new images
+                    'order' => $order
                 ]);
             }
         }
-        $product->update($request->except(['images', 'existing_images']));
-
+        
+        $product->update($request->except(['images', 'existing_images', 'image_orders']));
         $product->save();
 
         return redirect()->route('products.index', ['page' => $request->page ?? 1])

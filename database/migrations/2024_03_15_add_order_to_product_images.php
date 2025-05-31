@@ -10,17 +10,25 @@ return new class extends Migration
     public function up()
     {
         Schema::table('product_images', function (Blueprint $table) {
-            $table->integer('order')->default(0);
+            // Check if column doesn't exist before adding
+            if (!Schema::hasColumn('product_images', 'order')) {
+                $table->integer('order')->default(0);
+            }
         });
 
-        // Set initial order based on ID for existing images
-        DB::statement('UPDATE product_images SET `order` = id');
+        // Set initial order based on ID for existing images (only if needed)
+        $hasOrderData = DB::table('product_images')->where('order', '>', 0)->exists();
+        if (!$hasOrderData) {
+            DB::statement('UPDATE product_images SET `order` = id');
+        }
     }
 
     public function down()
     {
         Schema::table('product_images', function (Blueprint $table) {
-            $table->dropColumn('order');
+            if (Schema::hasColumn('product_images', 'order')) {
+                $table->dropColumn('order');
+            }
         });
     }
 }; 

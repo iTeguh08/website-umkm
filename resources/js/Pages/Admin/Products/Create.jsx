@@ -5,53 +5,54 @@ import Sidebar from "@/Components/Sidebar";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
-import { DndProvider, useDrag, useDrop } from "react-dnd";
-import { HTML5Backend } from "react-dnd-html5-backend";
+import {
+    DndContext,
+    closestCenter,
+    KeyboardSensor,
+    PointerSensor,
+    useSensor,
+    useSensors,
+} from "@dnd-kit/core";
+import {
+    arrayMove,
+    SortableContext,
+    sortableKeyboardCoordinates,
+    verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import {
+    useSortable,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
-const ImageItem = ({
+const SortableImageItem = ({
     id,
     src,
     index,
-    moveImage,
     removeTempImage,
     isLoading,
 }) => {
-    const ref = React.useRef(null);
+    const {
+        attributes,
+        listeners,
+        setNodeRef,
+        transform,
+        transition,
+        isDragging,
+    } = useSortable({ id });
 
-    const [{ isDragging }, drag] = useDrag(() => ({
-        type: "image",
-        item: () => ({ id, index }),
-        collect: (monitor) => ({
-            isDragging: monitor.isDragging(),
-        }),
-    }));
-
-    const [, drop] = useDrop({
-        accept: "image",
-        hover(item, monitor) {
-            if (!ref.current) {
-                return;
-            }
-            const dragIndex = item.index;
-            const hoverIndex = index;
-
-            if (dragIndex === hoverIndex) {
-                return;
-            }
-
-            moveImage(dragIndex, hoverIndex);
-            item.index = hoverIndex;
-        },
-    });
-
-    const opacity = isDragging ? 0.5 : 1;
-    drag(drop(ref));
+    const style = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.5 : 1,
+    };
 
     return (
         <div
-            ref={ref}
-            style={{ opacity }}
-            className="relative group aspect-[16/9] overflow-hidden rounded-sm border border-gray-200"
+            ref={setNodeRef}
+            style={style}
+            {...attributes}
+            {...listeners}
+            className="relative group aspect-[16/9] overflow-hidden rounded-sm border border-gray-200 cursor-grab active:cursor-grabbing"
         >
             {isLoading ? (
                 <div className="flex items-center justify-center h-full bg-gray-100">
@@ -62,13 +63,16 @@ const ImageItem = ({
                     <img
                         src={src}
                         alt={`Preview ${index + 1}`}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-cover pointer-events-none"
                     />
                     <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                         <button
                             type="button"
-                            onClick={() => removeTempImage(index)}
-                            className="bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition-colors"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                removeTempImage(index);
+                            }}
+                            className="bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition-colors pointer-events-auto"
                             title="Hapus gambar"
                         >
                             <svg
@@ -87,7 +91,7 @@ const ImageItem = ({
                             </svg>
                         </button>
                     </div>
-                    <div className="absolute top-1 left-1 bg-black bg-opacity-60 text-white text-xs px-2 py-1 rounded">
+                    <div className="absolute top-1 left-1 bg-black bg-opacity-60 text-white text-xs px-2 py-1 rounded pointer-events-none">
                         {index === 0 ? "Thumbnail" : index + 1}
                     </div>
                 </>
@@ -149,12 +153,31 @@ export default function Create({ bidangUsahaOptions, jenisUsahaOptions }) {
     const handleSubmit = (e) => {
         e.preventDefault();
         const formData = new FormData();
+        
+        // Add all form data
+        formData.append('nama_usaha', data.nama_usaha);
+        formData.append('lokasi', data.lokasi);
+        formData.append('email', data.email);
+        formData.append('telephone', data.telephone);
+        formData.append('description', data.description);
+        formData.append('bidang_usaha', data.bidang_usaha);
+        formData.append('jenis_usaha', data.jenis_usaha);
+        formData.append('latitude', data.latitude);
+        formData.append('longitude', data.longitude);
+        
+        // Add images in the correct order (after drag and drop reordering)
         if (data.images.length > 0) {
             for (let i = 0; i < data.images.length; i++) {
                 formData.append(`images[${i}]`, data.images[i]);
+                // Add explicit order information
+                formData.append(`image_orders[${i}]`, i);
             }
         }
+        
+        // Submit using post method with FormData
         submitForm(route("products.store"), {
+            data: formData,
+            forceFormData: true,
             preserveScroll: true,
         });
     };
@@ -289,37 +312,42 @@ export default function Create({ bidangUsahaOptions, jenisUsahaOptions }) {
         ));
     };
 
-    const moveImage = useCallback(
-        (dragIndex, hoverIndex) => {
-            setData((prevData) => {
-                const newImages = [...prevData.images];
-                const newPreviewUrls = [...imagePreviewUrls];
-                const newLoadingStates = [...loadingStates];
-
-                // Reorder images
-                const [movedImage] = newImages.splice(dragIndex, 1);
-                newImages.splice(hoverIndex, 0, movedImage);
-
-                // Reorder preview URLs
-                const [movedPreview] = newPreviewUrls.splice(dragIndex, 1);
-                newPreviewUrls.splice(hoverIndex, 0, movedPreview);
-
-                // Reorder loading states
-                const [movedLoading] = newLoadingStates.splice(dragIndex, 1);
-                newLoadingStates.splice(hoverIndex, 0, movedLoading);
-
-                // Update state
-                setImagePreviewUrls(newPreviewUrls);
-                setLoadingStates(newLoadingStates);
-
-                return { ...prevData, images: newImages };
-            });
-        },
-        [imagePreviewUrls, loadingStates]
+    // Sensors for @dnd-kit with better accessibility and touch support
+    const sensors = useSensors(
+        useSensor(PointerSensor),
+        useSensor(KeyboardSensor, {
+            coordinateGetter: sortableKeyboardCoordinates,
+        })
     );
 
+    // Handle drag end with @dnd-kit
+    const handleDragEnd = useCallback((event) => {
+        const { active, over } = event;
+
+        if (!over || active.id === over.id) {
+            return;
+        }
+
+        const activeIndex = imagePreviewUrls.findIndex((_, index) => `preview-${index}` === active.id);
+        const overIndex = imagePreviewUrls.findIndex((_, index) => `preview-${index}` === over.id);
+
+        if (activeIndex !== -1 && overIndex !== -1) {
+            setData((prevData) => {
+                const newImages = arrayMove(prevData.images, activeIndex, overIndex);
+                return { ...prevData, images: newImages };
+            });
+            
+            setImagePreviewUrls((prevUrls) => arrayMove(prevUrls, activeIndex, overIndex));
+            setLoadingStates((prevStates) => arrayMove(prevStates, activeIndex, overIndex));
+        }
+    }, [imagePreviewUrls]);
+
     return (
-        <DndProvider backend={HTML5Backend}>
+        <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+        >
             <Sidebar />
             <div className="pl-64 bg-gray-50 min-h-screen">
                 <AuthenticatedLayout>
@@ -607,19 +635,23 @@ export default function Create({ bidangUsahaOptions, jenisUsahaOptions }) {
 
                                     {/* Preview images dan placeholders */}
                                     <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4">
-                                        {imagePreviewUrls.map((url, index) => (
-                                            <ImageItem
-                                                key={`preview-${index}`}
-                                                id={`preview-${index}`}
-                                                src={url}
-                                                index={index}
-                                                moveImage={moveImage}
-                                                removeTempImage={
-                                                    removeTempImage
-                                                }
-                                                isLoading={loadingStates[index]}
-                                            />
-                                        ))}
+                                        <SortableContext
+                                            items={imagePreviewUrls.map((_, index) => `preview-${index}`)}
+                                            strategy={verticalListSortingStrategy}
+                                        >
+                                            {imagePreviewUrls.map((url, index) => (
+                                                <SortableImageItem
+                                                    key={`preview-${index}`}
+                                                    id={`preview-${index}`}
+                                                    src={url}
+                                                    index={index}
+                                                    removeTempImage={
+                                                        removeTempImage
+                                                    }
+                                                    isLoading={loadingStates[index]}
+                                                />
+                                            ))}
+                                        </SortableContext>
 
                                         {/* Render loading placeholders for images being uploaded */}
                                         {isUploading &&
@@ -647,6 +679,6 @@ export default function Create({ bidangUsahaOptions, jenisUsahaOptions }) {
                     </div>
                 </AuthenticatedLayout>
             </div>
-        </DndProvider>
+        </DndContext>
     );
 }
