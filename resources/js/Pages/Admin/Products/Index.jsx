@@ -357,6 +357,9 @@ const Index = () => {
                                                                 productId={
                                                                     product.id
                                                                 }
+                                                                currentPage={
+                                                                    page || 1
+                                                                }
                                                             />
                                                         </td>
                                                     </tr>

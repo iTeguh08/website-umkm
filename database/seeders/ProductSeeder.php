@@ -19,9 +19,9 @@ class ProductSeeder extends Seeder
         $faker = Faker::create('id_ID');
 
         // Data koordinat real di berbagai provinsi Indonesia
-        // Beberapa yang berdekatan untuk fitur nearby products
+        // Diperbanyak agar setiap cluster memiliki 4-6 produk untuk nearby products
         $indonesianLocations = [
-            // Jakarta & Sekitarnya (Cluster 1)
+            // Jakarta & Sekitarnya (Cluster 1 - 8 produk)
             [
                 'provinsi' => 'DKI Jakarta',
                 'kota' => 'Jakarta Pusat',
@@ -41,6 +41,18 @@ class ProductSeeder extends Seeder
                 'longitude' => 106.9004,
             ],
             [
+                'provinsi' => 'DKI Jakarta',
+                'kota' => 'Jakarta Barat',
+                'latitude' => -6.1352,
+                'longitude' => 106.8133,
+            ],
+            [
+                'provinsi' => 'DKI Jakarta',
+                'kota' => 'Jakarta Utara',
+                'latitude' => -6.1378,
+                'longitude' => 106.8631,
+            ],
+            [
                 'provinsi' => 'Jawa Barat',
                 'kota' => 'Bogor',
                 'latitude' => -6.5971,
@@ -52,8 +64,14 @@ class ProductSeeder extends Seeder
                 'latitude' => -6.4025,
                 'longitude' => 106.7942,
             ],
+            [
+                'provinsi' => 'Jawa Barat',
+                'kota' => 'Bekasi',
+                'latitude' => -6.2383,
+                'longitude' => 106.9756,
+            ],
             
-            // Jawa Barat (Cluster 2)
+            // Jawa Barat - Bandung Raya (Cluster 2 - 6 produk)
             [
                 'provinsi' => 'Jawa Barat',
                 'kota' => 'Bandung',
@@ -68,12 +86,30 @@ class ProductSeeder extends Seeder
             ],
             [
                 'provinsi' => 'Jawa Barat',
-                'kota' => 'Bekasi',
-                'latitude' => -6.2383,
-                'longitude' => 106.9756,
+                'kota' => 'Bandung Barat',
+                'latitude' => -6.8486,
+                'longitude' => 107.4981,
+            ],
+            [
+                'provinsi' => 'Jawa Barat',
+                'kota' => 'Sumedang',
+                'latitude' => -6.8389,
+                'longitude' => 107.9239,
+            ],
+            [
+                'provinsi' => 'Jawa Barat',
+                'kota' => 'Subang',
+                'latitude' => -6.5697,
+                'longitude' => 107.7586,
+            ],
+            [
+                'provinsi' => 'Jawa Barat',
+                'kota' => 'Purwakarta',
+                'latitude' => -6.5569,
+                'longitude' => 107.4431,
             ],
             
-            // Jawa Tengah (Cluster 3)
+            // Jawa Tengah (Cluster 3 - 6 produk)
             [
                 'provinsi' => 'Jawa Tengah',
                 'kota' => 'Semarang',
@@ -92,8 +128,26 @@ class ProductSeeder extends Seeder
                 'latitude' => -7.7956,
                 'longitude' => 110.3695,
             ],
+            [
+                'provinsi' => 'Jawa Tengah',
+                'kota' => 'Salatiga',
+                'latitude' => -7.3317,
+                'longitude' => 110.4928,
+            ],
+            [
+                'provinsi' => 'Jawa Tengah',
+                'kota' => 'Magelang',
+                'latitude' => -7.4797,
+                'longitude' => 110.2175,
+            ],
+            [
+                'provinsi' => 'Jawa Tengah',
+                'kota' => 'Klaten',
+                'latitude' => -7.7061,
+                'longitude' => 110.6067,
+            ],
             
-            // Jawa Timur (Cluster 4)
+            // Jawa Timur - Surabaya Raya (Cluster 4 - 6 produk)
             [
                 'provinsi' => 'Jawa Timur',
                 'kota' => 'Surabaya',
@@ -112,8 +166,26 @@ class ProductSeeder extends Seeder
                 'latitude' => -7.4378,
                 'longitude' => 112.7178,
             ],
+            [
+                'provinsi' => 'Jawa Timur',
+                'kota' => 'Gresik',
+                'latitude' => -7.1556,
+                'longitude' => 112.6536,
+            ],
+            [
+                'provinsi' => 'Jawa Timur',
+                'kota' => 'Mojokerto',
+                'latitude' => -7.4664,
+                'longitude' => 112.4339,
+            ],
+            [
+                'provinsi' => 'Jawa Timur',
+                'kota' => 'Pasuruan',
+                'latitude' => -7.6453,
+                'longitude' => 112.9075,
+            ],
             
-            // Bali (Cluster 5)
+            // Bali (Cluster 5 - 5 produk)
             [
                 'provinsi' => 'Bali',
                 'kota' => 'Denpasar',
@@ -132,8 +204,20 @@ class ProductSeeder extends Seeder
                 'latitude' => -8.6872,
                 'longitude' => 115.2632,
             ],
+            [
+                'provinsi' => 'Bali',
+                'kota' => 'Canggu',
+                'latitude' => -8.6481,
+                'longitude' => 115.1394,
+            ],
+            [
+                'provinsi' => 'Bali',
+                'kota' => 'Seminyak',
+                'latitude' => -8.6947,
+                'longitude' => 115.1731,
+            ],
             
-            // Sumatra Utara
+            // Sumatra Utara (Cluster 6 - 4 produk)
             [
                 'provinsi' => 'Sumatra Utara',
                 'kota' => 'Medan',
@@ -146,8 +230,20 @@ class ProductSeeder extends Seeder
                 'latitude' => 3.6004,
                 'longitude' => 98.4851,
             ],
+            [
+                'provinsi' => 'Sumatra Utara',
+                'kota' => 'Deli Serdang',
+                'latitude' => 3.5306,
+                'longitude' => 98.6719,
+            ],
+            [
+                'provinsi' => 'Sumatra Utara',
+                'kota' => 'Pematangsiantar',
+                'latitude' => 2.9597,
+                'longitude' => 99.0681,
+            ],
             
-            // Sumatra Barat
+            // Sumatra Barat (Cluster 7 - 4 produk)
             [
                 'provinsi' => 'Sumatra Barat',
                 'kota' => 'Padang',
@@ -160,8 +256,20 @@ class ProductSeeder extends Seeder
                 'latitude' => -0.3049,
                 'longitude' => 100.3691,
             ],
+            [
+                'provinsi' => 'Sumatra Barat',
+                'kota' => 'Payakumbuh',
+                'latitude' => -0.2297,
+                'longitude' => 100.6339,
+            ],
+            [
+                'provinsi' => 'Sumatra Barat',
+                'kota' => 'Padang Panjang',
+                'latitude' => -0.4656,
+                'longitude' => 100.4044,
+            ],
             
-            // Sulawesi Selatan
+            // Sulawesi Selatan (Cluster 8 - 4 produk)
             [
                 'provinsi' => 'Sulawesi Selatan',
                 'kota' => 'Makassar',
@@ -174,8 +282,20 @@ class ProductSeeder extends Seeder
                 'latitude' => -5.2112,
                 'longitude' => 119.4419,
             ],
+            [
+                'provinsi' => 'Sulawesi Selatan',
+                'kota' => 'Maros',
+                'latitude' => -4.9675,
+                'longitude' => 119.5847,
+            ],
+            [
+                'provinsi' => 'Sulawesi Selatan',
+                'kota' => 'Takalar',
+                'latitude' => -5.4078,
+                'longitude' => 119.4883,
+            ],
             
-            // Kalimantan Timur
+            // Kalimantan Timur (Cluster 9 - 3 produk)
             [
                 'provinsi' => 'Kalimantan Timur',
                 'kota' => 'Samarinda',
@@ -188,48 +308,44 @@ class ProductSeeder extends Seeder
                 'latitude' => -1.2379,
                 'longitude' => 116.8289,
             ],
+            [
+                'provinsi' => 'Kalimantan Timur',
+                'kota' => 'Bontang',
+                'latitude' => 0.1347,
+                'longitude' => 117.4758,
+            ],
             
-            // Papua
+            // Single locations untuk variasi geografis
             [
                 'provinsi' => 'Papua',
                 'kota' => 'Jayapura',
                 'latitude' => -2.5920,
                 'longitude' => 140.6689,
             ],
-            
-            // Aceh
             [
                 'provinsi' => 'Aceh',
                 'kota' => 'Banda Aceh',
                 'latitude' => 5.5483,
                 'longitude' => 95.3238,
             ],
-            
-            // Lombok
             [
                 'provinsi' => 'Nusa Tenggara Barat',
                 'kota' => 'Mataram',
                 'latitude' => -8.5833,
                 'longitude' => 116.1167,
             ],
-            
-            // Riau
             [
                 'provinsi' => 'Riau',
                 'kota' => 'Pekanbaru',
                 'latitude' => 0.5333,
                 'longitude' => 101.4500,
             ],
-            
-            // Sulawesi Utara
             [
                 'provinsi' => 'Sulawesi Utara',
                 'kota' => 'Manado',
                 'latitude' => 1.4748,
                 'longitude' => 124.8421,
             ],
-            
-            // Lampung
             [
                 'provinsi' => 'Lampung',
                 'kota' => 'Bandar Lampung',
@@ -238,7 +354,7 @@ class ProductSeeder extends Seeder
             ],
         ];
 
-        // Data nama usaha yang realistis berdasarkan bidang usaha
+        // Data nama usaha yang realistis berdasarkan bidang usaha - diperbanyak
         $businessData = [
             'kuliner' => [
                 'Warung Nasi Gudeg Bu Sari',
@@ -250,7 +366,17 @@ class ProductSeeder extends Seeder
                 'Nasi Padang Sederhana',
                 'Mie Ayam Pak Karso',
                 'Bubur Ayam Sukses',
-                'Martabak Manis House'
+                'Martabak Manis House',
+                'Warung Soto Betawi',
+                'Nasi Uduk Bu Tinah',
+                'Ayam Geprek Sambal Ijo',
+                'Warung Tegal Asli',
+                'Bakmi GM Lokal',
+                'Rendang Minang Pak Ajo',
+                'Pempek Palembang Asli',
+                'Gudeg Jogja Bu Kasinem',
+                'Rawon Setan Bu Wiwik',
+                'Coto Makassar Pak Daud'
             ],
             'fashion' => [
                 'Boutique Cantik Azzahra',
@@ -262,7 +388,17 @@ class ProductSeeder extends Seeder
                 'Tas Kulit Handmade',
                 'Sepatu Custom Jogja',
                 'Hijab Collection',
-                'Kemeja Kantor Premium'
+                'Kemeja Kantor Premium',
+                'Dress Pesta Elegan',
+                'Kaos Distro Branded',
+                'Celana Jeans Original',
+                'Jaket Kulit Premium',
+                'Sandal Kulit Asli',
+                'Topi Baseball Custom',
+                'Dompet Kulit Handmade',
+                'Ikat Pinggang Branded',
+                'Kacamata Fashion',
+                'Jam Tangan Trendy'
             ],
             'jasa' => [
                 'Bengkel Motor Jaya',
@@ -274,7 +410,17 @@ class ProductSeeder extends Seeder
                 'Kursus Bahasa Inggris',
                 'Jasa Desain Grafis',
                 'Tukang Bangunan Ahli',
-                'Ekspedisi Cepat Kirim'
+                'Ekspedisi Cepat Kirim',
+                'Jasa Pindahan Rumah',
+                'Service AC & Kulkas',
+                'Kursus Mengemudi',
+                'Jasa Cleaning Service',
+                'Barbershop Modern',
+                'Spa & Massage',
+                'Jasa Catering',
+                'Event Organizer',
+                'Jasa Renovasi Rumah',
+                'Travel & Tour'
             ],
             'pertanian' => [
                 'Toko Pupuk & Bibit',
@@ -286,7 +432,17 @@ class ProductSeeder extends Seeder
                 'Tanaman Hias Anggrek',
                 'Beras Organik Sawah',
                 'Madu Hutan Asli',
-                'Jamur Tiram Segar'
+                'Jamur Tiram Segar',
+                'Bibit Tanaman Unggul',
+                'Pakan Ternak Berkualitas',
+                'Pestisida Organik',
+                'Alat Pertanian Modern',
+                'Benih Sayuran Hibrida',
+                'Pupuk Kompos Organik',
+                'Tanaman Obat Herbal',
+                'Ikan Air Tawar',
+                'Telur Ayam Kampung',
+                'Susu Kambing Segar'
             ],
             'kreatif' => [
                 'Kerajinan Bambu Unik',
@@ -298,18 +454,28 @@ class ProductSeeder extends Seeder
                 'Rajutan Wol Hangat',
                 'Ukiran Kayu Jepara',
                 'Anyaman Rotan Cantik',
-                'Digital Art Studio'
+                'Digital Art Studio',
+                'Kerajinan Manik-manik',
+                'Patung Fiber Custom',
+                'Bordir Komputer',
+                'Sablon Kaos Manual',
+                'Kerajinan Kulit',
+                'Vas Bunga Keramik',
+                'Lampion Kertas Hias',
+                'Kaligrafi Arab',
+                'Mozaik Kaca',
+                'Origami Kreatif'
             ]
         ];
 
-        $allBusinessNames = array_merge(...array_values($businessData));
-        
         // Untuk memastikan distribusi yang baik
         $bidangUsahaValues = BidangUsaha::values();
         $jenisUsahaValues = JenisUsaha::values();
 
-        // Generate 30 products dengan distribusi yang merata
-        for ($i = 0; $i < 30; $i++) {
+        // Generate 50 products untuk memastikan setiap cluster punya cukup produk nearby
+        $totalProducts = 50;
+        
+        for ($i = 0; $i < $totalProducts; $i++) {
             $location = $indonesianLocations[$i % count($indonesianLocations)];
             $bidangUsaha = $bidangUsahaValues[$i % count($bidangUsahaValues)];
             $jenisUsaha = $jenisUsahaValues[$i % count($jenisUsahaValues)];
@@ -318,9 +484,9 @@ class ProductSeeder extends Seeder
             $businessNames = $businessData[$bidangUsaha];
             $namaUsaha = $businessNames[$i % count($businessNames)];
             
-            // Tambahkan sedikit variasi pada koordinat untuk realisme
-            $latVariation = $faker->randomFloat(4, -0.01, 0.01);
-            $lngVariation = $faker->randomFloat(4, -0.01, 0.01);
+            // Tambahkan variasi koordinat yang lebih besar dalam cluster untuk nearby products
+            $latVariation = $faker->randomFloat(4, -0.02, 0.02);
+            $lngVariation = $faker->randomFloat(4, -0.02, 0.02);
 
             Product::create([
                 'nama_usaha' => $namaUsaha,

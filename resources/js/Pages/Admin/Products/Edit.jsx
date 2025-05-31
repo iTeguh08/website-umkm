@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Head, Link, useForm, router } from "@inertiajs/react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import Sidebar from "@/Components/Sidebar";
@@ -63,6 +63,17 @@ export default function Edit({
         new Array(product.images.length).fill(true)
     );
 
+    // Handle initial load state for existing images
+    useEffect(() => {
+        // Set all existing images loading to false after a short delay
+        // This ensures the loading animation shows briefly but doesn't get stuck
+        const timer = setTimeout(() => {
+            setExistingImagesLoading(new Array(existingImages.length).fill(false));
+        }, 100);
+
+        return () => clearTimeout(timer);
+    }, []); // Run only once on mount
+
     // Sensors for @dnd-kit with better accessibility and touch support
     const sensors = useSensors(
         useSensor(PointerSensor),
@@ -71,49 +82,122 @@ export default function Edit({
         })
     );
 
-    // Handle drag end for existing images
-    const handleExistingImagesDragEnd = useCallback((event) => {
+    const handleDragEnd = async (event) => {
         const { active, over } = event;
 
         if (!over || active.id === over.id) {
             return;
         }
 
-        const activeIndex = existingImages.findIndex((img) => img.id === active.id);
-        const overIndex = existingImages.findIndex((img) => img.id === over.id);
+        // Helper function to get index and type from id
+        const getItemInfo = (id) => {
+            if (typeof id === 'number') {
+                const existingIndex = existingImages.findIndex(img => img.id === id);
+                return { index: existingIndex, type: 'existing' };
+            } else {
+                const newIndex = parseInt(id.split('-')[1]);
+                return { index: newIndex, type: 'new' };
+            }
+        };
 
-        if (activeIndex !== -1 && overIndex !== -1) {
-            setExistingImages((prevImages) => arrayMove(prevImages, activeIndex, overIndex));
-            setExistingImagesLoading((prevStates) => arrayMove(prevStates, activeIndex, overIndex));
-        }
-    }, [existingImages]);
+        const activeInfo = getItemInfo(active.id);
+        const overInfo = getItemInfo(over.id);
 
-    // Handle drag end for new images
-    const handleNewImagesDragEnd = useCallback((event) => {
-        const { active, over } = event;
-
-        if (!over || active.id === over.id) {
+        // Validate indices
+        if (activeInfo.index === -1 || overInfo.index === -1) {
             return;
         }
 
-        const activeIndex = imagePreviewUrls.findIndex((_, index) => `new-${index}` === active.id);
-        const overIndex = imagePreviewUrls.findIndex((_, index) => `new-${index}` === over.id);
+        if (activeInfo.type === overInfo.type) {
+            // Same type of images (existing or new)
+            if (activeInfo.type === 'existing') {
+                const newExistingImages = arrayMove(existingImages, activeInfo.index, overInfo.index);
+                const newExistingLoading = arrayMove(existingImagesLoading, activeInfo.index, overInfo.index);
+                setExistingImages(newExistingImages);
+                setExistingImagesLoading(newExistingLoading);
+            } else {
+                // Reordering new images
+                const newImages = arrayMove(data.images, activeInfo.index, overInfo.index);
+                const newUrls = arrayMove(imagePreviewUrls, activeInfo.index, overInfo.index);
+                const newLoadingStates = arrayMove(loadingStates, activeInfo.index, overInfo.index);
 
-        if (activeIndex !== -1 && overIndex !== -1) {
-            setData((prevData) => {
-                const newImages = arrayMove(prevData.images, activeIndex, overIndex);
-                return { ...prevData, images: newImages };
-            });
-            
-            setImagePreviewUrls((prevUrls) => arrayMove(prevUrls, activeIndex, overIndex));
-            setLoadingStates((prevStates) => arrayMove(prevStates, activeIndex, overIndex));
+                // Use Inertia's setData correctly
+                setData('images', newImages);
+                setImagePreviewUrls(newUrls);
+                setLoadingStates(newLoadingStates);
+            }
+        } else {
+            // Moving between existing and new images
+            if (activeInfo.type === 'existing') {
+                // Moving from existing to new
+                const movedImage = existingImages[activeInfo.index];
+                
+                try {
+                    // Convert existing image to new image format
+                    const imageBlob = await fetch(`/storage/${movedImage.image_path}`).then(r => r.blob());
+                    const file = new File([imageBlob], movedImage.image_path.split('/').pop(), { type: imageBlob.type });
+
+                    // Remove from existing
+                    const newExistingImages = existingImages.filter((_, idx) => idx !== activeInfo.index);
+                    const newExistingLoading = existingImagesLoading.filter((_, idx) => idx !== activeInfo.index);
+
+                    // Add to new at target position
+                    const newImages = [...data.images];
+                    const newPreviewUrls = [...imagePreviewUrls];
+                    const newLoadingStates = [...loadingStates];
+
+                    newImages.splice(overInfo.index, 0, file);
+                    newPreviewUrls.splice(overInfo.index, 0, URL.createObjectURL(file));
+                    newLoadingStates.splice(overInfo.index, 0, false);
+
+                    // Update all states
+                    setExistingImages(newExistingImages);
+                    setExistingImagesLoading(newExistingLoading);
+                    setData('images', newImages);
+                    setImagePreviewUrls(newPreviewUrls);
+                    setLoadingStates(newLoadingStates);
+                } catch (error) {
+                    console.error('Error converting existing image:', error);
+                }
+            } else {
+                // Moving from new to existing
+                const movedImage = data.images[activeInfo.index];
+                const movedPreview = imagePreviewUrls[activeInfo.index];
+
+                // Remove from new arrays
+                const newImages = data.images.filter((_, idx) => idx !== activeInfo.index);
+                const newPreviewUrls = imagePreviewUrls.filter((_, idx) => idx !== activeInfo.index);
+                const newLoadingStates = loadingStates.filter((_, idx) => idx !== activeInfo.index);
+
+                // Create new existing image entry
+                const newExistingImage = {
+                    id: Date.now(), // Temporary ID
+                    image_path: movedPreview,
+                    isTemp: true,
+                    file: movedImage
+                };
+
+                // Add to existing at target position
+                const newExistingImages = [...existingImages];
+                const newExistingLoading = [...existingImagesLoading];
+
+                newExistingImages.splice(overInfo.index, 0, newExistingImage);
+                newExistingLoading.splice(overInfo.index, 0, false);
+
+                // Update all states
+                setData('images', newImages);
+                setImagePreviewUrls(newPreviewUrls);
+                setLoadingStates(newLoadingStates);
+                setExistingImages(newExistingImages);
+                setExistingImagesLoading(newExistingLoading);
+            }
         }
-    }, [imagePreviewUrls]);
+    };
 
     const handleSubmit = (e) => {
         e.preventDefault();
         const formData = new FormData();
-        
+
         // Add all form data
         formData.append('nama_usaha', data.nama_usaha);
         formData.append('lokasi', data.lokasi);
@@ -126,7 +210,7 @@ export default function Edit({
         formData.append('longitude', data.longitude);
         formData.append('page', data.page);
         formData.append('_method', 'PUT');
-        
+
         // Add existing images with their new order
         if (existingImages.length > 0) {
             existingImages.forEach((image, index) => {
@@ -134,7 +218,7 @@ export default function Edit({
                 formData.append(`existing_images[${index}][order]`, index);
             });
         }
-        
+
         // Add new images with their order
         if (data.images.length > 0) {
             for (let i = 0; i < data.images.length; i++) {
@@ -144,7 +228,7 @@ export default function Edit({
                 formData.append(`image_orders[${i}]`, newImageOrder);
             }
         }
-        
+
         // Alternative approach: Use router.post instead of submitForm
         router.post(route("products.update", product.id), formData, {
             preserveScroll: true,
@@ -314,60 +398,74 @@ export default function Edit({
             opacity: isDragging ? 0.5 : 1,
         };
 
+        const handleDeleteClick = (e) => {
+            // Stop all event propagation
+            e.preventDefault();
+            e.stopPropagation();
+
+            removeExistingImage(image.id);
+        };
+
         return (
             <div
                 ref={setNodeRef}
                 style={style}
-                {...attributes}
-                {...listeners}
-                className="relative aspect-[16/9] overflow-hidden rounded-sm cursor-grab active:cursor-grabbing"
+                className="relative group aspect-[16/9] overflow-hidden rounded-sm border border-gray-200"
             >
-                {isLoading && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-gray-100 z-10">
-                        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
-                    </div>
-                )}
-                <img
-                    src={`/storage/${image.image_path}`}
-                    alt="Product"
-                    className={`w-full h-full object-cover pointer-events-none ${
-                        isLoading ? "invisible" : "visible"
-                    }`}
-                    onLoad={() => {
-                        setTimeout(() => {
-                            setExistingImagesLoading((prev) => {
-                                const newLoading = [...prev];
-                                newLoading[index] = false;
-                                return newLoading;
-                            });
-                        }, 500);
-                    }}
-                />
+                {/* Drag handle area - only the image itself */}
+                <div
+                    {...attributes}
+                    {...listeners}
+                    className="w-full h-full cursor-grab active:cursor-grabbing"
+                >
+                    {isLoading ? (
+                        <div className="flex items-center justify-center h-full bg-gray-100">
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                        </div>
+                    ) : (
+                        <img
+                            src={`/storage/${image.image_path}`}
+                            alt="Product"
+                            className="w-full h-full object-cover pointer-events-none"
+                        />
+                    )}
+                </div>
+
+                {/* Delete button overlay - positioned outside drag area */}
                 {!isLoading && (
                     <>
+                        <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none" />
+
                         <button
                             type="button"
-                            className="absolute top-2 right-2 w-6 h-6 bg-red-600 text-white rounded-sm flex items-center justify-center hover:bg-red-700 transition-colors duration-200 z-20 pointer-events-auto"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                removeExistingImage(image.id);
+                            onClick={handleDeleteClick}
+                            onMouseDown={(e) => e.stopPropagation()}
+                            onMouseUp={(e) => e.stopPropagation()}
+                            className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-red-500 text-white p-3 rounded-full hover:bg-red-600 transition-colors opacity-0 group-hover:opacity-100 z-50 pointer-events-auto shadow-lg"
+                            title="Hapus gambar"
+                            style={{
+                                zIndex: 9999,
+                                position: 'absolute',
+                                pointerEvents: 'auto'
                             }}
                         >
                             <svg
-                                className="w-4 h-4"
+                                xmlns="http://www.w3.org/2000/svg"
+                                className="h-4 w-4"
                                 fill="none"
-                                stroke="currentColor"
                                 viewBox="0 0 24 24"
+                                stroke="currentColor"
                             >
                                 <path
                                     strokeLinecap="round"
                                     strokeLinejoin="round"
                                     strokeWidth={2}
-                                    d="M6 18L18 6M6 6l12 12"
+                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
                                 />
                             </svg>
                         </button>
-                        <div className="absolute top-1 left-1 bg-black bg-opacity-60 text-white text-xs px-2 py-1 rounded pointer-events-none">
+
+                        <div className="absolute top-2 left-2 bg-black bg-opacity-60 text-white text-xs px-2 py-1 rounded pointer-events-none z-10">
                             {index === 0 ? "Thumbnail" : index + 1}
                         </div>
                     </>
@@ -398,48 +496,74 @@ export default function Edit({
             opacity: isDragging ? 0.5 : 1,
         };
 
+        const handleDeleteClick = (e) => {
+            // Stop all event propagation
+            e.preventDefault();
+            e.stopPropagation();
+
+            removeTempImage(index);
+        };
+
         return (
             <div
                 ref={setNodeRef}
                 style={style}
-                {...attributes}
-                {...listeners}
-                className="relative aspect-[16/9] overflow-hidden rounded-sm cursor-grab active:cursor-grabbing border-4 border-blue-200"
+                className="relative group aspect-[16/9] overflow-hidden rounded-sm border-4 border-blue-200"
             >
-                {isLoading ? (
-                    <div className="flex items-center justify-center h-full bg-gray-100">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                    </div>
-                ) : (
-                    <>
+                {/* Drag handle area - only the image itself */}
+                <div
+                    {...attributes}
+                    {...listeners}
+                    className="w-full h-full cursor-grab active:cursor-grabbing"
+                >
+                    {isLoading ? (
+                        <div className="flex items-center justify-center h-full bg-gray-100">
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                        </div>
+                    ) : (
                         <img
                             src={src}
                             alt={`New upload ${index + 1}`}
                             className="w-full h-full object-cover pointer-events-none"
                         />
+                    )}
+                </div>
+
+                {/* Delete button overlay - positioned outside drag area */}
+                {!isLoading && (
+                    <>
+                        <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none" />
+
                         <button
                             type="button"
-                            className="absolute top-2 right-2 w-6 h-6 bg-red-600 text-white rounded-sm flex items-center justify-center hover:bg-red-700 transition-colors duration-200 pointer-events-auto"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                removeTempImage(index);
+                            onClick={handleDeleteClick}
+                            onMouseDown={(e) => e.stopPropagation()}
+                            onMouseUp={(e) => e.stopPropagation()}
+                            className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-red-500 text-white p-3 rounded-full hover:bg-red-600 transition-colors opacity-0 group-hover:opacity-100 z-50 pointer-events-auto shadow-lg"
+                            title="Hapus gambar"
+                            style={{
+                                zIndex: 9999,
+                                position: 'absolute',
+                                pointerEvents: 'auto'
                             }}
                         >
                             <svg
-                                className="w-4 h-4"
+                                xmlns="http://www.w3.org/2000/svg"
+                                className="h-4 w-4"
                                 fill="none"
-                                stroke="currentColor"
                                 viewBox="0 0 24 24"
+                                stroke="currentColor"
                             >
                                 <path
                                     strokeLinecap="round"
                                     strokeLinejoin="round"
                                     strokeWidth={2}
-                                    d="M6 18L18 6M6 6l12 12"
+                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
                                 />
                             </svg>
                         </button>
-                        <div className="absolute top-1 left-1 bg-blue-600 bg-opacity-80 text-white text-xs px-2 py-1 rounded pointer-events-none">
+
+                        <div className="absolute top-2 left-2 bg-blue-600 bg-opacity-80 text-white text-xs px-2 py-1 rounded pointer-events-none z-10">
                             New {index + 1}
                         </div>
                     </>
@@ -472,14 +596,7 @@ export default function Edit({
                             <DndContext
                                 sensors={sensors}
                                 collisionDetection={closestCenter}
-                                onDragEnd={(event) => {
-                                    // Check if dragging existing image or new image
-                                    if (typeof event.active.id === 'number') {
-                                        handleExistingImagesDragEnd(event);
-                                    } else if (String(event.active.id).startsWith('new-')) {
-                                        handleNewImagesDragEnd(event);
-                                    }
-                                }}
+                                onDragEnd={handleDragEnd}
                             >
                                 <form
                                     onSubmit={handleSubmit}
@@ -529,35 +646,35 @@ export default function Edit({
                                                     </option>
                                                     {field.name === "bidang_usaha"
                                                         ? bidangUsahaOptions.map(
-                                                              (option) => (
-                                                                  <option
-                                                                      key={option}
-                                                                      value={option}
-                                                                  >
-                                                                      {option
-                                                                          .charAt(0)
-                                                                          .toUpperCase() +
-                                                                          option.slice(
-                                                                              1
-                                                                          )}
-                                                                  </option>
-                                                              )
-                                                          )
+                                                            (option) => (
+                                                                <option
+                                                                    key={option}
+                                                                    value={option}
+                                                                >
+                                                                    {option
+                                                                        .charAt(0)
+                                                                        .toUpperCase() +
+                                                                        option.slice(
+                                                                            1
+                                                                        )}
+                                                                </option>
+                                                            )
+                                                        )
                                                         : jenisUsahaOptions.map(
-                                                              (option) => (
-                                                                  <option
-                                                                      key={option}
-                                                                      value={option}
-                                                                  >
-                                                                      {option
-                                                                          .charAt(0)
-                                                                          .toUpperCase() +
-                                                                          option.slice(
-                                                                              1
-                                                                          )}
-                                                                  </option>
-                                                              )
-                                                          )}
+                                                            (option) => (
+                                                                <option
+                                                                    key={option}
+                                                                    value={option}
+                                                                >
+                                                                    {option
+                                                                        .charAt(0)
+                                                                        .toUpperCase() +
+                                                                        option.slice(
+                                                                            1
+                                                                        )}
+                                                                </option>
+                                                            )
+                                                        )}
                                                 </select>
                                             ) : (
                                                 <input
@@ -716,35 +833,35 @@ export default function Edit({
                                                     </option>
                                                     {field.name === "bidang_usaha"
                                                         ? bidangUsahaOptions.map(
-                                                              (option) => (
-                                                                  <option
-                                                                      key={option}
-                                                                      value={option}
-                                                                  >
-                                                                      {option
-                                                                          .charAt(0)
-                                                                          .toUpperCase() +
-                                                                          option.slice(
-                                                                              1
-                                                                          )}
-                                                                  </option>
-                                                              )
-                                                          )
+                                                            (option) => (
+                                                                <option
+                                                                    key={option}
+                                                                    value={option}
+                                                                >
+                                                                    {option
+                                                                        .charAt(0)
+                                                                        .toUpperCase() +
+                                                                        option.slice(
+                                                                            1
+                                                                        )}
+                                                                </option>
+                                                            )
+                                                        )
                                                         : jenisUsahaOptions.map(
-                                                              (option) => (
-                                                                  <option
-                                                                      key={option}
-                                                                      value={option}
-                                                                  >
-                                                                      {option
-                                                                          .charAt(0)
-                                                                          .toUpperCase() +
-                                                                          option.slice(
-                                                                              1
-                                                                          )}
-                                                                  </option>
-                                                              )
-                                                          )}
+                                                            (option) => (
+                                                                <option
+                                                                    key={option}
+                                                                    value={option}
+                                                                >
+                                                                    {option
+                                                                        .charAt(0)
+                                                                        .toUpperCase() +
+                                                                        option.slice(
+                                                                            1
+                                                                        )}
+                                                                </option>
+                                                            )
+                                                        )}
                                                 </select>
                                             ) : (
                                                 <input
@@ -805,33 +922,23 @@ export default function Edit({
                                         <label className="block text-sm font-medium text-gray-700 mb-2">
                                             Gambar
                                         </label>
-                                        <div className="relative">
-                                            <div className="relative inline-block min-w-[120px]">
-                                                <div className="inline-flex items-center justify-center px-4 py-1 bg-blue-100 text-blue-600 text-sm font-medium rounded-full hover:bg-blue-200 transition-colors duration-200 shadow-sm border border-blue-200">
-                                                    <svg
-                                                        className="w-4 h-4 mr-1"
-                                                        fill="none"
-                                                        stroke="currentColor"
-                                                        viewBox="0 0 24 24"
-                                                        xmlns="http://www.w3.org/2000/svg"
-                                                    >
-                                                        <path
-                                                            strokeLinecap="round"
-                                                            strokeLinejoin="round"
-                                                            strokeWidth={2}
-                                                            d="M12 4v16m8-8H4"
-                                                        />
-                                                    </svg>
-                                                    Tambahkan Image
-                                                </div>
-                                                <input
-                                                    id="images"
-                                                    type="file"
-                                                    name="images"
-                                                    multiple
-                                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                                                    onChange={handleImageChange}
-                                                />
+                                        <label htmlFor="images" className="cursor-pointer inline-flex items-center">
+                                            <div className="inline-flex items-center justify-center px-4 py-1 bg-blue-100 text-blue-600 text-sm font-medium rounded-full hover:bg-blue-200 transition-colors duration-200 shadow-sm border border-blue-200">
+                                                <svg
+                                                    className="w-4 h-4 mr-1"
+                                                    fill="none"
+                                                    stroke="currentColor"
+                                                    viewBox="0 0 24 24"
+                                                    xmlns="http://www.w3.org/2000/svg"
+                                                >
+                                                    <path
+                                                        strokeLinecap="round"
+                                                        strokeLinejoin="round"
+                                                        strokeWidth={2}
+                                                        d="M12 4v16m8-8H4"
+                                                    />
+                                                </svg>
+                                                Tambahkan Image
                                             </div>
                                             {data.images.length > 0 && (
                                                 <span className="ml-3 px-3 py-1.5 bg-gray-100 text-gray-600 text-sm rounded-full inline-flex items-center">
@@ -856,67 +963,51 @@ export default function Edit({
                                                     dipilih
                                                 </span>
                                             )}
-                                        </div>
-                                        {errors.image && (
-                                            <p className="mt-1 text-sm text-red-600">
-                                                {errors.image}
-                                            </p>
-                                        )}
+                                        </label>
+                                        <input
+                                            id="images"
+                                            type="file"
+                                            name="images"
+                                            multiple
+                                            className="sr-only"
+                                            onChange={handleImageChange}
+                                        />
+                                    </div>
 
-                                        <div className="mt-4">
-                                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                                <SortableContext
-                                                    items={existingImages.map((img) => img.id)}
-                                                    strategy={verticalListSortingStrategy}
-                                                >
-                                                    {existingImages.map(
-                                                        (image, index) => (
-                                                            <SortableExistingImageItem
-                                                                key={image.id}
-                                                                id={image.id}
-                                                                image={image}
-                                                                index={index}
-                                                                removeExistingImage={
-                                                                    removeExistingImage
-                                                                }
-                                                                isLoading={
-                                                                    existingImagesLoading[
-                                                                        index
-                                                                    ]
-                                                                }
-                                                                setExistingImagesLoading={
-                                                                    setExistingImagesLoading
-                                                                }
-                                                            />
-                                                        )
-                                                    )}
-                                                </SortableContext>
-                                                
-                                                <SortableContext
-                                                    items={imagePreviewUrls.map((_, index) => `new-${index}`)}
-                                                    strategy={verticalListSortingStrategy}
-                                                >
-                                                    {imagePreviewUrls.map(
-                                                        (url, index) => (
-                                                            <SortableNewImageItem
-                                                                key={`new-${index}`}
-                                                                id={`new-${index}`}
-                                                                src={url}
-                                                                index={index}
-                                                                removeTempImage={
-                                                                    removeTempImage
-                                                                }
-                                                                isLoading={
-                                                                    isUploading
-                                                                }
-                                                            />
-                                                        )
-                                                    )}
-                                                </SortableContext>
-                                                
-                                                {isUploading &&
-                                                    renderLoadingPlaceholders()}
-                                            </div>
+                                    <div className="mt-4">
+                                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                            <SortableContext
+                                                items={[
+                                                    ...existingImages.map(img => img.id),
+                                                    ...imagePreviewUrls.map((_, index) => `new-${index}`)
+                                                ]}
+                                                strategy={verticalListSortingStrategy}
+                                            >
+                                                {existingImages.map((image, index) => (
+                                                    <SortableExistingImageItem
+                                                        key={image.id}
+                                                        id={image.id}
+                                                        image={image}
+                                                        index={index}
+                                                        removeExistingImage={removeExistingImage}
+                                                        isLoading={existingImagesLoading[index]}
+                                                        setExistingImagesLoading={setExistingImagesLoading}
+                                                    />
+                                                ))}
+
+                                                {imagePreviewUrls.map((url, index) => (
+                                                    <SortableNewImageItem
+                                                        key={`new-${index}`}
+                                                        id={`new-${index}`}
+                                                        src={url}
+                                                        index={index}
+                                                        removeTempImage={removeTempImage}
+                                                        isLoading={loadingStates[index]}
+                                                    />
+                                                ))}
+                                            </SortableContext>
+
+                                            {isUploading && renderLoadingPlaceholders()}
                                         </div>
                                     </div>
 

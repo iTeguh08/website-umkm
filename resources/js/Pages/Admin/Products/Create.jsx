@@ -575,33 +575,23 @@ export default function Create({ bidangUsahaOptions, jenisUsahaOptions }) {
                                     <label className="block text-sm font-medium text-gray-700 mb-2">
                                         Gambar
                                     </label>
-                                    <div className="relative">
-                                        <div className="relative inline-block min-w-[120px]">
-                                            <div className="inline-flex items-center justify-center px-4 py-1 bg-green-100 text-green-600 text-sm font-medium rounded-full hover:bg-green-200 transition-colors duration-200 shadow-sm border border-green-200">
-                                                <svg
-                                                    className="w-4 h-4 mr-1"
-                                                    fill="none"
-                                                    stroke="currentColor"
-                                                    viewBox="0 0 24 24"
-                                                    xmlns="http://www.w3.org/2000/svg"
-                                                >
-                                                    <path
-                                                        strokeLinecap="round"
-                                                        strokeLinejoin="round"
-                                                        strokeWidth={2}
-                                                        d="M12 4v16m8-8H4"
-                                                    />
-                                                </svg>
-                                                Tambahkan Image
-                                            </div>
-                                            <input
-                                                id="images"
-                                                type="file"
-                                                name="images"
-                                                multiple
-                                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                                                onChange={handleImageChange}
-                                            />
+                                    <label htmlFor="images" className="cursor-pointer inline-flex items-center">
+                                        <div className="inline-flex items-center justify-center px-4 py-1 bg-green-100 text-green-600 text-sm font-medium rounded-full hover:bg-green-200 transition-colors duration-200 shadow-sm border border-green-200">
+                                            <svg
+                                                className="w-4 h-4 mr-1"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                viewBox="0 0 24 24"
+                                                xmlns="http://www.w3.org/2000/svg"
+                                            >
+                                                <path
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                    strokeWidth={2}
+                                                    d="M12 4v16m8-8H4"
+                                                />
+                                            </svg>
+                                            Tambahkan Image
                                         </div>
                                         {data.images.length > 0 && (
                                             <span className="ml-3 px-3 py-1.5 bg-gray-100 text-gray-600 text-sm rounded-full inline-flex items-center">
@@ -626,37 +616,45 @@ export default function Create({ bidangUsahaOptions, jenisUsahaOptions }) {
                                                 ditambahkan
                                             </span>
                                         )}
-                                    </div>
+                                    </label>
+                                    <input
+                                        id="images"
+                                        type="file"
+                                        name="images"
+                                        multiple
+                                        className="sr-only"
+                                        onChange={handleImageChange}
+                                    />
                                     {errors.image && (
                                         <p className="mt-1 text-sm text-red-600">
                                             {errors.image}
                                         </p>
                                     )}
+                                </div>
 
-                                    {/* Preview images dan placeholders */}
-                                    <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4">
-                                        <SortableContext
-                                            items={imagePreviewUrls.map((_, index) => `preview-${index}`)}
-                                            strategy={verticalListSortingStrategy}
-                                        >
-                                            {imagePreviewUrls.map((url, index) => (
-                                                <SortableImageItem
-                                                    key={`preview-${index}`}
-                                                    id={`preview-${index}`}
-                                                    src={url}
-                                                    index={index}
-                                                    removeTempImage={
-                                                        removeTempImage
-                                                    }
-                                                    isLoading={loadingStates[index]}
-                                                />
-                                            ))}
-                                        </SortableContext>
+                                {/* Preview images dan placeholders */}
+                                <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4">
+                                    <SortableContext
+                                        items={imagePreviewUrls.map((_, index) => `preview-${index}`)}
+                                        strategy={verticalListSortingStrategy}
+                                    >
+                                    {imagePreviewUrls.map((url, index) => (
+                                            <SortableImageItem
+                                            key={`preview-${index}`}
+                                            id={`preview-${index}`}
+                                            src={url}
+                                            index={index}
+                                            removeTempImage={
+                                                removeTempImage
+                                            }
+                                            isLoading={loadingStates[index]}
+                                        />
+                                    ))}
+                                    </SortableContext>
 
-                                        {/* Render loading placeholders for images being uploaded */}
-                                        {isUploading &&
-                                            renderLoadingPlaceholders()}
-                                    </div>
+                                    {/* Render loading placeholders for images being uploaded */}
+                                    {isUploading &&
+                                        renderLoadingPlaceholders()}
                                 </div>
 
                                 <div className="flex justify-end space-x-3 pt-4">

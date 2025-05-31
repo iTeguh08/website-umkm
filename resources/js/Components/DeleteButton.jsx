@@ -1,11 +1,26 @@
 import React from 'react';
 import { router } from '@inertiajs/react';
 
-export default function DeleteButton({ productId, className = '' }) {
-    const handleDelete = () => {
+export default function DeleteButton({ productId, currentPage = 1, className = '' }) {
+    const handleDelete = (e) => {
+        // Stop all event propagation - key for good UX
+        e.preventDefault();
+        e.stopPropagation();
+
         if (confirm('Are you sure you want to delete this product?')) {
             router.delete(route('products.destroy', productId), {
-                preserveScroll: true,
+                preserveScroll: true, // Don't auto scroll to top
+                data: {
+                    page: currentPage
+                },
+                onSuccess: () => {
+                    // Update data silently without page refresh or redirect
+                    router.reload({ 
+                        only: ['products'],
+                        preserveScroll: true,
+                        preserveState: true 
+                    });
+                }
             });
         }
     };
@@ -15,6 +30,8 @@ export default function DeleteButton({ productId, className = '' }) {
             className="p-1.5 text-red-600 hover:bg-red-50 transition-colors"
             type="button"
             onClick={handleDelete}
+            onMouseDown={(e) => e.stopPropagation()}
+            onMouseUp={(e) => e.stopPropagation()}
         >
             <svg
                 className="w-5 h-5"

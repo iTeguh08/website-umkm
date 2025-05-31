@@ -540,7 +540,7 @@ const ProductDetail = () => {
                             {/* Right column - Business details */}
                             <div className="space-y-6">
                                 <div>
-                                    <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                                    <h1 className="text-3xl font-semibold text-gray-700 mb-2">
                                         {product.nama_usaha}
                                     </h1>
                                     <div className="flex flex-wrap gap-2 mb-4">
@@ -573,7 +573,7 @@ const ProductDetail = () => {
 
                                     <div className="flex items-center text-gray-700">
                                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-500 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L16 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
                                         </svg>
                                         <span>{product.email || 'Email tidak tersedia'}</span>
                                     </div>
@@ -687,7 +687,7 @@ const ProductDetail = () => {
                                     <div className="flex items-center justify-center mt-6">
                                         <div className="w-16 h-[2px] bg-orange-400 mr-3"></div>
                                         <span className="text-lg text-white kaushan-script font-medium">
-                                            {nearbyProducts.length} UMKM Terdekat
+                                            {Math.min(nearbyProducts.length, 6)} UMKM Terdekat
                                         </span>
                                         <div className="w-16 h-[2px] bg-orange-400 ml-3"></div>
                                     </div>
