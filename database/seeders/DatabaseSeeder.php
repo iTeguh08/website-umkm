@@ -12,6 +12,7 @@ class DatabaseSeeder extends Seeder
             UserSeeder::class,
             TagSeeder::class,
             PostSeeder::class, // Menambahkan PostSeeder
+            ProductSeeder::class, // Seeder untuk UMKM dengan koordinat Indonesia
             // ProductDummySeeder::class,
         ]);
     }
