@@ -1,16 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link, usePage } from '@inertiajs/react';
 
 const Sidebar = () => {
-    const { currentPage } = usePage().props;
+    const { url } = usePage();
     const [openSections, setOpenSections] = useState(['UMKM', 'MANAGEMENT']);
-
-    // useEffect(() => {
-    //     const section = currentPage.includes('badges') || currentPage.includes('pages') ? 'MANAGEMENT' : 'UMKM';
-    //     if (!openSections.includes(section)) {
-    //         setOpenSections([...openSections, section]);
-    //     }
-    // }, [currentPage]);
 
     const toggleSection = (section) => {
         setOpenSections(prev =>
@@ -26,14 +19,14 @@ const Sidebar = () => {
             items: [
                 { name: 'jenis-usaha', label: 'Jenis Usaha', href: '/admin/dashboard/jenis-usaha', icon: 'tag' },
                 { name: 'bidang-usaha', label: 'Bidang Usaha', href: '/admin/dashboard/bidang-usaha', icon: 'briefcase' },
-                { name: 'product', label: 'Product', href: route('products.index'), icon: 'building' }
+                { name: 'product', label: 'Product', href: route('products.index', undefined, false), icon: 'building' }
             ]
         },
         {
             section: 'MANAGEMENT',
             items: [
-                { name: 'tag', label: 'Tags', href: route('tags.index'), icon: 'tag' },
-                { name: 'post', label: 'Posts', href: route('posts.index'), icon: 'document' }
+                { name: 'tag', label: 'Tags', href: route('tags.index', undefined, false), icon: 'tag' },
+                { name: 'post', label: 'Posts', href: route('posts.index', undefined, false), icon: 'document' }
             ]
         }
     ];
@@ -63,19 +56,26 @@ const Sidebar = () => {
                             </svg>
                         </button>
                         <div className={openSections.includes(group.section) ? "mt-1 space-y-1" : "hidden"}>
-                            {group.items.map((item) => (
-                                <Link
-                                    key={item.name}
-                                    href={item.href}
-                                    className={`group flex items-center px-4 py-2 rounded-lg transition font-medium text-base space-x-3 ${currentPage === item.name ? 'bg-blue-50 text-blue-700 font-bold' : 'text-gray-500 hover:bg-gray-100 hover:text-blue-600'}`}
-                                >
-                                    <span className="inline-block w-5 h-5">
-                                        {/* Replace with actual SVG icons as needed */}
-                                        <i className={`icon-${item.icon}`}></i>
-                                    </span>
-                                    <span>{item.label}</span>
-                                </Link>
-                            ))}
+                            {group.items.map((item) => {
+                                const isActive = item.href === '/' ? url === '/' : url.startsWith(item.href);
+                                return (
+                                    <Link
+                                        key={item.name}
+                                        href={item.href}
+                                        className={`group flex items-center px-4 py-2 rounded-lg transition font-medium text-base space-x-3 ${
+                                            isActive
+                                                ? 'bg-blue-50 text-blue-700 font-bold'
+                                                : 'text-gray-500 hover:bg-gray-100 hover:text-blue-600'
+                                        }`}
+                                    >
+                                        <span className="inline-block w-5 h-5">
+                                            {/* Replace with actual SVG icons as needed */}
+                                            <i className={`icon-${item.icon}`}></i>
+                                        </span>
+                                        <span>{item.label}</span>
+                                    </Link>
+                                );
+                            })}
                         </div>
                     </div>
                 ))}
