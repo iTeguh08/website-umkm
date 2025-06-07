@@ -169,56 +169,67 @@ class ProductController extends Controller
             'description' => 'nullable|string',
             'bidang_usaha' => 'required|in:' . implode(',', BidangUsaha::values()),
             'jenis_usaha' => 'required|in:' . implode(',', JenisUsaha::values()),
-            // 'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
-            // 'existing_images' => 'nullable|array',
-            // 'existing_images.*.id' => 'exists:product_images,id',
-            'existing_images.*.order' => 'integer|min:0',
-            'image_orders' => 'nullable|array',
-            'image_orders.*' => 'integer|min:0',
+            'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'existing_images' => 'nullable|array',
+            'existing_images.*.id' => 'required|exists:product_images,id',
+            'existing_images.*.order' => 'required|integer|min:0',
+            'image_orders' => 'nullable|json',
             'latitude' => 'nullable|numeric|between:-90,90',
             'longitude' => 'nullable|numeric|between:-180,180',
         ]);
 
-        $product->nama_usaha = $request->nama_usaha;
-        $product->lokasi = $request->lokasi;
-        $product->email = $request->email;
-        $product->telephone = $request->telephone;
-        $product->description = $request->description;
-        $product->bidang_usaha = $request->bidang_usaha;
-        $product->jenis_usaha = $request->jenis_usaha;
-        $product->latitude = $request->latitude;
-        $product->longitude = $request->longitude;
+        $product->update($request->only([
+            'nama_usaha', 'lokasi', 'email', 'telephone', 'description', 
+            'bidang_usaha', 'jenis_usaha', 'latitude', 'longitude'
+        ]));
 
         // Update existing images order
         if ($request->has('existing_images')) {
             foreach ($request->input('existing_images') as $imageData) {
-                $image = ProductImage::find($imageData['id']);
-                if ($image && $image->product_id === $product->id) {
-                    $image->update(['order' => $imageData['order']]);
+                ProductImage::where('id', $imageData['id'])
+                            ->where('product_id', $product->id)
+                            ->update(['order' => $imageData['order']]);
+            }
+        }
+        
+        // Handle new image uploads and their order
+        if ($request->hasFile('images')) {
+            $imageOrders = json_decode($request->input('image_orders'), true);
+            $uploadedFiles = $request->file('images');
+
+            // Create a map of original filename to uploaded file object
+            $fileMap = [];
+            foreach ($uploadedFiles as $file) {
+                $fileMap[$file->getClientOriginalName()] = $file;
+            }
+
+            if(!empty($imageOrders) && !empty($fileMap)) {
+                foreach($imageOrders as $orderInfo) {
+                    $fileName = $orderInfo['name'];
+                    if (isset($fileMap[$fileName])) {
+                        $imageFile = $fileMap[$fileName];
+                        $path = $imageFile->store('products', 'public');
+                        
+                        $product->images()->create([
+                            'image_path' => $path,
+                            'order' => $orderInfo['order']
+                        ]);
+                    }
+                }
+            } else {
+                // Fallback if order info is not correctly provided
+                foreach ($uploadedFiles as $index => $image) {
+                    $path = $image->store('products', 'public');
+                    // Calculate a fallback order
+                    $maxOrder = $product->images()->max('order') ?? -1;
+                    $product->images()->create([
+                        'image_path' => $path,
+                        'order' => $maxOrder + 1 + $index
+                    ]);
                 }
             }
         }
         
-        // Handle new image uploads with proper ordering
-        if ($request->hasFile('images')) {
-            $imageOrders = $request->input('image_orders', []);
-            
-            foreach ($request->file('images') as $index => $image) {
-                $path = $image->store('products', 'public');
-                
-                // Use the order from frontend drag & drop, fallback to calculated order
-                $order = isset($imageOrders[$index]) ? $imageOrders[$index] : $product->images()->count() + $index;
-                
-                $product->images()->create([
-                    'image_path' => $path,
-                    'order' => $order
-                ]);
-            }
-        }
-        
-        $product->update($request->except(['images', 'existing_images', 'image_orders']));
-        $product->save();
-
         return redirect()->route('products.index', ['page' => $request->page ?? 1])
             ->with('message', 'Product updated successfully.');
     }
