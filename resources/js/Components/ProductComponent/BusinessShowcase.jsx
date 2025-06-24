@@ -45,7 +45,7 @@ const BusinessShowcase = ({ products }) => {
                                             className="w-full h-48 sm:h-56 object-cover transition-transform duration-500 group-hover:scale-105"
                                         />
                                     ) : (
-                                        <div className="w-full h-48 sm:h-56 bg-white flex items-center justify-center text-gray-400">
+                                        <div className="w-full h-48 sm:h-56 bg-gray-100 flex items-center justify-center text-gray-300">
                                             <svg
                                                 className="w-12 h-12"
                                                 fill="none"

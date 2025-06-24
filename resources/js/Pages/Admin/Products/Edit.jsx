@@ -41,6 +41,7 @@ export default function Edit({
         jenis_usaha: product.jenis_usaha || "",
         latitude: product.latitude || "",
         longitude: product.longitude || "",
+        is_published: product.is_published == 1,
         _method: "PUT",
     });
 
@@ -86,6 +87,7 @@ export default function Edit({
             formData.append(key, data[key]);
         }
         formData.append("page", page);
+        formData.append('is_published', data.is_published ? '1' : '0');
         
         const image_orders = [];
 
@@ -310,6 +312,28 @@ export default function Edit({
                                             </SortableContext>
                                             {isUploading && <p>Uploading...</p>}
                                         </div>
+                                    </div>
+
+                                    <div className="flex items-center">
+                                        <input
+                                            type="checkbox"
+                                            name="is_published"
+                                            id="is_published"
+                                            checked={data.is_published}
+                                            onChange={(e) =>
+                                                setData(
+                                                    "is_published",
+                                                    e.target.checked
+                                                )
+                                            }
+                                            className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                                        />
+                                        <label
+                                            htmlFor="is_published"
+                                            className="ml-2 block text-sm text-gray-900"
+                                        >
+                                            Published
+                                        </label>
                                     </div>
 
                                     <div className="flex justify-end space-x-3 pt-4">

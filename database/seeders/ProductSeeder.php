@@ -498,6 +498,7 @@ class ProductSeeder extends Seeder
                 'jenis_usaha' => $jenisUsaha,
                 'latitude' => $location['latitude'] + $latVariation,
                 'longitude' => $location['longitude'] + $lngVariation,
+                'is_published' => true,
             ]);
         }
     }

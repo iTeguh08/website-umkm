@@ -71,7 +71,7 @@ class ProductController extends Controller
             ->when($bidangUsaha, function ($query) use ($bidangUsaha) {
                 return $query->where('bidang_usaha', $bidangUsaha);
             })
-            ->has('images')
+            ->where('is_published', true)
             ->latest()
             ->paginate(6);
 
@@ -113,6 +113,7 @@ class ProductController extends Controller
             'image_orders.*' => 'integer|min:0',
             'latitude' => 'nullable|numeric|between:-90,90',
             'longitude' => 'nullable|numeric|between:-180,180',
+            'is_published' => 'sometimes|boolean',
         ]);
 
         $product = new Product();
@@ -125,6 +126,7 @@ class ProductController extends Controller
         $product->jenis_usaha = $request->jenis_usaha;
         $product->latitude = $request->latitude;
         $product->longitude = $request->longitude;
+        $product->is_published = $request->input('is_published', false);
 
         $product->save();
 
@@ -176,12 +178,16 @@ class ProductController extends Controller
             'image_orders' => 'nullable|json',
             'latitude' => 'nullable|numeric|between:-90,90',
             'longitude' => 'nullable|numeric|between:-180,180',
+            'is_published' => 'sometimes|boolean',
         ]);
 
-        $product->update($request->only([
-            'nama_usaha', 'lokasi', 'email', 'telephone', 'description', 
+        $productData = $request->only([
+            'nama_usaha', 'lokasi', 'email', 'telephone', 'description',
             'bidang_usaha', 'jenis_usaha', 'latitude', 'longitude'
-        ]));
+        ]);
+        $productData['is_published'] = $request->input('is_published', false);
+
+        $product->update($productData);
 
         // Update existing images order
         if ($request->has('existing_images')) {

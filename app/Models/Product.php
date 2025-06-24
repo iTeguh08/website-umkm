@@ -22,7 +22,8 @@ class Product extends Model
         'bidang_usaha',
         'jenis_usaha',
         'latitude',
-        'longitude'
+        'longitude',
+        'is_published'
     ];
 
     protected $casts = [

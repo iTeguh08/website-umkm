@@ -119,6 +119,7 @@ export default function Create({ bidangUsahaOptions, jenisUsahaOptions }) {
         jenis_usaha: "",
         latitude: "",
         longitude: "",
+        is_published: false,
     });
 
     const [imagePreviewUrls, setImagePreviewUrls] = useState([]);
@@ -164,6 +165,7 @@ export default function Create({ bidangUsahaOptions, jenisUsahaOptions }) {
         formData.append('jenis_usaha', data.jenis_usaha);
         formData.append('latitude', data.latitude);
         formData.append('longitude', data.longitude);
+        formData.append('is_published', data.is_published ? '1' : '0');
         
         // Add images in the correct order (after drag and drop reordering)
         if (data.images.length > 0) {
@@ -655,6 +657,28 @@ export default function Create({ bidangUsahaOptions, jenisUsahaOptions }) {
                                     {/* Render loading placeholders for images being uploaded */}
                                     {isUploading &&
                                         renderLoadingPlaceholders()}
+                                </div>
+
+                                <div className="flex items-center">
+                                    <input
+                                        type="checkbox"
+                                        name="is_published"
+                                        id="is_published"
+                                        checked={data.is_published}
+                                        onChange={(e) =>
+                                            setData(
+                                                "is_published",
+                                                e.target.checked
+                                            )
+                                        }
+                                        className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                                    />
+                                    <label
+                                        htmlFor="is_published"
+                                        className="ml-2 block text-sm text-gray-900"
+                                    >
+                                        Published
+                                    </label>
                                 </div>
 
                                 <div className="flex justify-end space-x-3 pt-4">
