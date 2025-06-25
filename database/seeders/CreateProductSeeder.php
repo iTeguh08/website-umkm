@@ -9,7 +9,7 @@ use App\Enums\BidangUsaha;
 use App\Enums\JenisUsaha;
 use Faker\Factory as Faker;
 
-class ProductSeeder extends Seeder
+class CreateProductSeeder extends Seeder
 {
     /**
      * Run the database seeds.
@@ -482,7 +482,8 @@ class ProductSeeder extends Seeder
             
             // Pilih nama usaha berdasarkan bidang usaha
             $businessNames = $businessData[$bidangUsaha];
-            $namaUsaha = $businessNames[$i % count($businessNames)];
+            $baseName = $businessNames[$i % count($businessNames)];
+            $namaUsaha = $baseName . ' ' . $location['kota']; // Ensures more unique names
             
             // Tambahkan variasi koordinat yang lebih besar dalam cluster untuk nearby products
             $latVariation = $faker->randomFloat(4, -0.02, 0.02);
@@ -498,7 +499,7 @@ class ProductSeeder extends Seeder
                 'jenis_usaha' => $jenisUsaha,
                 'latitude' => $location['latitude'] + $latVariation,
                 'longitude' => $location['longitude'] + $lngVariation,
-                'is_published' => true,
+                'is_published' => false, // Set to false by default
             ]);
         }
     }
