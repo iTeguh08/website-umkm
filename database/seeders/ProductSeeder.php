@@ -16,6 +16,11 @@ class ProductSeeder extends Seeder
      */
     public function run(): void
     {
+        if (Product::count() > 0) {
+            $this->command->info('Tabel produk sudah berisi data. Seeder tidak akan dijalankan.');
+            return;
+        }
+
         $faker = Faker::create('id_ID');
 
         // Data koordinat real di berbagai provinsi Indonesia
@@ -472,6 +477,12 @@ class ProductSeeder extends Seeder
         $bidangUsahaValues = BidangUsaha::values();
         $jenisUsahaValues = JenisUsaha::values();
 
+        // Acak nama bisnis untuk memastikan keunikan
+        $availableBusinessNames = $businessData;
+        foreach ($availableBusinessNames as $bidang => $names) {
+            shuffle($availableBusinessNames[$bidang]);
+        }
+
         // Generate 50 products untuk memastikan setiap cluster punya cukup produk nearby
         $totalProducts = 50;
         
@@ -480,9 +491,14 @@ class ProductSeeder extends Seeder
             $bidangUsaha = $bidangUsahaValues[$i % count($bidangUsahaValues)];
             $jenisUsaha = $jenisUsahaValues[$i % count($jenisUsahaValues)];
             
-            // Pilih nama usaha berdasarkan bidang usaha
-            $businessNames = $businessData[$bidangUsaha];
-            $namaUsaha = $businessNames[$i % count($businessNames)];
+            // Ambil nama usaha yang unik dan hapus dari daftar
+            $namaUsaha = array_pop($availableBusinessNames[$bidangUsaha]);
+
+            // Jika daftar nama untuk bidang usaha habis, acak ulang
+            if (empty($availableBusinessNames[$bidangUsaha])) {
+                $availableBusinessNames[$bidangUsaha] = $businessData[$bidangUsaha];
+                shuffle($availableBusinessNames[$bidangUsaha]);
+            }
             
             // Tambahkan variasi koordinat yang lebih besar dalam cluster untuk nearby products
             $latVariation = $faker->randomFloat(4, -0.02, 0.02);
