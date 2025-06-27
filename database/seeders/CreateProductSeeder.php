@@ -9,13 +9,18 @@ use App\Enums\BidangUsaha;
 use App\Enums\JenisUsaha;
 use Faker\Factory as Faker;
 
-class CreateProductSeeder extends Seeder
+class ProductSeeder extends Seeder
 {
     /**
      * Run the database seeds.
      */
     public function run(): void
     {
+        if (Product::count() > 0) {
+            $this->command->info('Tabel produk sudah berisi data. Seeder tidak akan dijalankan.');
+            return;
+        }
+
         $faker = Faker::create('id_ID');
 
         // Data koordinat real di berbagai provinsi Indonesia
@@ -472,6 +477,12 @@ class CreateProductSeeder extends Seeder
         $bidangUsahaValues = BidangUsaha::values();
         $jenisUsahaValues = JenisUsaha::values();
 
+        // Acak nama bisnis untuk memastikan keunikan
+        $availableBusinessNames = $businessData;
+        foreach ($availableBusinessNames as $bidang => $names) {
+            shuffle($availableBusinessNames[$bidang]);
+        }
+
         // Generate 50 products untuk memastikan setiap cluster punya cukup produk nearby
         $totalProducts = 50;
         
@@ -480,10 +491,14 @@ class CreateProductSeeder extends Seeder
             $bidangUsaha = $bidangUsahaValues[$i % count($bidangUsahaValues)];
             $jenisUsaha = $jenisUsahaValues[$i % count($jenisUsahaValues)];
             
-            // Pilih nama usaha berdasarkan bidang usaha
-            $businessNames = $businessData[$bidangUsaha];
-            $baseName = $businessNames[$i % count($businessNames)];
-            $namaUsaha = $baseName . ' ' . $location['kota']; // Ensures more unique names
+            // Ambil nama usaha yang unik dan hapus dari daftar
+            $namaUsaha = array_pop($availableBusinessNames[$bidangUsaha]);
+
+            // Jika daftar nama untuk bidang usaha habis, acak ulang
+            if (empty($availableBusinessNames[$bidangUsaha])) {
+                $availableBusinessNames[$bidangUsaha] = $businessData[$bidangUsaha];
+                shuffle($availableBusinessNames[$bidangUsaha]);
+            }
             
             // Tambahkan variasi koordinat yang lebih besar dalam cluster untuk nearby products
             $latVariation = $faker->randomFloat(4, -0.02, 0.02);
@@ -499,7 +514,7 @@ class CreateProductSeeder extends Seeder
                 'jenis_usaha' => $jenisUsaha,
                 'latitude' => $location['latitude'] + $latVariation,
                 'longitude' => $location['longitude'] + $lngVariation,
-                'is_published' => false, // Set to false by default
+                'is_published' => true,
             ]);
         }
     }
